@@ -234,7 +234,7 @@ void load_db(const char* dbname){
 		m->seen=NOT_SEEN;
 
 		// store it in the hash tables
-		g_hash_table_insert(sha2mail,m->sha1,m);
+		g_hash_table_insert(sha2mail,m->bsha1,m);
 		g_hash_table_insert(filename2mail,m->name,m);
 		
 	} 
@@ -286,7 +286,6 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	m->mtime = sb.st_mtime;
-	sb.st_size;
 	
 	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
 
@@ -304,7 +303,7 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	// skip header
-	for(next = addr, header_found=0; next + 1 < addr + m->size; next++){
+	for(next = addr, header_found=0; next + 1 < addr + sb.st_size; next++){
 		if (*next == '\n' && *(next+1) == '\n') {
 			next+=2;
 			header_found=1;
