@@ -1,0 +1,2 @@
+internally compare sha1 using their byte representation and not their
+hex one
