@@ -53,6 +53,16 @@
 // int -> hex
 static char hexalphabet[]={'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
+void txtsha1(unsigned char *sha1, char* outbuff){
+	int fd;
+
+	for (fd = 0; fd < 20; fd++){
+		outbuff[fd*2] = hexalphabet[sha1[fd]>>4];
+		outbuff[fd*2+1] = hexalphabet[sha1[fd]&0x0f];
+	}
+	outbuff[40] = '\0';
+}
+
 enum sight {
 	SEEN=0, NOT_SEEN=1, MOVED=2, CHANGED=3
 };
@@ -65,9 +75,9 @@ const char* strsight(enum sight s){
 
 // mail metadata structure
 struct mail {
-	char sha1[41]; // body hash value
+	char bsha1[41]; // body hash value
+	char hsha1[41]; // header hash value
 	char *name;    // file name
-	size_t size;   // size in bytes
 	time_t mtime;  // modification time
 	enum sight seen;     // already seen (means do not delete)
 };
@@ -178,7 +188,7 @@ void save_db(const char* dbname){
 	for(i=0; i < mailno; i++){
 		struct mail* m = &mails[i];
 		if (m->seen == SEEN) {
-			fprintf(fd,"%lu %lu %s %s\n", m->size,m->mtime, m->sha1,m->name);
+			fprintf(fd,"%lu %s %s %s\n", m->mtime, m->hsha1, m->bsha1, m->name);
 		}
 	}
 
@@ -202,8 +212,8 @@ void load_db(const char* dbname){
 
 		// read one entry
 		fields = fscanf(fd,
-			"%1$zu %2$lu %3$40s %4$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
-			&(m->size), &(m->mtime), &(m->sha1[0]), next_name());
+			"%1$lu %2$40s %3$40s %4$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
+			&(m->mtime),  &(m->hsha1[0]), &(m->bsha1[0]), next_name());
 
 		if (fields == EOF) {
 			// deallocate mail entry
@@ -276,18 +286,18 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	m->mtime = sb.st_mtime;
-	m->size = sb.st_size;
+	sb.st_size;
 	
 	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
 
-	if (alias != NULL && alias->size == m->size && alias->mtime == m->mtime) {
+	if (alias != NULL && alias->mtime == m->mtime) {
 		// old email, we skip it and "free" the memory used
 		alias->seen=SEEN;
 		COMMAND_SKIP(alias);
 		goto err_alloc_fd_cleanup;
 	}
 
-	addr = mmap(NULL, m->size, PROT_READ, MAP_PRIVATE, fd, 0);
+	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED){
 		ERROR(mmap, "unable to load '%s'\n",m->name);
 		exit(EXIT_FAILURE);
@@ -309,19 +319,16 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	// calculate sha1
-	sha1 = SHA1((const unsigned char*)next,m->size - (next - addr),NULL);
+	sha1 = SHA1((const unsigned char*)addr, next - addr,NULL);
+	txtsha1(sha1,m->hsha1);
+	sha1 = SHA1((const unsigned char*)next, sb.st_size - (next - addr),NULL);
+	txtsha1(sha1,m->bsha1);
 	
-	munmap(addr,m->size);
+	munmap(addr, sb.st_size);
 	close(fd);
 
-	for (fd = 0; fd < 20; fd++){
-		m->sha1[fd*2] = hexalphabet[sha1[fd]>>4];
-		m->sha1[fd*2+1] = hexalphabet[sha1[fd]&0x0f];
-	}
-	m->sha1[40] = '\0';
-
 	if (alias != NULL) {
-		if(!strcmp(alias->sha1,m->sha1)) {
+		if(!strcmp(alias->bsha1,m->bsha1)) {
 			COMMAND_REPLACE_HEADER(alias,m);
 			m->seen=SEEN;
 			alias->seen=CHANGED;
@@ -334,9 +341,10 @@ void analize_file(const char* dir,const char* file) {
 		}
 	}
 
-	bodyalias = g_hash_table_lookup(sha2mail,m->sha1);
+	bodyalias = g_hash_table_lookup(sha2mail,m->bsha1);
 
 	if (bodyalias != NULL) {
+		if (!strcmp(bodialias->hsha1,bodialias->
 		COMMAND_COPYBODY(bodyalias,m);
 		m->seen=SEEN;
 		return;
