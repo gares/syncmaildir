@@ -246,22 +246,22 @@ void load_db(const char* dbname){
 	VERBOSE(skip,"%s\n",m->name)
 
 #define COMMAND_ADD(m) \
-	fprintf(stdout,"ADD %s %lu %s\n",m->name, m->size, m->sha1)
+	fprintf(stdout,"ADD %s %s %s\n",m->name, m->hsha1, m->bsha1)
 
 #define COMMAND_COPYBODY(m,n) \
-	fprintf(stdout, "COPYBODY %s %lu %s TO %s %lu\n",\
-		m->name,m->size,m->sha1,n->name,n->size)
+	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
+		m->name,m->bsha1,n->name,n->bsha1)
 
 #define COMMAND_REPLACE(m,n) \
-	fprintf(stdout, "REPLACE %s %lu %s WITH %s %lu %s\n",\
-		m->name,m->size,m->sha1,n->name,n->size,n->sha1)
+	fprintf(stdout, "REPLACE %s %s %s WITH %s %s %s\n",\
+		m->name,m->hsha1,m->bsha1,n->name,n->hsha1,n->bsha1)
 
 #define COMMAND_REPLACE_HEADER(m,n) \
-	fprintf(stdout, "REPLACEHEADER %s %lu %s WITH %s %lu %s\n",\
-		m->name,m->size,m->sha1,n->name,n->size,n->sha1)
+	fprintf(stdout, "REPLACEHEADER %s %s WITH %s %s\n",\
+		m->name,m->hsha1,n->name,n->hsha1)
 
 #define COMMAND_DELETE(m) \
-	fprintf(stdout,"DELETE %s %lu %s\n",m->name, m->size, m->sha1)
+	fprintf(stdout,"DELETE %s %s %s\n",m->name, m->hsha1, m->bsha1)
 	
 void analize_file(const char* dir,const char* file) {    
 	char *addr,*next;
@@ -313,7 +313,7 @@ void analize_file(const char* dir,const char* file) {
 
 	if (!header_found) {
 		ERROR(parse, "malformed file '%s', no header\n",m->name);
-		munmap(addr,m->size);
+		munmap(addr, sb.st_size);
 		goto err_alloc_fd_cleanup;
 	}
 
@@ -343,10 +343,11 @@ void analize_file(const char* dir,const char* file) {
 	bodyalias = g_hash_table_lookup(sha2mail,m->bsha1);
 
 	if (bodyalias != NULL) {
-		if (!strcmp(bodialias->hsha1,bodialias->
-		COMMAND_COPYBODY(bodyalias,m);
-		m->seen=SEEN;
-		return;
+		if (!strcmp(bodyalias->hsha1,m->hsha1)) {
+			COMMAND_COPYBODY(bodyalias,m);
+			m->seen=SEEN;
+			return;
+		}
 	}
 
 	// we should add that file
@@ -399,8 +400,8 @@ void generate_deletions(){
 		if (m->seen == NOT_SEEN) 
 			COMMAND_DELETE(m);
 		else 
-			VERBOSE(seen,"STATUS OF %s %lu %s IS %s\n",
-				m->name,m->size,m->sha1,strsight(m->seen));
+			VERBOSE(seen,"STATUS OF %s %s %s IS %s\n",
+				m->name,m->hsha1,m->bsha1,strsight(m->seen));
 	}
 }
 
