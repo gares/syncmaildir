@@ -53,7 +53,34 @@
 // int -> hex
 static char hexalphabet[]={'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
-void txtsha1(unsigned char *sha1, char* outbuff){
+int hex2int(char c){
+	switch(c){
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8': 
+		case '9': return c - '0';
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e': 
+		case 'f': return c - 'a' + 10;
+	}
+	exit(1);
+}
+
+char tmpbuff_1[41];
+char tmpbuff_2[41];
+char tmpbuff_3[41];
+char tmpbuff_4[41];
+
+char* txtsha(unsigned char *sha1, char* outbuff){
 	int fd;
 
 	for (fd = 0; fd < 20; fd++){
@@ -61,6 +88,14 @@ void txtsha1(unsigned char *sha1, char* outbuff){
 		outbuff[fd*2+1] = hexalphabet[sha1[fd]&0x0f];
 	}
 	outbuff[40] = '\0';
+	return outbuff;
+}
+
+void shatxt(const char string[41], unsigned char outbuff[]) {
+	int i;
+	for(i=0; i < SHA_DIGEST_LENGTH; i++){
+		outbuff[i] = hex2int(string[2*i]) * 16 + hex2int(string[2*i+1]);
+	}
 }
 
 enum sight {
@@ -75,8 +110,8 @@ const char* strsight(enum sight s){
 
 // mail metadata structure
 struct mail {
-	char bsha1[41]; // body hash value
-	char hsha1[41]; // header hash value
+	unsigned char bsha[SHA_DIGEST_LENGTH]; // body hash value
+	unsigned char hsha[SHA_DIGEST_LENGTH]; // header hash value
 	char *name;    // file name
 	time_t mtime;  // modification time
 	enum sight seen;     // already seen (means do not delete)
@@ -136,6 +171,16 @@ void dealloc_name(){
 	curname = old_curname;
 }
 
+guint sha_hash(gconstpointer key){
+	unsigned char * k = (unsigned char *) key;
+	return k[0] + (k[1] << 8) + (k[2] << 16) + (k[3] << 24);
+}
+
+gboolean sha_equal(gconstpointer k1, gconstpointer k2){
+	if(!memcmp(k1,k2,SHA_DIGEST_LENGTH)) return TRUE;
+	else return FALSE;
+}
+
 // setup memory pools and hash tables
 void setup_globals(unsigned long int mno, unsigned int fnlen){
 	// allocate space for mail metadata
@@ -158,7 +203,7 @@ void setup_globals(unsigned long int mno, unsigned int fnlen){
 	max_curname=mno * fnlen;
 
 	// allocate hashtables for detection of already available mails
-	sha2mail = g_hash_table_new(g_str_hash,g_str_equal);
+	sha2mail = g_hash_table_new(sha_hash,sha_equal);
 	if (sha2mail == NULL) {
 		ERROR(sha2mail,"hashtable creation failure\n");
 		exit(EXIT_FAILURE);
@@ -188,7 +233,9 @@ void save_db(const char* dbname){
 	for(i=0; i < mailno; i++){
 		struct mail* m = &mails[i];
 		if (m->seen == SEEN) {
-			fprintf(fd,"%lu %s %s %s\n", m->mtime, m->hsha1, m->bsha1, m->name);
+			fprintf(fd,"%lu %s %s %s\n", m->mtime, 
+				txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), 
+				m->name);
 		}
 	}
 
@@ -213,7 +260,9 @@ void load_db(const char* dbname){
 		// read one entry
 		fields = fscanf(fd,
 			"%1$lu %2$40s %3$40s %4$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
-			&(m->mtime),  &(m->hsha1[0]), &(m->bsha1[0]), next_name());
+			&(m->mtime),  tmpbuff_1, tmpbuff_2, next_name());
+		shatxt(tmpbuff_1, m->hsha);
+		shatxt(tmpbuff_2, m->bsha);
 
 		if (fields == EOF) {
 			// deallocate mail entry
@@ -234,7 +283,7 @@ void load_db(const char* dbname){
 		m->seen=NOT_SEEN;
 
 		// store it in the hash tables
-		g_hash_table_insert(sha2mail,m->bsha1,m);
+		g_hash_table_insert(sha2mail,m->bsha,m);
 		g_hash_table_insert(filename2mail,m->name,m);
 		
 	} 
@@ -246,22 +295,27 @@ void load_db(const char* dbname){
 	VERBOSE(skip,"%s\n",m->name)
 
 #define COMMAND_ADD(m) \
-	fprintf(stdout,"ADD %s %s %s\n",m->name, m->hsha1, m->bsha1)
+	fprintf(stdout,"ADD %s %s %s\n",m->name, \
+		txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
 
 #define COMMAND_COPYBODY(m,n) \
 	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
-		m->name,m->bsha1,n->name,n->bsha1)
+		m->name,txtsha(m->bsha, tmpbuff_1),\
+		n->name,txtsha(n->bsha, tmpbuff_2))
 
 #define COMMAND_REPLACE(m,n) \
 	fprintf(stdout, "REPLACE %s %s %s WITH %s %s %s\n",\
-		m->name,m->hsha1,m->bsha1,n->name,n->hsha1,n->bsha1)
+		m->name,txtsha(m->hsha,tmpbuff_1),txtsha(m->bsha,tmpbuff_2),\
+		n->name,txtsha(n->hsha,tmpbuff_3),txtsha(n->bsha,tmpbuff_4))
 
 #define COMMAND_REPLACE_HEADER(m,n) \
 	fprintf(stdout, "REPLACEHEADER %s %s WITH %s %s\n",\
-		m->name,m->hsha1,n->name,n->hsha1)
+		m->name,txtsha(m->hsha,tmpbuff_1),\
+		n->name,txtsha(n->hsha,tmpbuff_2))
 
 #define COMMAND_DELETE(m) \
-	fprintf(stdout,"DELETE %s %s %s\n",m->name, m->hsha1, m->bsha1)
+	fprintf(stdout,"DELETE %s %s %s\n",m->name, \
+		txtsha(m->hsha, tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
 	
 void analize_file(const char* dir,const char* file) {    
 	char *addr,*next;
@@ -319,15 +373,15 @@ void analize_file(const char* dir,const char* file) {
 
 	// calculate sha1
 	sha1 = SHA1((const unsigned char*)addr, next - addr,NULL);
-	txtsha1(sha1,m->hsha1);
+	memcpy(m->hsha, sha1, SHA_DIGEST_LENGTH);
 	sha1 = SHA1((const unsigned char*)next, sb.st_size - (next - addr),NULL);
-	txtsha1(sha1,m->bsha1);
+	memcpy(m->bsha, sha1, SHA_DIGEST_LENGTH);
 	
 	munmap(addr, sb.st_size);
 	close(fd);
 
 	if (alias != NULL) {
-		if(!strcmp(alias->bsha1,m->bsha1)) {
+		if(sha_equal(alias->bsha,m->bsha)) {
 			COMMAND_REPLACE_HEADER(alias,m);
 			m->seen=SEEN;
 			alias->seen=CHANGED;
@@ -340,10 +394,10 @@ void analize_file(const char* dir,const char* file) {
 		}
 	}
 
-	bodyalias = g_hash_table_lookup(sha2mail,m->bsha1);
+	bodyalias = g_hash_table_lookup(sha2mail,m->bsha);
 
 	if (bodyalias != NULL) {
-		if (!strcmp(bodyalias->hsha1,m->hsha1)) {
+		if (sha_equal(bodyalias->hsha,m->hsha)) {
 			COMMAND_COPYBODY(bodyalias,m);
 			m->seen=SEEN;
 			return;
@@ -401,7 +455,8 @@ void generate_deletions(){
 			COMMAND_DELETE(m);
 		else 
 			VERBOSE(seen,"STATUS OF %s %s %s IS %s\n",
-				m->name,m->hsha1,m->bsha1,strsight(m->seen));
+				m->name,txtsha(m->hsha,tmpbuff_1),
+				txtsha(m->bsha,tmpbuff_2),strsight(m->seen));
 	}
 }
 
