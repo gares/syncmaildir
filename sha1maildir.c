@@ -1,5 +1,6 @@
 //
-// sha1maildir, hopefully efficient sha1 calculation of a maildair 
+// sha1maildir, hopefully efficient sha1 calculation of a maildair.
+// outputs a diff tha can be applied to a secon mailbox 
 //
 // Absolutely no warranties, released under GNU GPL version 3 or at your 
 // option any later version.
@@ -55,23 +56,12 @@ static char hexalphabet[]={'0','1','2','3','4','5','6','7','8','9','a','b','c','
 
 int hex2int(char c){
 	switch(c){
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8': 
-		case '9': return c - '0';
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e': 
-		case 'f': return c - 'a' + 10;
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9': return c - '0';
+		case 'a': case 'b': case 'c':
+		case 'd': case 'e': case 'f': return c - 'a' + 10;
 	}
+	ERROR(hex2int,"Invalid hex character: %c\n",c);
 	exit(1);
 }
 
@@ -110,11 +100,11 @@ const char* strsight(enum sight s){
 
 // mail metadata structure
 struct mail {
-	unsigned char bsha[SHA_DIGEST_LENGTH]; // body hash value
-	unsigned char hsha[SHA_DIGEST_LENGTH]; // header hash value
-	char *name;    // file name
-	time_t mtime;  // modification time
-	enum sight seen;     // already seen (means do not delete)
+	unsigned char bsha[SHA_DIGEST_LENGTH]; 	// body hash value
+	unsigned char hsha[SHA_DIGEST_LENGTH]; 	// header hash value
+	char *name;    							// file name
+	time_t mtime;  							// modification time
+	enum sight seen;     				// already seen (means do not delete)
 };
 
 // memory pool for mail file names
@@ -125,12 +115,14 @@ long unsigned int curname, max_curname, old_curname;
 struct mail* mails;
 long unsigned int mailno, max_mailno;
 
-// hash tables for fast comparsing of mails given their name/body-hash
+// hash tables for fast comparison of mails given their name/body-hash
 GHashTable *sha2mail;
 GHashTable *filename2mail;
 
 // program options
 int verbose;
+
+// =========================== memory allocator ============================
 
 struct mail* alloc_mail(){
 	struct mail* m = &mails[mailno];
@@ -170,6 +162,8 @@ char *alloc_name(){
 void dealloc_name(){
 	curname = old_curname;
 }
+
+// =========================== global variables setup ======================
 
 guint sha_hash(gconstpointer key){
 	unsigned char * k = (unsigned char *) key;
@@ -215,6 +209,8 @@ void setup_globals(unsigned long int mno, unsigned int fnlen){
 		exit(EXIT_FAILURE);
 	}
 }
+
+// =========================== cache (de)serialization ======================
 
 // dump to file the mailbox status
 void save_db(const char* dbname){
@@ -290,6 +286,8 @@ void load_db(const char* dbname){
 
 	fclose(fd);
 }
+
+// =============================== protocol ================================
 
 #define COMMAND_SKIP(m) \
 	VERBOSE(skip,"%s\n",m->name)
@@ -459,6 +457,8 @@ void generate_deletions(){
 				txtsha(m->bsha,tmpbuff_2),strsight(m->seen));
 	}
 }
+
+// ============================ main =====================================
 
 #define OPT_MAX_MAILNO 300
 #define OPT_DB_FILE    301
