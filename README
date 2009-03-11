@@ -1,0 +1,30 @@
+MAILDIR DIFF
+============
+
+maildir diff (mddiff) computes the delta from an old status of a maildir
+(previously recorded in a support file) and the current status, generating
+a set of commands (a diff) that a third party software can apply to
+synchronize a (remote) copy of the maildir.
+
+How it works
+------------
+
+This software uses sha1 to compute snapshots of a maildir, and 
+computes a set of actions a client should perform to sync with
+the mailbox status. This software alone is unable to syncronize
+two maildirs. It has to be supported but an higher level tool implementing
+the application of actions and data transfer over the network if 
+the twin maildir is remote.
+
+To cache the expensive sha1 calculation, a cache file is used.
+Every run the program generates a new status file (appending .new)
+that must substitute the old one if generated action are committed
+to the other maildir. Cache files are specific to the twin maildir,
+if you have more than one, you must use a different cache file for
+each of them.
+
+The commands
+------------
+
+
+
