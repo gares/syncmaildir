@@ -1,26 +1,13 @@
 //
-// sha1maildir, hopefully efficient sha1 calculation of a maildair.
-// outputs a diff tha can be applied to a secon mailbox 
+// maildir diff (mddiff) computes the delta from an old status of a maildir
+// (previously recorded in a support file) and the current status, generating
+// a set of commands (a diff) that a third party software can apply to
+// synchronize a (remote) copy of the maildir.
 //
 // Absolutely no warranties, released under GNU GPL version 3 or at your 
 // option any later version.
 //
 // Copyright 2008 Enrico Tassi <tassi@cs.unibo.it>
-//
-// This software uses sha1 to compute snapshots of a maildir, and 
-// computes a set of actions a client should perform to sync with
-// the mailbox status. This software alone is unable to syncronize
-// two maildirs, has to be supported but an higher level tool implementing
-// the application of action and data transfer over the network if 
-// the twin maildir is remote
-//
-// To cache the expensive sha1 calculation, a cache file is used.
-// Every run the program generates a new status file (appending .new)
-// that must substitute the old one if generated action are committed
-// to the other maildir. Cache files are specific to the twin maildir,
-// if you have more than one, you must use a different cache file for
-// each of them.
-//
 
 #define _BSD_SOURCE
 #include <dirent.h>
@@ -287,7 +274,7 @@ void load_db(const char* dbname){
 	fclose(fd);
 }
 
-// =============================== protocol ================================
+// =============================== commands ================================
 
 #define COMMAND_SKIP(m) \
 	VERBOSE(skip,"%s\n",m->name)
@@ -315,6 +302,7 @@ void load_db(const char* dbname){
 	fprintf(stdout,"DELETE %s %s %s\n",m->name, \
 		txtsha(m->hsha, tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
 	
+// the hearth 
 void analize_file(const char* dir,const char* file) {    
 	char *addr,*next;
 	int fd, header_found;
@@ -341,8 +329,9 @@ void analize_file(const char* dir,const char* file) {
 	
 	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
 
+	// check if the cache lists a file with the same name and the same
+	// mtime. if so, this is an old, untouched, message we can skip
 	if (alias != NULL && alias->mtime == m->mtime) {
-		// old email, we skip it and "free" the memory used
 		alias->seen=SEEN;
 		COMMAND_SKIP(alias);
 		goto err_alloc_fd_cleanup;
@@ -351,7 +340,12 @@ void analize_file(const char* dir,const char* file) {
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED){
 		ERROR(mmap, "unable to load '%s'\n",m->name);
-		exit(EXIT_FAILURE);
+		if (sb.st_size == 0) 
+			// empty file, we do not consider them emails
+			goto err_alloc_fd_cleanup;
+		else 
+			// mmap failed, XXX add more verbose output
+			exit(EXIT_FAILURE);
 	}
 
 	// skip header
