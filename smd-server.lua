@@ -42,11 +42,24 @@ end
 
 -- ============================= MAIN =====================================
 
-local mailbox = 'Mail'
-local database = 'db.txt'
+local endpoint = arg[1]
+if endpoint == nil or not endpoint:match('^[a-zA-Z]+$') then
+	io.stderr:write([[
+Usage: ]]..arg[0]..[[ endpointname [mailbox] [dbfile]
+]])
+	os.exit(1)
+end
+
+local mailbox = '~/Mail'
+if arg[2] ~= nil then mailbox = arg[2] end
+local mailbox_opt = ' ' .. mailbox
+
+local database = mailbox..'.'..endpoint..'.db.txt'
+if arg[3] ~= nil then database = arg[3] end
+local database_opt = ' --db-file '..database
 
 -- run mddiff and send the output to the client
-local r = io.popen("./mddiff "..mailbox,"r")
+local r = io.popen("./mddiff"..database_opt..mailbox_opt,"r")
 while true do
 	local l = r:read("*l")
 	if l ~= nil then
