@@ -10,6 +10,7 @@
 // Copyright 2008 Enrico Tassi <tassi@cs.unibo.it>
 
 #define _BSD_SOURCE
+#define _GNU_SOURCE
 #include <dirent.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -20,7 +21,6 @@
 #include <openssl/sha.h>
 #include <limits.h>
 #include <errno.h>
-#define __USE_GNU
 #include <string.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -452,6 +452,59 @@ void generate_deletions(){
 	}
 }
 
+int extra_sha_file(const char* file) {    
+	char *addr,*next;
+	int fd, header_found;
+	struct stat sb;
+	unsigned char* sha1;
+
+	fd = open(file, O_RDONLY | O_NOATIME);
+	if (fd == -1) {
+		ERROR(open,"unable to open file '%s'\n",file);
+		return 1;
+	}
+
+	if (fstat(fd, &sb) == -1) {
+		ERROR(fstat,"unable to stat file '%s'\n",file);
+		close(fd);
+		return 2;
+	}
+
+	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (addr == MAP_FAILED){
+		ERROR(mmap, "unable to load '%s'\n",file);
+		close(fd);
+		return 3;
+	}
+
+	// skip header
+	for(next = addr, header_found=0; next + 1 < addr + sb.st_size; next++){
+		if (*next == '\n' && *(next+1) == '\n') {
+			next+=2;
+			header_found=1;
+			break;
+		}
+	}
+
+	if (!header_found) {
+		ERROR(parse, "malformed file '%s', no header\n",file);
+		munmap(addr, sb.st_size);
+		close(fd);
+		return 4;
+	}
+
+	// calculate sha1
+	sha1 = SHA1((const unsigned char*)addr, next - addr,NULL);
+	fprintf(stdout, "%s ", txtsha(sha1,tmpbuff_1));
+	sha1 = SHA1((const unsigned char*)next, sb.st_size - (next - addr),NULL);
+	fprintf(stdout, "%s\n", txtsha(sha1,tmpbuff_1));
+	
+	munmap(addr, sb.st_size);
+	close(fd);
+	return 0;
+}
+	
+
 // ============================ main =====================================
 
 #define OPT_MAX_MAILNO 300
@@ -486,11 +539,16 @@ void help(char* argv0, int rc){
 	char *bname = strdup(argv0);
 	bname = basename(bname);
 
-	fprintf(stdout,"\nUsage: %s [options] dir\n",bname);
+	fprintf(stdout,"\nUsage: %s [options] path\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
 		fprintf(stdout,"  --%-20s%s\n",
 			long_options[i].name,long_options_doc[i]);
 	}
+	fprintf(stdout,
+		"\nIf path is a regular file, %s outputs the sha1 of its header and\n"
+		"body separated by space. If it is a directory it outputs a list of\n"
+		"actions a client has to perform to syncronize a copy of the same\n"
+		"maildir. Every client must use a different db-file\n", argv0);
 	fprintf(stdout,
 		"\n© 2008 Enrico Tassi, released under GPLv3, no waranties\n\n");
 	exit(rc);
@@ -501,9 +559,10 @@ int main(int argc, char *argv[]) {
 	char *dbfile="db.txt";
 	unsigned long int mailno = DEFAULT_MAIL_NUMBER;
 	unsigned int filenamelen = DEFAULT_FILENAME_LEN;
-
+	struct stat sb;
 	int c = 0;
 	int option_index = 0;
+
 	for(;;) {
 		c = getopt_long(argc, argv, "vh", long_options, &option_index);
 		if (c == -1) break; // no more args
@@ -533,6 +592,20 @@ int main(int argc, char *argv[]) {
 
 	// we remove a trailing '/' if any 
 	if (data[strlen(data)-1] == '/') data[strlen(data)-1] = '\0';
+
+	// check if data is a directory or a single file
+	c = stat(data, &sb);
+	if (c != 0) {
+		ERROR(stat,"unable to stat %s\n",data);
+		exit(EXIT_FAILURE);
+	}
+	if ( S_ISREG(sb.st_mode) ){
+		// simple mode, just hash the file
+		return extra_sha_file(data);
+	} else if ( ! S_ISDIR(sb.st_mode) ) {
+		ERROR(stat, "given path is not a regular file nor a directory: %s\n",data);
+		exit(EXIT_FAILURE);
+	}
 
 	VERBOSE(init,"data directory is '%s'\n",data);
 
