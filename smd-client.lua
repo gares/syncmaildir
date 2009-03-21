@@ -1,5 +1,7 @@
 #!/usr/bin/env lua5.1
 
+local MDDIFF = '../mddiff'
+
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
 
@@ -9,7 +11,7 @@ function receive(inf,outfile)
 		local next_chunk = 4096
 		if len < next_chunk then next_chunk = len end
 		local data = inf:read(next_chunk)
-		len = len - data:length()
+		len = len - data:len()
 		outf:write(data)
 	end
 	outf:close()
@@ -20,11 +22,23 @@ function receive_delta(inf)
 	local line = ""
 
 	repeat
+		log('receiving '..#cmds)
 		line = inf:read("*l")
+		--log('received '..line)
 		if line ~= "END" then cmds[#cmds+1] = line end
 	until line == "END"
 
 	return cmds
+end
+
+function log(msg)
+	io.stderr:write(msg,'\n')
+end
+
+function tmp_for(path)
+	local newpath = path .. '.new'
+	assert(os.execute('test -f '..newpath) ~= 0)
+	return newpath
 end
 
 function execute(cmd)
@@ -32,7 +46,22 @@ function execute(cmd)
 
 	if opcode == "ADD" then
 		local name, hsha, bsha = cmd:match('ADD (%S+) (%S+) (%S+)')
-
+		local exists = os.execute('test -f '..name)
+		if exists then
+			local inf = io.popen(MDDIFF .. ' ' .. name)
+			local hsha_l, bsha_l = 
+				inf:read('*a'):match('(%S+) (%S+)')
+			if hash == hsha_l and bsha == bsha_l then
+				log('skipping '..name..' already there')
+				return
+			end
+		end
+		local tmpfile = tmp_for(name)
+		io.stdout:write('GET '..name..'\n')
+		io.stdout:flush()
+		receive(io.stdin, tmpfile)
+		os.rename(tmpfile, name)
+		log('added '..name)
 	elseif opcode == "DELETE" then
 		local name, hsha, bsha = cmd:match('DELETE (%S+) (%S+) (%S+)')
 
@@ -53,3 +82,8 @@ function execute(cmd)
 	end
 end
 
+local commands = receive_delta(io.stdin)
+log('delta received')
+for _,cmd in ipairs(commands) do
+	execute(cmd)
+end

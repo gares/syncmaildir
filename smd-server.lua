@@ -36,6 +36,7 @@ function transmit(out, path, what)
 		if data == nil then break end
 		out:write(data)
 	end
+	out:flush()
 
 	f:close()
 end
@@ -60,20 +61,27 @@ local database_opt = ' --db-file '..database
 
 -- run mddiff and send the output to the client
 local r = io.popen("./mddiff"..database_opt..mailbox_opt,"r")
+local sent = 0
 while true do
 	local l = r:read("*l")
 	if l ~= nil then
+		sent = sent + 1
+		--io.stderr:write('sending '..l..'\n')
 		io.write(l,'\n')
+		io.stderr:write('sent '..sent..'\n')
 	else
 		break
 	end
 end
 r:close()
+io.stderr:write('done\n')
+
 
 -- end the first phase, now the client should
 -- apply the diff eventually asking for the transmission
 -- of some data
 io.write('END\n')
+io.flush()
 
 -- process client commands
 while true do

@@ -7,4 +7,4 @@ all: $(BINARIES)
 		`pkg-config --cflags --libs glib-2.0 openssl`
 
 clean: 
-	rm -f $(BINARIES)
+	rm -rf $(BINARIES) s2c c2s target
