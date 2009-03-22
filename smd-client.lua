@@ -1,6 +1,10 @@
 #!/usr/bin/env lua5.1
 
-local MDDIFF = '../mddiff'
+local MDDIFF = 'mddiff'
+
+function log(msg)
+--	io.stderr:write(msg,'\n')
+end
 
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
@@ -29,10 +33,6 @@ function receive_delta(inf)
 	until line == "END"
 
 	return cmds
-end
-
-function log(msg)
-	io.stderr:write(msg,'\n')
 end
 
 function tmp_for(path)
@@ -87,3 +87,7 @@ log('delta received')
 for _,cmd in ipairs(commands) do
 	execute(cmd)
 end
+log('committing')
+io.stdout:write('COMMIT\n')
+io.stdout:flush()
+os.exit(0)

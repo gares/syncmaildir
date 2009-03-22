@@ -1,5 +1,11 @@
 #! /usr/bin/env lua5.1
 
+local MDDIFF = 'mddiff'
+
+function log(msg)
+	--io.stderr:write(msg,'\n')
+end
+
 function transmit(out, path, what)
 	what = what or "all"
 	local f = assert(io.open(path,"r"))
@@ -60,21 +66,21 @@ if arg[3] ~= nil then database = arg[3] end
 local database_opt = ' --db-file '..database
 
 -- run mddiff and send the output to the client
-local r = io.popen("./mddiff"..database_opt..mailbox_opt,"r")
+local r = io.popen(MDDIFF..database_opt..mailbox_opt,"r")
 local sent = 0
 while true do
 	local l = r:read("*l")
 	if l ~= nil then
 		sent = sent + 1
-		--io.stderr:write('sending '..l..'\n')
+		--log('sending '..l..'\n')
 		io.write(l,'\n')
-		io.stderr:write('sent '..sent..'\n')
+		log('sent '..sent..'\n')
 	else
 		break
 	end
 end
 r:close()
-io.stderr:write('done\n')
+log('done\n')
 
 
 -- end the first phase, now the client should
@@ -88,7 +94,7 @@ while true do
 	local l = io.read('*l')
 	if l == nil then 
 		-- end of input stream
-		io.stderr:write('Client died\n')
+		log('Client died\n')
 		return 2
 	end
 	if l:match('^COMMIT$') then
@@ -107,7 +113,7 @@ while true do
 		transmit(io.stdout, path, "body")
 	else
 		-- protocol error
-		io.stderr:write('Invalid command '..l..'\n')
+		log('Invalid command '..l..'\n')
 		return 1
 	end
 end
