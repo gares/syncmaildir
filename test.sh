@@ -2,43 +2,65 @@
 
 export PATH="$PATH:$PWD"
 TOKILL=""
+ROOT=$PWD
 
 out(){
-	rm -rf s2c c2s target
+	(
+	cd $ROOT/test && rm -rf s2c c2s target
 	for P in $TOKILL; do
 		kill $P
 	done
+	) 2>/dev/null
 }
 
-make
+test_eq(){
+	cd $ROOT/test
+	if diff -ruN $1 $2 >/dev/null; then
+		echo OK
+	else
+		echo ERROR
+		exit 1
+	fi
+}
 
-rm -rf test
-mkdir test
-cd test
-tar -xzf ../Mail.testcase.tgz
+prepare(){
+	cd $ROOT
+	make --quiet
+	
+	rm -rf test
+	mkdir test
+	cd test
+	tar -xzf ../Mail.testcase.tgz
+	
+	mkfifo s2c
+	mkfifo c2s
+	mkdir -p target/Mail/new
+	mkdir -p target/Mail/cur
+	mkdir -p target/Mail/tmp
 
-mkfifo s2c
-mkfifo c2s
-mkdir -p target/Mail/new
-mkdir -p target/Mail/cur
-mkdir -p target/Mail/tmp
+	trap out EXIT
+}
 
-smd-server.lua test Mail < c2s | tee log.s2c > s2c &
-TOKILL="$TOKILL $!"
+conclude(){
+	cd $ROOT/test
+	test_eq Mail target/Mail
+	cd ..
+	rm -rf test
+}
 
-cd target 
-smd-client.lua < ../s2c | tee ../log.c2s > ../c2s &
-TOKILL="$TOKILL $!"
+if [ -f $1 ]; then
+	echo "running $T"
+	prepare
+	cd $ROOT
+	. $1
+	conclude
+else
+	for T in tests.d/*; do
+		echo "running $T"
+		prepare
+		cd $ROOT
+		. $T
+		conclude
+	done
+fi
 
-cd ..
-
-xterm -e 'tail -f log.s2c' &
-TOKILL="$TOKILL $!"
-
-xterm -e 'tail -f log.c2s' &
-TOKILL="$TOKILL $!"
-
-trap out EXIT
-
-echo 'Enter to exit'
-read FOO

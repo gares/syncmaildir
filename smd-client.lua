@@ -47,7 +47,7 @@ function execute(cmd)
 	if opcode == "ADD" then
 		local name, hsha, bsha = cmd:match('ADD (%S+) (%S+) (%S+)')
 		local exists = os.execute('test -f '..name)
-		if exists then
+		if exists == 0 then
 			local inf = io.popen(MDDIFF .. ' ' .. name)
 			local hsha_l, bsha_l = 
 				inf:read('*a'):match('(%S+) (%S+)')
@@ -64,14 +64,27 @@ function execute(cmd)
 		log('added '..name)
 	elseif opcode == "DELETE" then
 		local name, hsha, bsha = cmd:match('DELETE (%S+) (%S+) (%S+)')
-
+		local exists = os.execute('test -f '..name)
+		if exists then
+			local inf = io.popen(MDDIFF .. ' ' .. name)
+			local hsha_l, bsha_l = 
+				inf:read('*a'):match('(%S+) (%S+)')
+			if hash == hsha_l and bsha == bsha_l then
+				log('deleting '..name)
+				os.remove(name)
+				return
+			end
+		end
+		log('already deleted '..name)
 	elseif opcode == "REPLACEHEADER" then
 		local name1, hsha1, name2, hsha2 = 
 			cmd:match('REPLACEHEADER (%S+) (%S+) WITH (%S+) (%S+)')
 
+		error('non implemented opcode '..opcode)
 	elseif opcode == "COPYBODY" then
 		local name1, bsha1, name2, bsha2 = 
 			cmd:match('COPYBODY (%S+) (%S+) WITH (%S+) (%S+)')
+		error('non implemented opcode '..opcode)
 
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
@@ -91,3 +104,5 @@ log('committing')
 io.stdout:write('COMMIT\n')
 io.stdout:flush()
 os.exit(0)
+
+-- vim:set ts=4:
