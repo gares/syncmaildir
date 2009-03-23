@@ -10,12 +10,18 @@ out(){
 	done
 }
 
-make clean
 make
+
+rm -rf test
+mkdir test
+cd test
+tar -xzf ../Mail.testcase.tgz
 
 mkfifo s2c
 mkfifo c2s
-mkdir -p target/Mail
+mkdir -p target/Mail/new
+mkdir -p target/Mail/cur
+mkdir -p target/Mail/tmp
 
 smd-server.lua test Mail < c2s | tee log.s2c > s2c &
 TOKILL="$TOKILL $!"
