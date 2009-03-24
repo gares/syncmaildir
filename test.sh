@@ -48,14 +48,22 @@ conclude(){
 	rm -rf test
 }
 
-if [ -f $1 ]; then
+if [ ! -z "$1" ] && [ "$1" = "-v" ]; then
+	VERBOSE=1
+	shift
+else
+	VERBOSE=0
+fi
+
+if [ ! -z "$1" ] && [ -f $1 ]; then
 	echo "running $T"
 	prepare
 	cd $ROOT
 	. $1
 	conclude
 else
-	for T in tests.d/*; do
+	. tests.d/common
+	for T in tests.d/[0-9]*; do
 		echo "running $T"
 		prepare
 		cd $ROOT

@@ -2,21 +2,4 @@
 
 cd $ROOT/test
 
-smd-server.lua test Mail < c2s 2> log.server | tee log.s2c > s2c &
-SERVER=$!
-TOKILL="$TOKILL $SERVER"
-
-cd target 
-smd-client.lua < ../s2c 2> ../log.client | tee ../log.c2s > ../c2s &
-CLIENT=$!
-TOKILL="$TOKILL $CLIENT"
-cd ..
-
-xterm -e 'tail -f log.s2c' &
-TOKILL="$TOKILL $!"
-
-xterm -e 'tail -f log.c2s' &
-TOKILL="$TOKILL $!"
-
-wait $CLIENT
-wait $SERVER
+msync

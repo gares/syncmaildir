@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cd $ROOT/test
+
+msync
+
+cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
+
+msync
+

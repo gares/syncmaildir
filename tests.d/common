@@ -1,0 +1,49 @@
+#!/bin/sh
+
+run_server(){
+	smd-server.lua test Mail < c2s 2> log.server | tee log.s2c > s2c &
+	SERVER=$!
+	TOKILL="$TOKILL $SERVER"
+}
+
+run_client(){
+	cd target 
+	smd-client.lua < ../s2c 2> ../log.client | tee ../log.c2s > ../c2s &
+	CLIENT=$!
+	TOKILL="$TOKILL $CLIENT"
+	cd ..
+}
+
+display_log_server(){
+	if [ $VERBOSE = 1 ]; then
+		xterm -e 'tail -f log.s2c' &
+		TOKILL="$TOKILL $!"
+	fi
+}
+
+display_log_client(){
+	if [ $VERBOSE = 1 ]; then
+		xterm -e 'tail -f log.c2s' &
+		TOKILL="$TOKILL $!"
+	fi
+}
+
+wait_server(){
+	wait $SERVER || exit 1
+}
+
+wait_client(){
+	wait $CLIENT || exit 1
+}
+
+msync(){
+	run_server
+	run_client
+	
+	display_log_server
+	display_log_client
+	
+	wait_server
+	wait_client
+}
+
