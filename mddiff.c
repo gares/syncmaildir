@@ -283,10 +283,10 @@ void load_db(const char* dbname){
 	fprintf(stdout,"ADD %s %s %s\n",m->name, \
 		txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
 
-#define COMMAND_COPYBODY(m,n) \
-	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
-		m->name,txtsha(m->bsha, tmpbuff_1),\
-		n->name,txtsha(n->bsha, tmpbuff_2))
+#define COMMAND_COPY(m,n) \
+	fprintf(stdout, "COPY %s %s %s TO %s\n",\
+		m->name,txtsha(m->hsha, tmpbuff_1),\
+		txtsha(m->bsha, tmpbuff_2),n->name)
 
 #define COMMAND_REPLACE(m,n) \
 	fprintf(stdout, "REPLACE %s %s %s WITH %s %s %s\n",\
@@ -390,7 +390,7 @@ void analize_file(const char* dir,const char* file) {
 
 	if (bodyalias != NULL) {
 		if (sha_equal(bodyalias->hsha,m->hsha)) {
-			COMMAND_COPYBODY(bodyalias,m);
+			COMMAND_COPY(bodyalias,m);
 			m->seen=SEEN;
 			return;
 		}

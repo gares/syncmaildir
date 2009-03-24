@@ -69,7 +69,7 @@ function execute(cmd)
 			local inf = io.popen(MDDIFF .. ' ' .. name)
 			local hsha_l, bsha_l = 
 				inf:read('*a'):match('(%S+) (%S+)')
-			if hash == hsha_l and bsha == bsha_l then
+			if hsha == hsha_l and bsha == bsha_l then
 				log('deleting '..name)
 				os.remove(name)
 				return
@@ -81,11 +81,28 @@ function execute(cmd)
 			cmd:match('REPLACEHEADER (%S+) (%S+) WITH (%S+) (%S+)')
 
 		error('non implemented opcode '..opcode)
-	elseif opcode == "COPYBODY" then
-		local name1, bsha1, name2, bsha2 = 
-			cmd:match('COPYBODY (%S+) (%S+) WITH (%S+) (%S+)')
-		error('non implemented opcode '..opcode)
-
+	elseif opcode == "COPY" then
+		local name_src, hsha, bsha, name_tgt = 
+			cmd:match('COPY (%S+) (%S+) (%S+) TO (%S+)')
+		local exists = os.execute('test -f '..name_src)
+		if exists then
+			local inf = io.popen(MDDIFF .. ' ' .. name_src)
+			local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
+			if hsha == hsha_l and bsha == bsha_l then
+				log('copying '..name_src)
+				local ok = os.execute('cp '..name_src..' '..name_tgt)
+				if ok == 0 then return
+				else error('cp failed')
+				end
+			end
+		else
+			local tmpfile = tmp_for(name_tgt)
+			io.stdout:write('GET '..name_tgt..'\n')
+			io.stdout:flush()
+			receive(io.stdin, tmpfile)
+			os.rename(tmpfile, name_tgt)
+			log('added '..name_tgt)
+		end
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
 		   cmd:match('REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)')
