@@ -300,9 +300,9 @@ void load_db(const char* dbname){
 		n->name,txtsha(n->hsha,tmpbuff_3),txtsha(n->bsha,tmpbuff_4))
 
 #define COMMAND_REPLACE_HEADER(m,n) \
-	fprintf(stdout, "REPLACEHEADER %s %s WITH %s %s\n",\
-		m->name,txtsha(m->hsha,tmpbuff_1),\
-		n->name,txtsha(n->hsha,tmpbuff_2))
+	fprintf(stdout, "REPLACEHEADER %s %s %s WITH %s\n",\
+		m->name,txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), \
+					txtsha(n->hsha,tmpbuff_3))
 
 // the hearth 
 void analize_file(const char* dir,const char* file) {    
