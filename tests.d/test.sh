@@ -14,7 +14,7 @@ out(){
 }
 
 test_eq(){
-	cd $ROOT/test
+	cd $ROOT/test.$3
 	if diff -ruN $1 $2 >/dev/null; then
 		echo OK
 	else
@@ -27,9 +27,9 @@ prepare(){
 	cd $ROOT
 	make --quiet
 	
-	rm -rf test
-	mkdir test
-	cd test
+	rm -rf test.$1
+	mkdir test.$1
+	cd test.$1
 	tar -xzf ../Mail.testcase.tgz
 	
 	mkfifo s2c
@@ -42,10 +42,9 @@ prepare(){
 }
 
 conclude(){
-	cd $ROOT/test
-	test_eq Mail target/Mail
+	cd $ROOT/test.$1
+	test_eq Mail target/Mail $1
 	cd ..
-	rm -rf test
 }
 
 if [ ! -z "$1" ] && [ "$1" = "-v" ]; then
@@ -57,18 +56,20 @@ fi
 
 . tests.d/common
 if [ ! -z "$1" ] && [ -f $1 ]; then
-	echo "running $T"
-	prepare
+	echo "running $1"
+	N=`echo $1 | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
+	prepare $N
 	cd $ROOT
 	. $1
-	conclude
+	conclude $N
 else
 	for T in tests.d/[0-9]*; do
 		echo "running $T"
-		prepare
+		N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
+		prepare $N
 		cd $ROOT
 		. $T
-		conclude
+		conclude $N
 	done
 fi
 

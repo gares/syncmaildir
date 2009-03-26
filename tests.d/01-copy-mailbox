@@ -1,5 +1,5 @@
 #!/bin/sh
 
-cd $ROOT/test
+cd $ROOT/test.$N
 
 msync

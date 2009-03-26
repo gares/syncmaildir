@@ -6,8 +6,9 @@ all: $(BINARIES)
 	gcc -Wall -Wextra -g $< -o $@ \
 		`pkg-config --cflags --libs glib-2.0 openssl`
 
-test:
+test: all
 	tests.d/test.sh $T
+	rm -rf test.[0-9]*/
 
 clean: 
-	rm -rf $(BINARIES) test/ 
+	rm -rf $(BINARIES) test.[0-9]*/
