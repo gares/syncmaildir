@@ -56,7 +56,7 @@ fi
 
 . tests.d/common
 if [ ! -z "$1" ] && [ -f $1 ]; then
-	echo "running $1"
+	echo -n "running $1: "
 	N=`echo $1 | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
 	prepare $N
 	cd $ROOT
@@ -64,7 +64,7 @@ if [ ! -z "$1" ] && [ -f $1 ]; then
 	conclude $N
 else
 	for T in tests.d/[0-9]*; do
-		echo "running $T"
+		echo -n "running $T: "
 		N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
 		prepare $N
 		cd $ROOT
