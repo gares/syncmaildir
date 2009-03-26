@@ -1,14 +1,14 @@
 #!/bin/sh
 
 run_server(){
-	smd-server.lua test Mail < c2s 2> log.server | tee log.s2c > s2c &
+	smd-server test Mail < c2s 2> log.server | tee log.s2c > s2c &
 	SERVER=$!
 	TOKILL="$TOKILL $SERVER"
 }
 
 run_client(){
 	cd target 
-	smd-client.lua < ../s2c 2> ../log.client | tee ../log.c2s > ../c2s &
+	smd-client < ../s2c 2> ../log.client | tee ../log.c2s > ../c2s &
 	CLIENT=$!
 	TOKILL="$TOKILL $CLIENT"
 	cd ..
