@@ -93,28 +93,32 @@ io.flush()
 while true do
 	local l = io.read('*l')
 	if l == nil then 
-		-- end of input stream
-		log('Client died\n')
-		return 2
+		-- end of input stream, client is dead
+		log('Communication with client died unexpectedly\n')
+		os.exit(3)
 	end
 	if l:match('^COMMIT$') then
 		-- the client applied the diff, the new mailbox
 		-- fingerprint should be used for the next sync
 		os.rename(database..".new", database) 
-		return 0
+		os.exit(0)
+	elseif l:match('^ABORT$') then
+		-- the client failed in applying the diff
+		log('Client aborted\n')
+		os.exit(2)
 	elseif l:match('^GET ') then
-		local path = l:match('GET ([^%s]+)')
+		local path = l:match('^GET ([^%s]+)$')
 		transmit(io.stdout, path, "all")
 	elseif l:match('^GETHEADER ') then
-		local path = l:match('GETHEADER ([^%s]+)')
+		local path = l:match('^GETHEADER ([^%s]+)$')
 		transmit(io.stdout, path, "header")
 	elseif l:match('^GETBODY ') then
-		local path = l:match('GETBODY ([^%s]+)')
+		local path = l:match('^GETBODY ([^%s]+)$')
 		transmit(io.stdout, path, "body")
 	else
 		-- protocol error
 		log('Invalid command '..l..'\n')
-		return 1
+		os.exit(1)
 	end
 end
 
