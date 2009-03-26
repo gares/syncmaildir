@@ -55,6 +55,7 @@ else
 	VERBOSE=0
 fi
 
+. tests.d/common
 if [ ! -z "$1" ] && [ -f $1 ]; then
 	echo "running $T"
 	prepare
@@ -62,7 +63,6 @@ if [ ! -z "$1" ] && [ -f $1 ]; then
 	. $1
 	conclude
 else
-	. tests.d/common
 	for T in tests.d/[0-9]*; do
 		echo "running $T"
 		prepare
