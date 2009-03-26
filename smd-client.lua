@@ -6,6 +6,18 @@ function log(msg)
 --	io.stderr:write(msg,'\n')
 end
 
+function trace()
+	local t = {}
+	local n = 2
+	while true do
+		local d = debug.getinfo(n,"nl")
+		if not d or not d.name then break end
+		t[#t+1] = d.name ..":".. (d.currentline or "?")
+		n=n+1
+	end
+	io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
+end
+
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
 
@@ -52,10 +64,12 @@ function get_full_email(name,hsha,bsha)
 	if hsha_l == hsha and bsha_l == bsha then
 		os.rename(tmpfile, name)
 		log('added '..name)
+		trace()
 		return true
 	else
 		log('got a different email for '..name)
 		os.remove(tmpfile)
+		trace()
 		return false
 	end
 end
@@ -78,77 +92,90 @@ function exists(name)
 end
 
 function execute_add(cmd)
-	local name, hsha, bsha = cmd:match('ADD (%S+) (%S+) (%S+)')
+	local name, hsha, bsha = cmd:match('^ADD (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists(name)
 	if ex then
 		if hash == hsha_l and bsha == bsha_l then
 			log('skipping '..name..' already there')
+			trace()
 			return true
 		else
 			log('error '..name..' already there but different')
+			trace()
 			return false
 		end
 	end
-	return get_full_email(name,hsha,bsha)
+	-- return get_full_email(name,hsha,bsha)
+	return (get_full_email(name,hsha,bsha))
 end
 
 function execute_delete(cmd)
-	local name, hsha, bsha = cmd:match('DELETE (%S+) (%S+) (%S+)')
+	local name, hsha, bsha = cmd:match('^DELETE (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
 			log('deleting '..name)
 			os.remove(name)
+			trace()
 			return true
 		else
 			log('skipping removal '..name..' since differs')
+			trace()
 			return true
 		end
 	end
 	log('already deleted '..name)
+	trace()
 	return true
 end
 
 function execute_copy(cmd)
 	local name_src, hsha, bsha, name_tgt = 
-		cmd:match('COPY (%S+) (%S+) (%S+) TO (%S+)')
+		cmd:match('^COPY (%S+) (%S+) (%S+) TO (%S+)$')
 	local ex_src, hsha_src, bsha_src = exists(name_src)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists(name_tgt)
 	if ex_src and ex_tgt then
 		if hsha_src == hsha_tgt and bsha_src == bsha_tgt then
 			log('skipping copy of '..name_src..' to '..name_tgt)
+			trace()
 			return true
 		else
 			log('unable to copy '..name_src..' to '..name_tgt..' since'..
 				' target exists')
+			trace()
 			return false
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				log('copy '..name_src..' to '..name_tgt)
 				local ok = os.execute('cp '..name_src..' '..name_tgt)
-				if ok == 0 then return true
+				if ok == 0 then 
+					trace()
+					return true
 				else 
 					log('copy '..name_src..' to '..name_tgt..' failed')
+					trace()
 					return false
 				end
 		else
 				-- sub-optimal, we may reuse body or header 
-				return get_full_email(name_tgt,hsha,bsha)
+				return (get_full_email(name_tgt,hsha,bsha))
 		end
 	elseif not ex_src and ex_tgt then
 		if hsha == hsha_tgt and bsha == bsha_tgt then
 			log('skipping copy of non existent '..name_src..' to '..
 				name_tgt ..' since target already there')
+			trace()
 			return true
 		else
 			log('unable to copy non existent '..name_src..' to '..
 				name_tgt..' since'.. ' target exists')
+			trace()
 			return false
 		end
 	else
 		log('add '..name_tgt..' as a copy of the not existing '..name_src)
-		return get_full_email(name_tgt,hsha,bsha)
+		return (get_full_email(name_tgt,hsha,bsha))
 	end
 end
 
@@ -160,7 +187,7 @@ function execute(cmd)
 	elseif opcode == "COPY"          then return execute_copy(cmd)
 	elseif opcode == "REPLACEHEADER" then
 		local name, hsha, bsha, hsha_new = 
-			cmd:match('REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)')
+			cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
 		local exists = os.execute('test -f '..name)
 		if exists then
 			local inf = io.popen(MDDIFF .. ' ' .. name)
@@ -173,8 +200,11 @@ function execute(cmd)
 				-- XXX add the body of local file 'name'
 				os.rename(tmpfile, name)
 				log('changed header of '..name)
+				trace()
+				return 
 			elseif hsha_l == hsha_new and bsha == bsha_l then
 				log('header already changed for '..name)
+				trace()
 				return
 			end
 		else
@@ -184,10 +214,13 @@ function execute(cmd)
 			receive(io.stdin, tmpfile)
 			os.rename(tmpfile, name)
 			log('added '..name)
+			trace()
+			return
 		end
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
-		   cmd:match('REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)')
+		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
+		trace()
 
 	else
 		error('Unknown opcode '..opcode)
@@ -196,8 +229,14 @@ end
 
 local commands = receive_delta(io.stdin)
 log('delta received')
-for _,cmd in ipairs(commands) do
-	execute(cmd)
+for i,cmd in ipairs(commands) do
+	local rc = execute(cmd)
+	if not rc then
+		log('error executing command '..i..": "..cmd)
+		io.stdout:write('ABORT\n')
+		io.stdout:flush()
+		os.exit(1)
+	end
 end
 log('committing')
 io.stdout:write('COMMIT\n')
