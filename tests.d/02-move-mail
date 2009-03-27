@@ -2,8 +2,8 @@
 
 cd $ROOT/test.$N
 
-msync
+msync 1
 
 mv Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/moved_here
 
-msync
+msync 2

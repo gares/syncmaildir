@@ -2,9 +2,9 @@
 
 cd $ROOT/test.$N
 
-msync
+msync 1
 
 cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
 
-msync
+msync 2
 

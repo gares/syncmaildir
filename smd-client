@@ -6,7 +6,7 @@ function log(msg)
 --	io.stderr:write(msg,'\n')
 end
 
-function trace()
+function trace(x)
 	local t = {}
 	local n = 2
 	while true do
@@ -16,6 +16,7 @@ function trace()
 		n=n+1
 	end
 	io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
+	return x
 end
 
 function receive(inf,outfile)
@@ -64,13 +65,11 @@ function get_full_email(name,hsha,bsha)
 	if hsha_l == hsha and bsha_l == bsha then
 		os.rename(tmpfile, name)
 		log('added '..name)
-		trace()
-		return true
+		return (trace(true))
 	else
 		log('got a different email for '..name)
 		os.remove(tmpfile)
-		trace()
-		return false
+		return (trace(false))
 	end
 end
 
@@ -97,12 +96,10 @@ function execute_add(cmd)
 	if ex then
 		if hash == hsha_l and bsha == bsha_l then
 			log('skipping '..name..' already there')
-			trace()
-			return true
+			return (trace(true))
 		else
 			log('error '..name..' already there but different')
-			trace()
-			return false
+			return (trace(false))
 		end
 	end
 	-- return get_full_email(name,hsha,bsha)
@@ -116,17 +113,14 @@ function execute_delete(cmd)
 		if hsha == hsha_l and bsha == bsha_l then
 			log('deleting '..name)
 			os.remove(name)
-			trace()
-			return true
+			return (trace(true))
 		else
 			log('skipping removal '..name..' since differs')
-			trace()
-			return true
+			return (trace(true))
 		end
 	end
 	log('already deleted '..name)
-	trace()
-	return true
+	return (trace(true))
 end
 
 function execute_copy(cmd)
@@ -137,25 +131,21 @@ function execute_copy(cmd)
 	if ex_src and ex_tgt then
 		if hsha_src == hsha_tgt and bsha_src == bsha_tgt then
 			log('skipping copy of '..name_src..' to '..name_tgt)
-			trace()
-			return true
+			return (trace(true))
 		else
 			log('unable to copy '..name_src..' to '..name_tgt..' since'..
 				' target exists')
-			trace()
-			return false
+			return (trace(false))
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				log('copy '..name_src..' to '..name_tgt)
 				local ok = os.execute('cp '..name_src..' '..name_tgt)
 				if ok == 0 then 
-					trace()
-					return true
+					return (trace(true))
 				else 
 					log('copy '..name_src..' to '..name_tgt..' failed')
-					trace()
-					return false
+					return (trace(false))
 				end
 		else
 				-- sub-optimal, we may reuse body or header 
@@ -165,13 +155,11 @@ function execute_copy(cmd)
 		if hsha == hsha_tgt and bsha == bsha_tgt then
 			log('skipping copy of non existent '..name_src..' to '..
 				name_tgt ..' since target already there')
-			trace()
-			return true
+			return (trace(true))
 		else
 			log('unable to copy non existent '..name_src..' to '..
 				name_tgt..' since'.. ' target exists')
-			trace()
-			return false
+			return (trace(false))
 		end
 	else
 		log('add '..name_tgt..' as a copy of the not existing '..name_src)
@@ -182,9 +170,9 @@ end
 function execute(cmd)
 	local opcode = cmd:match('^(%S+)')
 
-	    if opcode == "ADD"           then return execute_add(cmd)
-	elseif opcode == "DELETE"        then return execute_delete(cmd)
-	elseif opcode == "COPY"          then return execute_copy(cmd)
+	    if opcode == "ADD"           then return (execute_add(cmd))
+	elseif opcode == "DELETE"        then return (execute_delete(cmd))
+	elseif opcode == "COPY"          then return (execute_copy(cmd))
 	elseif opcode == "REPLACEHEADER" then
 		local name, hsha, bsha, hsha_new = 
 			cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
@@ -200,12 +188,10 @@ function execute(cmd)
 				-- XXX add the body of local file 'name'
 				os.rename(tmpfile, name)
 				log('changed header of '..name)
-				trace()
-				return 
+				return (trace()) 
 			elseif hsha_l == hsha_new and bsha == bsha_l then
 				log('header already changed for '..name)
-				trace()
-				return
+				return (trace())
 			end
 		else
 			local tmpfile = tmp_for(name)
@@ -214,13 +200,12 @@ function execute(cmd)
 			receive(io.stdin, tmpfile)
 			os.rename(tmpfile, name)
 			log('added '..name)
-			trace()
-			return
+			return (trace())
 		end
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
 		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
-		trace()
+		return (trace())
 
 	else
 		error('Unknown opcode '..opcode)

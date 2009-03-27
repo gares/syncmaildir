@@ -2,4 +2,4 @@
 
 cd $ROOT/test.$N
 
-msync
+msync 1
