@@ -58,8 +58,29 @@ function mkdir_p(path)
 end
 
 function tmp_for(path)
-	local newpath = path .. '.new'
-	assert(os.execute('test -f '..newpath) ~= 0)
+	local t = {} 
+	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
+	local fname = t[#t]
+	table.remove(t,#t)
+	local i, found = 0, false
+	for i=#t,1,-1 do
+		if t[i] == 'cur' then 
+			t[i] = 'tmp' 
+			found = true
+			break
+		end
+	end
+	local newpath
+	if not found then
+		newpath = path .. '.new'
+	else
+		newpath = table.concat(t,'/') .. '/' .. fname
+	end
+	mkdir_p(newpath)
+	while os.execute('test -f '..newpath) == 0 do
+		newpath = newpath .. 'x'
+	end
+	--assert(os.execute('test -f '..newpath) ~= 0)
 	return newpath
 end
 
