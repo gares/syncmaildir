@@ -48,6 +48,15 @@ function receive_delta(inf)
 	return cmds
 end
 
+
+function mkdir_p(path)
+	local t = {} 
+	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
+	table.remove(t,#t)
+	local dir = table.concat(t,'/')
+	os.execute('mkdir -p '..dir)
+end
+
 function tmp_for(path)
 	local newpath = path .. '.new'
 	assert(os.execute('test -f '..newpath) ~= 0)
