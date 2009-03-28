@@ -25,6 +25,7 @@ function transmit(out, path, what)
 		f:close()
 		out:write("chunk " .. size .. "\n")
 		out:write(unpack(header))
+		out:flush()
 		return
 	end
 
