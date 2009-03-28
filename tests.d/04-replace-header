@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cd $ROOT/test.$N
+
+msync 1
+
+sed -i 's/^Subject:.*$/Subject: PIPPO/' Mail/cur/`ls Mail/cur/ | head -n 1`
+
+msync 2
+
