@@ -34,9 +34,7 @@ prepare(){
 	
 	mkfifo s2c
 	mkfifo c2s
-	mkdir -p target/Mail/new
-	mkdir -p target/Mail/cur
-	mkdir -p target/Mail/tmp
+	mkdir -p target
 
 	trap out EXIT
 }
