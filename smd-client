@@ -220,41 +220,60 @@ function execute_copy(cmd)
 	end
 end
 
+function get_header_and_merge(name,hsha,bsha)
+	local tmpfile = tmp_for(name)
+	io.stdout:write('GETHEADER '..name..'\n')
+	io.stdout:flush()
+	receive(io.stdin, tmpfile)
+	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
+	local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
+	inf:close()
+	if hsha_l == hsha and bsha_l == bsha then
+		local tmpfile1 = tmp_for(name)
+		merge_mail(tmpfile,name,tmpfile1)
+		os.rename(tmpfile1, name)
+		log('changed header of '..name)
+		return (trace(true)) 
+	else
+		log('got a different email for '..name)
+		os.remove(tmpfile)
+		return (trace(false))
+	end
+end
+
+-- XXX add mkdir everywhere
+
+function execute_replaceheader(cmd)
+	local name, hsha, bsha, hsha_new = 
+		cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
+	local exists = os.execute('test -f '..name)
+	if exists then
+		local inf = io.popen(MDDIFF .. ' ' .. name)
+		local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
+		if hsha == hsha_l and bsha == bsha_l then
+			return (get_header_and_merge(name,hsha_new,bsha))
+		elseif hsha_l == hsha_new and bsha == bsha_l then
+			log('header already changed for '..name)
+			return (trace(true))
+		else
+			log('header change failed, local modifications ..'..name)
+			return (trace(false))
+		end
+	else
+		log('added '..name)
+		return (get_full_email(namename,hsha_new,bsha))
+	end
+end
+
 function execute(cmd)
 	local opcode = cmd:match('^(%S+)')
 
 	    if opcode == "ADD"           then return (execute_add(cmd))
 	elseif opcode == "DELETE"        then return (execute_delete(cmd))
 	elseif opcode == "COPY"          then return (execute_copy(cmd))
-	elseif opcode == "REPLACEHEADER" then
-		local name, hsha, bsha, hsha_new = 
-			cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
-		local exists = os.execute('test -f '..name)
-		if exists then
-			local inf = io.popen(MDDIFF .. ' ' .. name)
-			local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
-			if hsha == hsha_l and bsha == bsha_l then
-				local tmpfile = tmp_for(name)
-				io.stdout:write('GETHEADER '..name..'\n')
-				io.stdout:flush()
-				receive(io.stdin, tmpfile)
-				-- XXX add the body of local file 'name'
-				os.rename(tmpfile, name)
-				log('changed header of '..name)
-				return (trace()) 
-			elseif hsha_l == hsha_new and bsha == bsha_l then
-				log('header already changed for '..name)
-				return (trace())
-			end
-		else
-			local tmpfile = tmp_for(name)
-			io.stdout:write('GET '..name..'\n')
-			io.stdout:flush()
-			receive(io.stdin, tmpfile)
-			os.rename(tmpfile, name)
-			log('added '..name)
-			return (trace())
-		end
+	elseif opcode == "REPLACEHEADER" then return (execute_replaceheader(cmd))
+
+
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
 		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
