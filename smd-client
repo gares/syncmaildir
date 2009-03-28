@@ -93,6 +93,7 @@ function get_full_email(name,hsha,bsha)
 	local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
 	inf:close()
 	if hsha_l == hsha and bsha_l == bsha then
+		mkdir_p(name)
 		os.rename(tmpfile, name)
 		log('added '..name)
 		return (trace(true))
@@ -122,7 +123,7 @@ end
 
 function merge_mail(header,body,target)
 	local h = io.open(header,"r")
-	local b = io.open(header,"r")
+	local b = io.open(body,"r")
 	local t = io.open(target,"w")
 	local l
 	while true do
@@ -193,6 +194,7 @@ function execute_copy(cmd)
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				log('copy '..name_src..' to '..name_tgt)
+				mkdir_p(name_tgt)
 				local ok = os.execute('cp '..name_src..' '..name_tgt)
 				if ok == 0 then 
 					return (trace(true))
@@ -226,11 +228,12 @@ function get_header_and_merge(name,hsha,bsha)
 	io.stdout:flush()
 	receive(io.stdin, tmpfile)
 	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
-	local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
+	local hsha_l, _ = inf:read('*a'):match('(%S+) (%S+)')
 	inf:close()
-	if hsha_l == hsha and bsha_l == bsha then
+	if hsha_l == hsha then
 		local tmpfile1 = tmp_for(name)
 		merge_mail(tmpfile,name,tmpfile1)
+		os.remove(tmpfile)
 		os.rename(tmpfile1, name)
 		log('changed header of '..name)
 		return (trace(true)) 
@@ -240,8 +243,6 @@ function get_header_and_merge(name,hsha,bsha)
 		return (trace(false))
 	end
 end
-
--- XXX add mkdir everywhere
 
 function execute_replaceheader(cmd)
 	local name, hsha, bsha, hsha_new = 
