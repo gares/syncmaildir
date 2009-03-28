@@ -120,6 +120,29 @@ function exists(name)
 	end
 end
 
+function merge_mail(header,body,target)
+	local h = io.open(header,"r")
+	local b = io.open(header,"r")
+	local t = io.open(target,"w")
+	local l
+	while true do
+		l = h:read("*l")
+		if l and l ~= "" then t:write(l,'\n') else break end
+	end
+	while true do
+		l = b:read("*l")
+		if not l or l == "" then break end
+	end
+	t:write('\n')
+	while true do
+		l = b:read("*l")
+		if l then t:write(l,'\n') else break end
+	end
+	h:close()
+	b:close()
+	t:close()
+end
+
 function execute_add(cmd)
 	local name, hsha, bsha = cmd:match('^ADD (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists(name)
