@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export PATH="$PATH:$PWD"
 TOKILL=""
@@ -14,11 +14,10 @@ out(){
 }
 
 test_eq(){
-	cd $ROOT/test.$3
 	if diff -ruN $1 $2 >/dev/null; then
-		echo OK
+		echo -n .
 	else
-		echo ERROR
+		echo ERROR: diff
 		exit 1
 	fi
 }
@@ -27,9 +26,9 @@ prepare(){
 	cd $ROOT
 	make --quiet
 	
-	rm -rf test.$1
-	mkdir test.$1
-	cd test.$1
+	rm -rf test.$N
+	mkdir test.$N
+	cd test.$N
 	tar -xzf ../Mail.testcase.tgz
 	
 	mkfifo s2c
@@ -37,12 +36,6 @@ prepare(){
 	mkdir -p target
 
 	trap out EXIT
-}
-
-conclude(){
-	cd $ROOT/test.$1
-	test_eq Mail target/Mail $1
-	cd ..
 }
 
 if [ ! -z "$1" ] && [ "$1" = "-v" ]; then
@@ -56,18 +49,18 @@ fi
 if [ ! -z "$1" ] && [ -f $1 ]; then
 	echo -n "running $1: "
 	N=`echo $1 | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-	prepare $N
+	prepare 
 	cd $ROOT
 	. $1
-	conclude $N
+	echo OK
 else
 	for T in tests.d/[0-9]*; do
 		echo -n "running $T: "
 		N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-		prepare $N
+		prepare 
 		cd $ROOT
 		. $T
-		conclude $N
+		echo OK
 	done
 fi
 

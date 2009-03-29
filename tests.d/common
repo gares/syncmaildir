@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 run_server(){
 	smd-server test Mail < c2s 2> log.server.$1 | tee log.s2c > s2c &
@@ -37,11 +37,11 @@ wait_client(){
 }
 
 msync(){
-	run_server $1
-	run_client $1
+	run_server $N
+	run_client $N
 	
-	display_log_server $1
-	display_log_client $1
+	display_log_server $N
+	display_log_client $N
 	
 	wait_server
 	wait_client

@@ -1,5 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 cd $ROOT/test.$N
 
 msync 1
+
+test_eq Mail target/Mail 
+
