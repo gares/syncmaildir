@@ -94,9 +94,14 @@ function get_full_email(name,hsha,bsha)
 	inf:close()
 	if hsha_l == hsha and bsha_l == bsha then
 		mkdir_p(name)
-		os.rename(tmpfile, name) --- XXX it could fail
-		log('added '..name)
-		return (trace(true)) -- get full email success
+		local rc = os.rename(tmpfile, name) 
+		if rc then
+			log('added '..name)
+			return (trace(true)) -- get full email success
+		else
+			log('failed to rename '..tmpfile..' to '..name)
+			return (trace(false)) -- fail rename tmpfile to actual name
+		end
 	else
 		log('got a different email for '..name)
 		os.remove(tmpfile)
@@ -165,9 +170,14 @@ function execute_delete(cmd)
 	local ex, hsha_l, bsha_l = exists(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
-			log('deleting '..name)
-			os.remove(name) -- XXX may fail
-			return (trace(true)) -- removed successfully
+			local rc = os.remove(name) 
+			if rc then
+				log('deleted '..name)
+				return (trace(true)) -- removed successfully
+			else
+				log('deletion of '..name..' failed')
+				return (trace(false)) -- os.remove failed
+			end
 		else
 			log('skipping removal '..name..' since differs')
 			return (trace(false)) -- remove fails since local file is !=
