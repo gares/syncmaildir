@@ -4,7 +4,7 @@
 PATHS=`grep TRACE test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
 
 echo
-echo "Tested $PATHS leaves"
+echo "Tested $PATHS paths"
 echo
 
 grep TRACE test.[0-9]*/log.client* | sort -u
