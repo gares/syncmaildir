@@ -1,0 +1,28 @@
+#!/bin/bash
+
+cd $ROOT/test.$N
+
+msync 1
+
+C=`ls Mail/cur/ | head -n 1`
+cp Mail/cur/$C Mail/cur/copied_here
+cp Mail/cur/$C target/Mail/cur/copied_here
+sed -i 's/Subject/XXXX/' target/Mail/cur/copied_here
+rm target/Mail/cur/$C
+cp -r  target/Mail  target/Mail.old
+
+msync 2
+
+rm Mail/cur/$C
+
+test_eq target/Mail.old target/Mail 
+
+X=`grep '^COPY ' log.s2c | wc -l`
+assert $X 1 "missing COPY in s2c"
+
+X=`grep '^GET ' log.c2s | wc -l`
+assert $X 0 "GET in c2s, should not"
+
+X=`grep '^ABORT$' log.c2s | wc -l`
+assert $X 1 "missing ABORT in c2s"
+
