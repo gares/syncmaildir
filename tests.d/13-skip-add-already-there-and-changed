@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cd $ROOT/test.$N
+
+msync 1
+
+echo -en 'Subject: aa\n\nBody\n' >  Mail/cur/new_mail
+echo -en 'Subject: bb\n\nBody\n' >  target/Mail/cur/new_mail
+cp -r target/Mail target/Mail.old
+
+msync 2
+
+test_eq target/Mail.old target/Mail 
+X=`grep '^ADD ' log.s2c | wc -l`
+Y=`grep '^GET ' log.c2s | wc -l`
+if [ $X = 1 -a $Y = 0 ]; then
+	echo -n '.'
+else
+	echo 'ERROR'
+	exit 1
+fi
