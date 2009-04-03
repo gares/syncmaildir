@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cd $ROOT/test.$N
+
+msync 1
+
+rm Mail/cur/`ls Mail/cur/ | head -n 1`
+sed -i 's/Subject/Subbbbbbject/' target/Mail/cur/`ls target/Mail/cur/ | head -n 1`
+cp -r target/Mail target/Mail.old
+
+msync 2
+
+test_eq target/Mail.old target/Mail 
+X=`grep '^DELETE ' log.s2c | wc -l`
+if [ $X = 1 ]; then
+	echo -n '.'
+else
+	echo 'ERROR: no COPY/DELETE'
+	exit 1
+fi
