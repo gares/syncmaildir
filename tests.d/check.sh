@@ -2,16 +2,15 @@
 
 
 PATHS=`grep TRACE test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
-TRACES=`grep trace smd-client | grep -v ^function | wc -l`
 
 echo
-echo "Tested $PATHS leaves out of $TRACES"
+echo "Tested $PATHS leaves"
 echo
 
 grep TRACE test.[0-9]*/log.client* | sort -u
 
 echo
-echo "Missing leaves:"
+echo "Surely missing leaves (there may be more paths for the same leaf):"
 echo
 
 tmpa=`mktemp`
