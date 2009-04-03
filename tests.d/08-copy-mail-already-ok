@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cd $ROOT/test.$N
+
+msync 1
+
+cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
+cp Mail/cur/`ls Mail/cur/ | head -n 1` target/Mail/cur/copied_here
+
+msync 2
+
+test_eq Mail target/Mail 
+X=`grep '^COPY ' log.s2c | wc -l`
+Y=`grep '^GET ' log.c2s | wc -l`
+if [ $X = 1 -a $Y = 0 ]; then
+	echo -n '.'
+else
+	echo 'ERROR: no COPY'	
+fi
+
