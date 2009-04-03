@@ -10,7 +10,8 @@ msync 2
 
 test_eq Mail target/Mail 
 X=`grep '^COPY ' log.s2c | wc -l`
-if [ $X = 1 ]; then
+Y=`grep '^GET ' log.c2s | wc -l`
+if [ $X = 1 -a $Y = 0 ]; then
 	echo -n '.'
 else
 	echo 'ERROR: no COPY'	
