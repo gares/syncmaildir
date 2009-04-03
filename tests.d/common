@@ -29,11 +29,11 @@ display_log_client(){
 }
 
 wait_server(){
-	wait $SERVER || exit 1
+	wait $SERVER 
 }
 
 wait_client(){
-	wait $CLIENT || exit 1
+	wait $CLIENT
 }
 
 msync(){
