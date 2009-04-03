@@ -148,7 +148,7 @@ function execute_add(cmd)
 	local name, hsha, bsha = cmd:match('^ADD (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists(name)
 	if ex then
-		if hash == hsha_l and bsha == bsha_l then
+		if hsha == hsha_l and bsha == bsha_l then
 			log('skipping '..name..' already there')
 			return (trace(true)) -- skipping add since already there
 		else
