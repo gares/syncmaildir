@@ -94,13 +94,13 @@ function get_full_email(name,hsha,bsha)
 	inf:close()
 	if hsha_l == hsha and bsha_l == bsha then
 		mkdir_p(name)
-		os.rename(tmpfile, name)
+		os.rename(tmpfile, name) --- XXX it could fail
 		log('added '..name)
-		return (trace(true))
+		return (trace(true)) -- get full email success
 	else
 		log('got a different email for '..name)
 		os.remove(tmpfile)
-		return (trace(false))
+		return (trace(false)) -- get full email failed, received wrong mail
 	end
 end
 
@@ -150,10 +150,10 @@ function execute_add(cmd)
 	if ex then
 		if hash == hsha_l and bsha == bsha_l then
 			log('skipping '..name..' already there')
-			return (trace(true))
+			return (trace(true)) -- skipping add since already there
 		else
 			log('error '..name..' already there but different')
-			return (trace(false))
+			return (trace(false)) -- skipping add since already there but !=
 		end
 	end
 	-- return get_full_email(name,hsha,bsha)
@@ -166,15 +166,15 @@ function execute_delete(cmd)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
 			log('deleting '..name)
-			os.remove(name)
-			return (trace(true))
+			os.remove(name) -- XXX may fail
+			return (trace(true)) -- removed successfully
 		else
 			log('skipping removal '..name..' since differs')
-			return (trace(true))
+			return (trace(false)) -- remove fails since local file is !=
 		end
 	end
 	log('already deleted '..name)
-	return (trace(true))
+	return (trace(true)) -- already removed
 end
 
 function execute_copy(cmd)
@@ -185,11 +185,11 @@ function execute_copy(cmd)
 	if ex_src and ex_tgt then
 		if hsha_src == hsha_tgt and bsha_src == bsha_tgt then
 			log('skipping copy of '..name_src..' to '..name_tgt)
-			return (trace(true))
+			return (trace(true)) -- skip copy, already there
 		else
 			log('unable to copy '..name_src..' to '..name_tgt..' since'..
 				' target exists')
-			return (trace(false))
+			return (trace(false)) -- fail copy, already there but !=
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
@@ -197,10 +197,10 @@ function execute_copy(cmd)
 				mkdir_p(name_tgt)
 				local ok = os.execute('cp '..name_src..' '..name_tgt)
 				if ok == 0 then 
-					return (trace(true))
+					return (trace(true)) -- copy successful
 				else 
 					log('copy '..name_src..' to '..name_tgt..' failed')
-					return (trace(false))
+					return (trace(false)) -- copy failed (cp command failed)
 				end
 		else
 				-- sub-optimal, we may reuse body or header 
@@ -210,11 +210,11 @@ function execute_copy(cmd)
 		if hsha == hsha_tgt and bsha == bsha_tgt then
 			log('skipping copy of non existent '..name_src..' to '..
 				name_tgt ..' since target already there')
-			return (trace(true))
+			return (trace(true)) -- skip copy, already there (only the copy)
 		else
 			log('unable to copy non existent '..name_src..' to '..
 				name_tgt..' since'.. ' target exists')
-			return (trace(false))
+			return (trace(false)) -- skip copy, already there and !=, no source
 		end
 	else
 		log('add '..name_tgt..' as a copy of the not existing '..name_src)
@@ -236,11 +236,11 @@ function get_header_and_merge(name,hsha,bsha)
 		os.remove(tmpfile)
 		os.rename(tmpfile1, name)
 		log('changed header of '..name)
-		return (trace(true)) 
+		return (trace(true)) -- get header OK
 	else
 		log('got a different email for '..name)
 		os.remove(tmpfile)
-		return (trace(false))
+		return (trace(false)) -- get header fails, got a different header
 	end
 end
 
@@ -255,10 +255,10 @@ function execute_replaceheader(cmd)
 			return (get_header_and_merge(name,hsha_new,bsha))
 		elseif hsha_l == hsha_new and bsha == bsha_l then
 			log('header already changed for '..name)
-			return (trace(true))
+			return (trace(true)) -- replace header ok, already changend
 		else
 			log('header change failed, local modifications ..'..name)
-			return (trace(false))
+			return (trace(false)) -- replace header fails, local header !=
 		end
 	else
 		log('added '..name)
