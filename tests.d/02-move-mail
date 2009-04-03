@@ -9,11 +9,12 @@ mv Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/moved_here
 msync 2
 
 test_eq Mail target/Mail 
+
 X=`grep '^DELETE ' log.s2c | wc -l`
-Y=`grep '^COPY ' log.s2c | wc -l`
-if [ $X = 1 -a $Y = 1 ]; then
-	echo -n '.'
-else
-	echo 'ERROR: no COPY/DELETE'
-	exit 1
-fi
+assert $X 1 "missing DELETE in s2c"
+
+X=`grep '^COPY ' log.s2c | wc -l`
+assert $X 1 "missing COPY in s2c"
+
+X=`grep '^COMMIT$' log.c2s | wc -l`
+assert $X 1 "missing COMMIT in c2s"

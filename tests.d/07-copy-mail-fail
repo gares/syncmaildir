@@ -12,10 +12,10 @@ msync 2
 
 test_eq target/Mail.old target/Mail 
 X=`grep '^COPY ' log.s2c | wc -l`
-Y=`grep '^GET ' log.c2s | wc -l`
-if [ $X = 1 -a $Y = 0 ]; then
-	echo -n '.'
-else
-	echo 'ERROR: no COPY'	
-fi
+assert $X 1 "missing COPY in s2c"
 
+X=`grep '^GET ' log.c2s | wc -l`
+assert $X 0 "GET in c2s, should not"
+
+X=`grep '^ABORT$' log.c2s | wc -l`
+assert $X 1 "missing ABORT in c2s"

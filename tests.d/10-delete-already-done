@@ -10,10 +10,10 @@ rm target/Mail/cur/`ls target/Mail/cur/ | head -n 1`
 msync 2
 
 test_eq Mail target/Mail 
+
 X=`grep '^DELETE ' log.s2c | wc -l`
-if [ $X = 1 ]; then
-	echo -n '.'
-else
-	echo 'ERROR: no COPY/DELETE'
-	exit 1
-fi
+assert $X 1 "missing DELETE in s2c"
+
+X=`grep '^COMMIT$' log.c2s | wc -l`
+assert $X 1 "missing COMMIT in c2s"
+
