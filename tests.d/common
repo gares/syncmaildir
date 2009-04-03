@@ -47,3 +47,11 @@ msync(){
 	wait_client
 }
 
+assert(){
+	if [ "$1" = "$2" ]; then
+		echo -n '.'
+	else
+		echo 'ERROR: ' $3
+		exit 1
+	fi
+}
