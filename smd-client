@@ -100,6 +100,7 @@ function get_full_email(name,hsha,bsha)
 			return (trace(true)) -- get full email success
 		else
 			log('failed to rename '..tmpfile..' to '..name)
+			os.remove(tmpfile)
 			return (trace(false)) -- fail rename tmpfile to actual name
 		end
 	else
