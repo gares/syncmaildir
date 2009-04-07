@@ -1,6 +1,6 @@
 #!/usr/bin/env lua5.1
 
-local MDDIFF = 'mddiff'
+local MDDIFF = '/home/tassi/SYNC/smd/mddiff'
 
 function log(msg)
 --	io.stderr:write(msg,'\n')
@@ -18,6 +18,8 @@ function trace(x)
 	io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
 	return x
 end
+
+function trace(x) return x end
 
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
