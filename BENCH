@@ -1,0 +1,12 @@
+- senza mddiff dopo ogni download
+real	1m23.603s
+user	0m25.514s
+sys	0m33.138s
+
+- con   mddiff dopo ogni download
+real	1m35.385s
+user	0m26.954s
+sys	0m37.054s
+
+- con   mddiff dopo N download
+- con   mddiff dopo N download e packing GET
