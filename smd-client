@@ -63,7 +63,7 @@ function tmp_for(path)
 	table.remove(t,#t)
 	local i, found = 0, false
 	for i=#t,1,-1 do
-		if t[i] == 'cur' then 
+		if t[i] == 'cur' or t[i] == 'new' then 
 			t[i] = 'tmp' 
 			found = true
 			break
