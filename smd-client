@@ -85,11 +85,19 @@ function tmp_for(path)
 	return newpath
 end
 
+function sha_file(name)
+	local inf = io.popen(MDDIFF .. ' ' .. name)
+	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
+	inf:close()
+	return hsha, bsha
+end
+
 function get_full_email(name,hsha,bsha)
 	local tmpfile = tmp_for(name)
 	io.stdout:write('GET '..name..'\n')
 	io.stdout:flush()
 	receive(io.stdin, tmpfile)
+	-- XXX use sha_file
 	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
 	local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
 	inf:close()
@@ -109,13 +117,6 @@ function get_full_email(name,hsha,bsha)
 		os.remove(tmpfile)
 		return (trace(false)) -- get full email failed, received wrong mail
 	end
-end
-
-function sha_file(name)
-	local inf = io.popen(MDDIFF .. ' ' .. name)
-	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
-	inf:close()
-	return hsha, bsha
 end
 
 function exists(name)
@@ -239,6 +240,7 @@ function get_header_and_merge(name,hsha,bsha)
 	io.stdout:write('GETHEADER '..name..'\n')
 	io.stdout:flush()
 	receive(io.stdin, tmpfile)
+	-- XXX use sha_file
 	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
 	local hsha_l, _ = inf:read('*a'):match('(%S+) (%S+)')
 	inf:close()
@@ -261,6 +263,7 @@ function execute_replaceheader(cmd)
 		cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
 	local exists = os.execute('test -f '..name)
 	if exists then
+		-- XXX use sha_file
 		local inf = io.popen(MDDIFF .. ' ' .. name)
 		local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
 		if hsha == hsha_l and bsha == bsha_l then
