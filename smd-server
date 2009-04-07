@@ -1,6 +1,6 @@
 #! /usr/bin/env lua5.1
 
-local MDDIFF = 'mddiff'
+local MDDIFF = '/home/tassi/SYNC/smd/mddiff'
 
 function log(msg)
 	--io.stderr:write(msg,'\n')
@@ -62,7 +62,7 @@ local mailbox = '~/Mail'
 if arg[2] ~= nil then mailbox = arg[2] end
 local mailbox_opt = ' ' .. mailbox
 
-local database = mailbox..'.'..endpoint..'.db.txt'
+local database = mailbox:gsub('/$','')..'.'..endpoint..'.db.txt'
 if arg[3] ~= nil then database = arg[3] end
 local database_opt = ' --db-file '..database
 
