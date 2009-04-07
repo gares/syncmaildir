@@ -95,6 +95,8 @@ cleanup() {
 	rm -f $CONFDIR/lock
 	kill $LOGGER1 2>/dev/null || true
 	kill $LOGGER2 2>/dev/null || true
+	kill $SERVER 2>/dev/null || true
+	kill $CLIENT 2>/dev/null || true
 }
 
 trap cleanup "EXIT" 
