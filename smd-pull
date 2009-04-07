@@ -1,0 +1,17 @@
+#!/bin/sh
+
+H=$HOME
+
+CtS=$H/.smd/c2s
+StC=$H/.smd/s2c
+
+mkdir -p `dirname $CtS`
+mkfifo $CtS
+mkfifo $StC
+
+smd-client < $StC | tee $CtS.log > $CtS &
+CLIENT=$!
+ssh localhost ~/SYNC/smd/smd-server birba $1 < $CtS | tee $StC.log > $StC &
+SERVER=$!
+wait $CLIENT
+wait $SERVER
