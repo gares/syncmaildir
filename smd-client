@@ -41,9 +41,8 @@ function receive_delta(inf)
 	repeat
 		log('receiving '..#cmds)
 		line = inf:read("*l")
-		--log('received '..line)
-		if line ~= "END" then cmds[#cmds+1] = line end
-	until line == "END"
+		if line and line ~= "END" then cmds[#cmds+1] = line end
+	until not line or line == "END"
 
 	return cmds
 end
