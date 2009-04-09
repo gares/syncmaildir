@@ -79,7 +79,8 @@ function tmp_for(path)
 	if not found then
 		newpath = path .. '.new'
 	else
-		newpath = table.concat(t,'/') .. '/' .. fname
+		t[#t+1] = fname
+		newpath = table.concat(t,'/') 
 	end
 	mkdir_p(newpath)
 	while os.execute('test -f '..newpath) == 0 do
