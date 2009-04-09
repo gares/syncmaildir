@@ -39,7 +39,7 @@ function transmit(out, path, what)
 
 	out:write("chunk " .. size .. "\n")
 	while true do
-		local data = f:read(4096)
+		local data = f:read(16384)
 		if data == nil then break end
 		out:write(data)
 	end
