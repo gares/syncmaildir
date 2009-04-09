@@ -49,13 +49,17 @@ function receive_delta(inf)
 	return cmds
 end
 
+local mkdir_p_cache = {}
 
 function mkdir_p(path)
 	local t = {} 
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	table.remove(t,#t)
 	local dir = table.concat(t,'/')
-	os.execute('mkdir -p '..dir)
+	if not mkdir_p_cache[dir] then
+		os.execute('mkdir -p '..dir)
+		mkdir_p_cache[dir] = true
+	end
 end
 
 function tmp_for(path)
