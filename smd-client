@@ -83,10 +83,7 @@ function tmp_for(path)
 		newpath = table.concat(t,'/') 
 	end
 	mkdir_p(newpath)
-	while os.execute('test -f '..newpath) == 0 do
-		newpath = newpath .. 'x'
-	end
-	--assert(os.execute('test -f '..newpath) ~= 0)
+	while exists(newpath) do newpath = newpath .. 'x' end
 	return newpath
 end
 
