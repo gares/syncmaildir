@@ -27,7 +27,7 @@ function receive(inf,outfile)
 	local line = inf:read("*l")
 	local len = tonumber(line:match('^chunk (%d+)'))
 	while len > 0 do
-		local next_chunk = 4096
+		local next_chunk = 16384
 		if len < next_chunk then next_chunk = len end
 		local data = inf:read(next_chunk)
 		len = len - data:len()
