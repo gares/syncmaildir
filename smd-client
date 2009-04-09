@@ -1,6 +1,6 @@
 #!/usr/bin/env lua5.1
 
-local MDDIFF = '/home/tassi/SYNC/smd/mddiff'
+local MDDIFF = '/home/tassi/SYNC/smd/mddiff '
 
 function log(msg)
 --	io.stderr:write(msg,'\n')
@@ -86,7 +86,7 @@ function tmp_for(path)
 end
 
 function sha_file(name)
-	local inf = io.popen(MDDIFF .. ' ' .. name)
+	local inf = io.popen(MDDIFF .. name)
 	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
 	inf:close()
 	return hsha, bsha
