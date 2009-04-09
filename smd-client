@@ -94,15 +94,30 @@ function sha_file(name)
 	return hsha, bsha
 end
 
-function get_full_email(name,hsha,bsha)
-	local tmpfile = tmp_for(name)
-	io.stdout:write('GET '..name..'\n')
+local get_full_email_queue_commands = {}
+local get_full_email_queue_closures = {}
+
+function process_get_full_email_queue()
+	local command = table.concat(get_full_email_queue_commands)
+	io.stdout:write(command)
 	io.stdout:flush()
+	local result = true
+	for _,f in ipairs(get_full_email_queue_closures) do
+		local rc = f()
+		result = result and rc
+	end
+	get_full_email_queue_commands = {}
+	get_full_email_queue_closures = {}
+	return result
+end
+
+function get_full_email(name,hsha,bsha)
+	local command = 'GET '..name..'\n'
+	get_full_email_queue_commands[#get_full_email_queue_commands+1] = command
+	get_full_email_queue_closures[#get_full_email_queue_closures+1] = function()
+	local tmpfile = tmp_for(name)
 	receive(io.stdin, tmpfile)
-	-- XXX use sha_file
-	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
-	local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
-	inf:close()
+	local hsha_l, bsha_l = sha_file(tmpfile)
 	if hsha_l == hsha and bsha_l == bsha then
 		mkdir_p(name)
 		local rc = os.rename(tmpfile, name) 
@@ -119,6 +134,8 @@ function get_full_email(name,hsha,bsha)
 		os.remove(tmpfile)
 		return (trace(false)) -- get full email failed, received wrong mail
 	end
+	end
+	return true
 end
 
 function exists(name)
@@ -311,6 +328,16 @@ function execute(cmd)
 	end
 end
 
+function process_pending_queue()
+	local rc = process_get_full_email_queue()
+	if not rc then
+		log('error executing command')
+		io.stdout:write('ABORT\n')
+		io.stdout:flush()
+		os.exit(1)
+	end
+end
+
 local commands = receive_delta(io.stdin)
 log('delta received')
 for i,cmd in ipairs(commands) do
@@ -321,7 +348,12 @@ for i,cmd in ipairs(commands) do
 		io.stdout:flush()
 		os.exit(1)
 	end
+	if #get_full_email_queue_commands > 1000 then
+			process_pending_queue()
+	end
 end
+process_pending_queue()
+
 log('committing')
 io.stdout:write('COMMIT\n')
 io.stdout:flush()
