@@ -268,9 +268,7 @@ function get_header_and_merge(name,hsha,bsha)
 	io.stdout:write('GETHEADER '..name..'\n')
 	io.stdout:flush()
 	receive(io.stdin, tmpfile)
-	-- XXX use sha_file
-	local inf = io.popen(MDDIFF .. ' ' .. tmpfile)
-	local hsha_l, _ = inf:read('*a'):match('(%S+) (%S+)')
+	local hsha_l, _ = sha_file(tmpfile)
 	inf:close()
 	if hsha_l == hsha then
 		local tmpfile1 = tmp_for(name)
@@ -289,11 +287,8 @@ end
 function execute_replaceheader(cmd)
 	local name, hsha, bsha, hsha_new = 
 		cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
-	local exists = os.execute('test -f '..name)
-	if exists then
-		-- XXX use sha_file
-		local inf = io.popen(MDDIFF .. ' ' .. name)
-		local hsha_l, bsha_l = inf:read('*a'):match('(%S+) (%S+)')
+	if exists(name) then
+		local hsha_l, bsha_l = sha_file(name)
 		if hsha == hsha_l and bsha == bsha_l then
 			return (get_header_and_merge(name,hsha_new,bsha))
 		elseif hsha_l == hsha_new and bsha == bsha_l then
