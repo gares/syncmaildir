@@ -33,6 +33,8 @@
 	fprintf(stderr, "error [" tostring(cause) "]: " msg)
 #define VERBOSE(cause,msg...) \
 	if (verbose) fprintf(stderr,"debug [" tostring(cause) "]: " msg)
+#define VERBOSE_NOH(msg...) \
+	if (verbose) fprintf(stderr,msg)
 
 // default numbers for static memory allocation
 #define DEFAULT_FILENAME_LEN 100
@@ -438,6 +440,16 @@ void analize_dir(const char* path){
 	}
 }
 
+void analize_dirs(char* paths[], int no){
+	int i;
+	for(i=0; i<no; i++){
+		// we remove a trailing '/' if any 
+		char *data = paths[i];
+		if (data[strlen(data)-1] == '/') data[strlen(data)-1] = '\0';
+		analize_dir(data);
+	}
+}
+
 // at the end of the analysis phase, look at the mails data structure to
 // identify mails that are not available anymore and should be removed
 void generate_deletions(){
@@ -505,7 +517,28 @@ int extra_sha_file(const char* file) {
 	close(fd);
 	return 0;
 }
-	
+
+
+int extra_sha_files(char* file[],int no) {    
+	int i;
+	struct stat sb;
+	for (i=0; i < no; i++){
+		const char * data = file[i];
+		int rc = stat(data, &sb);
+		if (rc != 0) {
+			ERROR(stat,"unable to stat %s\n",data);
+			exit(EXIT_FAILURE);
+		}
+		if ( S_ISREG(sb.st_mode) ){
+			rc = extra_sha_file(data);
+			if (rc != 0) return rc;
+		} else {
+			ERROR(stat,"not a regular file '%s'\n",data);
+			exit(EXIT_FAILURE);
+		}
+	}
+	return 0;
+}
 
 // ============================ main =====================================
 
@@ -541,16 +574,22 @@ void help(char* argv0, int rc){
 	char *bname = strdup(argv0);
 	bname = basename(bname);
 
-	fprintf(stdout,"\nUsage: %s [options] path\n",bname);
+	fprintf(stdout,"\nUsage: %s [options] paths...\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
 		fprintf(stdout,"  --%-20s%s\n",
 			long_options[i].name,long_options_doc[i]);
 	}
-	fprintf(stdout,
-		"\nIf path is a regular file, %s outputs the sha1 of its header and\n"
-		"body separated by space. If it is a directory it outputs a list of\n"
-		"actions a client has to perform to syncronize a copy of the same\n"
-		"maildir. Every client must use a different db-file\n", argv0);
+	fprintf(stdout,"\n"
+	"If paths is a list of regular files, %s outputs the sha1 of its header\n"
+	"header and body separated by space.\n\n"
+	"If paths is a list of directories, %s outputs a list of actions a client\n"
+	"has to perform to syncronize a copy of the same maildir.\n\n"
+	"Regular files and directories cannot be mixed in paths.\n\n"
+	"Every client must use a different db-file, and the db-file is strictly\n"
+	"related with the set of directories given as arguments, and should not\n"
+	"be used with a different directory set. Adding items to the directory\n"
+	"set is safe, while removing them may not what you want (delete actions\n"
+	"are generated).", bname, bname);
 	fprintf(stdout,
 		"\n© 2008 Enrico Tassi, released under GPLv3, no waranties\n\n");
 	exit(rc);
@@ -587,15 +626,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (optind != argc-1) help(argv[0],EXIT_FAILURE);
+	if (optind >= argc) help(argv[0],EXIT_FAILURE);
 
-	// remaining arg is the dir containing the data
+	// remaining args is the dirs containing the data or the files to hash
 	data = argv[optind];
 
-	// we remove a trailing '/' if any 
-	if (data[strlen(data)-1] == '/') data[strlen(data)-1] = '\0';
-
-	// check if data is a directory or a single file
+	// check if data is a directory or a regular file
 	c = stat(data, &sb);
 	if (c != 0) {
 		ERROR(stat,"unable to stat %s\n",data);
@@ -603,20 +639,23 @@ int main(int argc, char *argv[]) {
 	}
 	if ( S_ISREG(sb.st_mode) ){
 		// simple mode, just hash the file
-		return extra_sha_file(data);
+		return extra_sha_files(&argv[optind],argc - optind);
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
-		ERROR(stat, "given path is not a regular file nor a directory: %s\n",data);
+		ERROR(stat, "given path is not a regular file nor a directory: %s\n",
+			data);
 		exit(EXIT_FAILURE);
 	}
-
-	VERBOSE(init,"data directory is '%s'\n",data);
+	
+	VERBOSE(init,"data directories are ");
+	for(c=optind; c<argc - optind; c++) { VERBOSE_NOH(argv[c]);}	
+	VERBOSE_NOH("\n");
 
 	// allocate memory
 	setup_globals(mailno,filenamelen);
 
 	load_db(dbfile);
 
-	analize_dir(data);
+	analize_dirs(&argv[optind],argc - optind);
 
 	generate_deletions();
 
