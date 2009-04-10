@@ -589,7 +589,7 @@ void help(char* argv0, int rc){
 	"related with the set of directories given as arguments, and should not\n"
 	"be used with a different directory set. Adding items to the directory\n"
 	"set is safe, while removing them may not what you want (delete actions\n"
-	"are generated).", bname, bname);
+	"are generated).\n", bname, bname);
 	fprintf(stdout,
 		"\n© 2008 Enrico Tassi, released under GPLv3, no waranties\n\n");
 	exit(rc);
