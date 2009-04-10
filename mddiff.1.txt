@@ -1,0 +1,45 @@
+NAME
+  mddiff - generates a diff from a maildir fingerprint to its actual status
+SYNOPSIS
+  mddiff [--max-mailno max] [--db-file db] [-v|--verbose] [--help] path ...
+DESCRIPTION
+  mddiff computes the delta from an old status of a maildir (previously
+  recorded in a support file, called db file) and the current status, 
+  generating a set of commands (a diff) that a third party software can 
+  apply to synchronize a (eventually remote) copy of the maildir.
+
+  If paths is a list of regular files, mddiff outputs the sha1 of its header
+  and body separated by space.
+  
+  If paths is a list of directories, mddiff outputs a list of actions a client
+  has to perform to syncronize a copy of the same maildirs. This set of actions
+  is relative to a previous status of the maildir stored in the db file.
+  The input directories are traversed recursively, and every file encountered
+  is a potential mail message (if it contains no \n\n it is skipped).
+  
+  Regular files and directories cannot be mixed in paths.
+  
+  Every client must use a different db-file, and the db-file is strictly
+  related with the set of directories given as arguments, and should not
+  be used with a different directory set. Adding items to the directory
+  set is safe, while removing them may not do what you want (delete actions
+  are generated).
+
+OPTIONS
+  --max-mailno max      Estimation of max mail message number (default 500000)
+                        Decrease for small systems, it is increased
+                        automatically if needed
+  --db-file db          Name of the cache for the endpoint (default db.txt)
+  --verbose             Increase program verbosity (printed on stderr)
+  -v                    Increase program verbosity (printed on stderr)
+  --help                This help screen
+
+NOTES
+  mddiff is a low level utility, used by smd-server and smd-client. You
+  should use higher level tools like smd-pull(1) and smd-push(1)
+
+SEE ALSO
+  smd-client(1), smd-server(1), smd-pull(1), smd-push(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>

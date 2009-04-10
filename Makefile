@@ -1,6 +1,7 @@
 BINARIES=mddiff
+MANPAGES=mddiff.1
 
-all: $(BINARIES)
+all: $(BINARIES) $(MANPAGES)
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \
@@ -23,6 +24,9 @@ Mail.testcase.tgz:
 	done
 	tar -czf $@ Mail
 	rm -rf Mail
+
+%.1:%.1.txt
+	txt2man -v "Sync Mail Dir documentation" -s 1 $< > $@
 
 clean: 
 	rm -rf $(BINARIES) test.[0-9]*/
