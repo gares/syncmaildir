@@ -26,7 +26,7 @@ Mail.testcase.tgz:
 	rm -rf Mail
 
 %.1:%.1.txt
-	txt2man -v "Sync Mail Dir documentation" -s 1 $< > $@
+	txt2man -t $* -v "smd (Sync Mail Dir) documentation" -s 1 $< > $@
 
 clean: 
 	rm -rf $(BINARIES) test.[0-9]*/
