@@ -39,4 +39,4 @@ install: all
 	cp *.1 $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
-	rm -rf $(BINARIES) test.[0-9]*/
+	rm -rf $(BINARIES) test.[0-9]*/ *.1
