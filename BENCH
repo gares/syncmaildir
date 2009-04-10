@@ -1,6 +1,0 @@
-- siamo a 18 (senza check che il file ricevuto sia OK)
-- siamo a 32 con tale check
-  - topo fare una sola os.execute per N mail
-
-- tar ci mette 17 secondi
-
