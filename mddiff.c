@@ -579,17 +579,20 @@ void help(char* argv0, int rc){
 		fprintf(stdout,"  --%-20s%s\n",
 			long_options[i].name,long_options_doc[i]);
 	}
-	fprintf(stdout,"\n"
-	"If paths is a list of regular files, %s outputs the sha1 of its header\n"
-	"header and body separated by space.\n\n"
-	"If paths is a list of directories, %s outputs a list of actions a client\n"
-	"has to perform to syncronize a copy of the same maildir.\n\n"
-	"Regular files and directories cannot be mixed in paths.\n\n"
-	"Every client must use a different db-file, and the db-file is strictly\n"
-	"related with the set of directories given as arguments, and should not\n"
-	"be used with a different directory set. Adding items to the directory\n"
-	"set is safe, while removing them may not what you want (delete actions\n"
-	"are generated).\n", bname, bname);
+	fprintf(stdout,"\n\
+If paths is a list of regular files, %s outputs the sha1 of its header\n\
+and body separated by space.\n\n\
+If paths is a list of directories, %s outputs a list of actions a client\n\
+has to perform to syncronize a copy of the same maildir. This set of actions\n\
+is relative to a previous status of the maildir stored in the db file.\n\
+The input directories are traversed recursively, and every file encountered\n\
+is a potential mail message (if it contains no \\n\\n it is skipped).\n\n\
+Regular files and directories cannot be mixed in paths.\n\n\
+Every client must use a different db-file, and the db-file is strictly\n\
+related with the set of directories given as arguments, and should not\n\
+be used with a different directory set. Adding items to the directory\n\
+set is safe, while removing them may not do what you want (delete actions\n\
+are generated).\n", bname, bname);
 	fprintf(stdout,
 		"\n© 2009 Enrico Tassi, released under GPLv3, no waranties\n\n");
 	exit(rc);
