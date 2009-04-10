@@ -591,7 +591,7 @@ void help(char* argv0, int rc){
 	"set is safe, while removing them may not what you want (delete actions\n"
 	"are generated).\n", bname, bname);
 	fprintf(stdout,
-		"\n© 2008 Enrico Tassi, released under GPLv3, no waranties\n\n");
+		"\n© 2009 Enrico Tassi, released under GPLv3, no waranties\n\n");
 	exit(rc);
 }
 
