@@ -1,0 +1,62 @@
+
+H=$HOME
+SMDSERVER=~/SYNC/smd/smd-server 
+SMDCLIENT=~/SYNC/smd/smd-client 
+CONFDIR=$H/.smd
+SSH=ssh
+
+if [ ! -f $CONFDIR/config ]; then
+	mkdir -p $CONFDIR/
+	cat > $CONFDIR/config <<- EOT
+	# No config file found, this is a default one.
+
+	# Name that will identify this client (usually the hostname).
+	CLIENTNAME=`hostname`
+
+	# Host name to be used with ssh (use ~/.ssh/config for extra options).
+	# We suggest creating an alias with your ~/.ssh/config like:
+	# 
+	#   Host smd-server
+	#     Compression yes
+	#     Hostname your.real.server.name
+	#     Username you
+	#
+	SERVERNAME=smd-server
+
+	# The mailbox to sync, the path is the same on both hosts, but
+	# can be relative to the current working directory.
+	MAILBOX=Mail/
+
+	# Log client to server and server to client communication.
+	# This is usefull only for debugging, since all network traffic
+	# is dumped, including transmitted mails.
+	DEBUG=false
+	EOT
+	echo No config file found: created a default one
+	echo Please edit it: $CONFDIR/config
+	exit 1
+fi
+
+if [ -f $CONFDIR/lock ]; then
+	echo Already running
+	exit 1
+fi
+
+touch $CONFDIR/lock
+
+. $CONFDIR/config
+
+CtL=$CONFDIR/c2l
+LtC=$CONFDIR/l2c
+LtS=$CONFDIR/l2s
+StL=$CONFDIR/s2l
+CtS=$CONFDIR/c2s.log
+StC=$CONFDIR/s2c.log
+CL=$CONFDIR/client.log
+SL=$CONFDIR/server.log
+
+[ -p $CtL ] || mkfifo $CtL 
+[ -p $LtC ] || mkfifo $LtC
+[ -p $LtS ] || mkfifo $LtS 
+[ -p $StL ] || mkfifo $StL
+
