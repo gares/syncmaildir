@@ -3,7 +3,7 @@
 local MDDIFF = '/home/tassi/SYNC/smd/mddiff '
 
 function log(msg)
---	io.stderr:write(msg,'\n')
+	io.stderr:write(msg,'\n')
 end
 
 function trace(x)
@@ -19,7 +19,11 @@ function trace(x)
 	return x
 end
 
+-- comment this to run make test
 function trace(x) return x end
+
+-- comment this to obtain a verbose log
+function log() end
 
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
