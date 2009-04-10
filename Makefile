@@ -4,18 +4,25 @@ PREFIX=usr/local
 DESTDIR=
 VERSION=0.9
 
-all: $(BINARIES) $(MANPAGES)
+all: check-build $(BINARIES) $(MANPAGES)
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \
 		`pkg-config --cflags --libs glib-2.0 openssl`
 
-test: all Mail.testcase.tgz
+check-build: check-w-txt2man check-w-gcc
+check-run: check-w-lua5.1 check-w-bash 
+
+check-w-%:
+	@which $* > /dev/null || echo $* not found
+
+test: all check-run Mail.testcase.tgz
 	@tests.d/test.sh $T
 	@tests.d/check.sh
 	@rm -rf test.[0-9]*/
 
-Mail.testcase.tgz:
+Mail.testcase.tgz: 
+	$(MAKE) check-w-polygen
 	mkdir -p Mail/cur
 	for i in `seq 100`; do \
 		echo "Subject: `polygen /usr/share/polygen/eng/manager.grm`"\
