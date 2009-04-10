@@ -6,7 +6,6 @@ ROOT=$PWD
 
 out(){
 	(
-	cd $ROOT/test && rm -rf s2c c2s target
 	for P in $TOKILL; do
 		kill $P
 	done
@@ -29,13 +28,13 @@ prepare(){
 	rm -rf test.$N
 	mkdir test.$N
 	cd test.$N
+	export HOME=$PWD
 	tar -xzf ../Mail.testcase.tgz
 	
 	mkfifo s2c
 	mkfifo c2s
 	mkdir -p target
 
-	trap out EXIT
 }
 
 if [ ! -z "$1" ] && [ "$1" = "-v" ]; then
@@ -45,6 +44,7 @@ else
 	VERBOSE=0
 fi
 
+trap out EXIT
 . tests.d/common
 if [ ! -z "$1" ] && [ -f $1 ]; then
 	echo -n "running $1: "

@@ -3,28 +3,28 @@
 local MDDIFF = '/home/tassi/SYNC/smd/mddiff '
 local queue_max_len = 50
 
+local verbose = false
+
 function log(msg)
-	io.stderr:write(msg,'\n')
+	if verbose then
+		io.stderr:write(msg,'\n')
+	end
 end
 
 function trace(x)
-	local t = {}
-	local n = 2
-	while true do
-		local d = debug.getinfo(n,"nl")
-		if not d or not d.name then break end
-		t[#t+1] = d.name ..":".. (d.currentline or "?")
-		n=n+1
+	if verbose then
+		local t = {}
+		local n = 2
+		while true do
+			local d = debug.getinfo(n,"nl")
+			if not d or not d.name then break end
+			t[#t+1] = d.name ..":".. (d.currentline or "?")
+			n=n+1
+		end
+		io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
 	end
-	io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
 	return x
 end
-
--- comment this to run make test
-function trace(x) return x end
-
--- comment this to obtain a verbose log
-function log() end
 
 function receive(inf,outfile)
 	local outf = assert(io.open(outfile,"w"))
@@ -361,6 +361,10 @@ setmetatable(_G,{
 })
 
 -- ============================= MAIN =====================================
+
+if arg[1] == '-v' then
+	verbose = true
+end
 
 local commands = receive_delta(io.stdin)
 log('delta received')

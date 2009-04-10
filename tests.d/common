@@ -1,31 +1,17 @@
 #!/bin/bash
 
 run_server(){
-	smd-server test Mail < c2s 2> log.server.$1 | tee log.s2c > s2c &
+	smd-server -v test Mail < c2s 2> log.server.$1 | tee log.s2c > s2c &
 	SERVER=$!
 	TOKILL="$TOKILL $SERVER"
 }
 
 run_client(){
 	cd target 
-	smd-client < ../s2c 2> ../log.client.$1 | tee ../log.c2s > ../c2s &
+	smd-client -v < ../s2c 2> ../log.client.$1 | tee ../log.c2s > ../c2s &
 	CLIENT=$!
 	TOKILL="$TOKILL $CLIENT"
 	cd ..
-}
-
-display_log_server(){
-	if [ $VERBOSE = 1 ]; then
-		xterm -e 'tail -f log.s2c' &
-		TOKILL="$TOKILL $!"
-	fi
-}
-
-display_log_client(){
-	if [ $VERBOSE = 1 ]; then
-		xterm -e 'tail -f log.c2s' &
-		TOKILL="$TOKILL $!"
-	fi
 }
 
 wait_server(){
@@ -39,9 +25,6 @@ wait_client(){
 msync(){
 	run_server $N
 	run_client $N
-	
-	display_log_server $N
-	display_log_client $N
 	
 	wait_server
 	wait_client
