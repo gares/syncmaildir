@@ -1,5 +1,7 @@
 BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 
+PREFIX=usr/local
+DESTDIR=
 
 all: $(BINARIES) $(MANPAGES)
 
@@ -27,6 +29,14 @@ Mail.testcase.tgz:
 
 %.1:%.1.txt
 	txt2man -t $* -v "smd (Sync Mail Dir) documentation" -s 1 $< > $@
+
+install: all
+	mkdir -p $(DESTDIR)/$(PREFIX)/bin
+	mkdir -p $(DESTDIR)/$(PREFIX)/share/smd
+	mkdir -p $(DESTDIR)/$(PREFIX)/share/man/1
+	cp smd-common $(DESTDIR)/$(PREFIX)/share/smd
+	cp mddiff smd-server smd-client smd-pull $(DESTDIR)/$(PREFIX)/bin
+	cp *.1 $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
 	rm -rf $(BINARIES) test.[0-9]*/
