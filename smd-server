@@ -48,6 +48,20 @@ function transmit(out, path, what)
 	f:close()
 end
 
+-- strict access to the global environment
+setmetatable(_G,{
+	__newindex = function (t,k,v)
+		local d = debug.getinfo(2,"nl")
+		error(d.name..': '..d.currentline..
+			' :attempt to create new global '..k)
+	end;
+	__index = function(t,k)
+		local d = debug.getinfo(2,"nl")
+		error(d.name..': '..d.currentline..
+			' :attempt to read undefined global '..k)
+	end;
+})
+
 -- ============================= MAIN =====================================
 
 local endpoint = arg[1]
