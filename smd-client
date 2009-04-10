@@ -273,7 +273,6 @@ function get_header_and_merge(name,hsha,bsha)
 	io.stdout:flush()
 	receive(io.stdin, tmpfile)
 	local hsha_l, _ = sha_file(tmpfile)
-	inf:close()
 	if hsha_l == hsha then
 		local tmpfile1 = tmp_for(name)
 		merge_mail(tmpfile,name,tmpfile1)
