@@ -1,0 +1,36 @@
+NAME
+  smd-pull - syncs the local mail dir letting the remote one untouched
+
+SYNOPSIS
+  smd-pull
+
+DESCRIPTION
+  smd-pull performs in the local maildir all the changes that
+  were performed on remote one.
+
+  No changes are made on the remote maildir. Use smd-push(1) for that.
+
+  The first time this program is run a new config file is created and
+  the user is asked to edit it. That file is composed by the following
+  fields
+
+  CLIENTNAME  name of the client host
+  SERVERNAME  name of the server host
+  MAILBOX A list of directories, separated by space
+
+  The fields CLIENTNAME and SERVERNAME must be valid names for 
+  ssh, thus can be aliases like smd-foo and smd-bar. 
+  The default config file contains an example of how to set up an alias
+  for ssh.
+
+  The config file is a regular shell script, refer to bash(1) for 
+  its syntax.
+
+FILES
+  ~/.smd/config
+
+SEE ALSO
+  mddiff(1), smd-server(1), smd-client(1), smd-push(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
