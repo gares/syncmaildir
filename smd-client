@@ -1,6 +1,7 @@
 #!/usr/bin/env lua5.1
 
 local MDDIFF = '/home/tassi/SYNC/smd/mddiff '
+local queue_max_len = 50
 
 function log(msg)
 	io.stderr:write(msg,'\n')
@@ -98,47 +99,57 @@ function sha_file(name)
 	return hsha, bsha
 end
 
-local get_full_email_queue_commands = {}
-local get_full_email_queue_closures = {}
+local get_full_email_queue = {}
 
 function process_get_full_email_queue()
-	local command = table.concat(get_full_email_queue_commands)
-	io.stdout:write(command)
-	io.stdout:flush()
-	local result = true
-	for _,f in ipairs(get_full_email_queue_closures) do
-		local rc = f()
-		result = result and rc
+	local command = {}
+	for _,v in ipairs(get_full_email_queue) do
+		command[#command+1] = 'GET ' .. v.name
 	end
-	get_full_email_queue_commands = {}
-	get_full_email_queue_closures = {}
-	return result
+	command[#command+1] = ''
+	io.stdout:write(table.concat(command,'\n'))
+	command = nil
+	io.stdout:flush()
+	local tmp = {}
+	for _,v in ipairs(get_full_email_queue) do
+		tmp[#tmp+1] = tmp_for(v.name)
+		v.tmp = tmp[#tmp]
+		receive(io.stdin, tmp[#tmp])
+	end
+	local inf = io.popen(MDDIFF .. table.concat(tmp,' '))
+	tmp = nil
+	for _,v in ipairs(get_full_email_queue) do
+		local hsha_l, bsha_l = inf:read('*l'):match('^(%S+) (%S+)$') 
+		if hsha_l == nil or bsha_l == nil then
+			log('mddiff returned less messages')
+			error('mddiff incorrect behaviour')
+		elseif hsha_l == v.hsha and bsha_l == v.bsha then
+			mkdir_p(v.name)
+			local rc = os.rename(v.tmp, v.name) 
+			if rc then
+				log('added '..v.name)
+			else
+				log('failed to rename '..v.tmp..' to '..v.name)
+				os.remove(v.tmp)
+				return (trace(false)) -- fail rename tmpfile to actual name
+			end
+		else
+			log('got a different email for '..v.name)
+			os.remove(v.tmp)
+			return (trace(false)) -- get full email failed, received wrong mail
+		end
+	end
+	inf:close()
+	get_full_email_queue = {}
+	return (trace(true)) -- get full email OK
 end
 
 function get_full_email(name,hsha,bsha)
-	local command = 'GET '..name..'\n'
-	get_full_email_queue_commands[#get_full_email_queue_commands+1] = command
-	get_full_email_queue_closures[#get_full_email_queue_closures+1] = function()
-	local tmpfile = tmp_for(name)
-	receive(io.stdin, tmpfile)
-	local hsha_l, bsha_l = sha_file(tmpfile)
-	if hsha_l == hsha and bsha_l == bsha then
-		mkdir_p(name)
-		local rc = os.rename(tmpfile, name) 
-		if rc then
-			log('added '..name)
-			return (trace(true)) -- get full email success
-		else
-			log('failed to rename '..tmpfile..' to '..name)
-			os.remove(tmpfile)
-			return (trace(false)) -- fail rename tmpfile to actual name
-		end
-	else
-		log('got a different email for '..name)
-		os.remove(tmpfile)
-		return (trace(false)) -- get full email failed, received wrong mail
-	end
-	end
+	get_full_email_queue[#get_full_email_queue+1] = {
+		name = name;
+		hsha = hsha;
+		bsha = bsha;
+	}
 	return true
 end
 
@@ -196,7 +207,6 @@ function execute_add(cmd)
 			return (trace(false)) -- skipping add since already there but !=
 		end
 	end
-	-- return get_full_email(name,hsha,bsha)
 	return (get_full_email(name,hsha,bsha))
 end
 
@@ -329,7 +339,7 @@ end
 function process_pending_queue()
 	local rc = process_get_full_email_queue()
 	if not rc then
-		log('error executing command')
+		log('error getting full email')
 		io.stdout:write('ABORT\n')
 		io.stdout:flush()
 		os.exit(1)
@@ -362,7 +372,7 @@ for i,cmd in ipairs(commands) do
 		io.stdout:flush()
 		os.exit(1)
 	end
-	if #get_full_email_queue_commands > 1000 then
+	if #get_full_email_queue > queue_max_len then
 			process_pending_queue()
 	end
 end
