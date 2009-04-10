@@ -1,7 +1,7 @@
 NAME
-  mddiff - generates a diff from a maildir fingerprint to its actual status
+  mddiff - computes diff for maildirs
 SYNOPSIS
-  mddiff [--max-mailno max] [--db-file db] [-v|--verbose] [--help] path ...
+  mddiff [--max-mailno mno] [--db-file dbf] [-v|--verbose] [--help] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
   recorded in a support file, called db file) and the current status, 
@@ -10,12 +10,21 @@ DESCRIPTION
 
   If paths is a list of regular files, mddiff outputs the sha1 of its header
   and body separated by space.
+
+      $ mddiff mddiff.c LICENSE Makefile 
+      806a0ffe4f29766effd764... 463e543da9dac8e298...
+      582cbb6a5cd3ce13965c8c... 8fa60a7458b1157193...
+      da60957614a4c2f8ebc4c0... 51980702755973efae...
   
   If paths is a list of directories, mddiff outputs a list of actions a client
   has to perform to syncronize a copy of the same maildirs. This set of actions
   is relative to a previous status of the maildir stored in the db file.
   The input directories are traversed recursively, and every file encountered
-  is a potential mail message (if it contains no \n\n it is skipped).
+  is a potential mail message (if it contains no \\n\\n it is skipped).
+
+      $ mddiff ~/Mail/
+      ADD ~/Mail/cur/1239038050.14937_1.garfield:2,S 66532ebb05b252e... 
+      ...
   
   Regular files and directories cannot be mixed in paths.
   
@@ -25,13 +34,16 @@ DESCRIPTION
   set is safe, while removing them may not do what you want (delete actions
   are generated).
 
+  mddiff does not alter the dbf file, it generates a new one called dbf.new.
+  It is up to the higher level tool smd-server(1) to rename dbf.new to dbf 
+  in case the other endpoint successfully applied the diff.
+
 OPTIONS
-  --max-mailno max      Estimation of max mail message number (default 500000)
+  --max-mailno mno      Estimation of max mail message number (default 500000)
                         Decrease for small systems, it is increased
                         automatically if needed
-  --db-file db          Name of the cache for the endpoint (default db.txt)
-  --verbose             Increase program verbosity (printed on stderr)
-  -v                    Increase program verbosity (printed on stderr)
+  --db-file dbf         Name of the cache for the endpoint (default db.txt)
+  -v --verbose          Increase program verbosity (printed on stderr)
   --help                This help screen
 
 NOTES
