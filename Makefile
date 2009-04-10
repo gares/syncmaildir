@@ -2,6 +2,7 @@ BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 
 PREFIX=usr/local
 DESTDIR=
+VERSION=0.9
 
 all: $(BINARIES) $(MANPAGES)
 
@@ -39,4 +40,15 @@ install: all
 	cp *.1 $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
-	rm -rf $(BINARIES) test.[0-9]*/ *.1
+	rm -rf $(BINARIES) test.[0-9]*/ *.1 
+	rm -f smd-$(VERSION) smd-$(VERSION).tar.gz
+
+dist:
+	$(MAKE) clean
+	mkdir smd-$(VERSION)
+	for X in *; do if [ $$X != smd-$(VERSION) ]; then \
+		cp -r $$X smd-$(VERSION); fi; done;
+	tar -cvzf smd-$(VERSION).tar.gz smd-$(VERSION)
+	rm -rf smd-$(VERSION)
+
+
