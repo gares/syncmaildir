@@ -1,5 +1,5 @@
 BINARIES=mddiff
-MANPAGES=mddiff.1 smd-server.1
+MANPAGES=mddiff.1 smd-server.1 smd-client.1
 
 all: $(BINARIES) $(MANPAGES)
 

@@ -1,0 +1,23 @@
+NAME
+  smd-client - receives diffs and performs actions
+
+SYNOPSIS
+  smd-client [-v]
+
+DESCRIPTION
+  smd-client waits on stdin a mail dir diff. It attempts to 
+  execute these actions, eventually asking data printing commands
+  on stdout and expecting the data on stdin. 
+
+OPTIONS
+  -v  Increase program verbosity (printed on stderr)
+
+NOTES
+  smd-client is a low level utility. You should use higher level tools like
+  smd-pull(1) and smd-push(1)
+
+SEE ALSO
+  mddiff(1), smd-server(1), smd-pull(1), smd-push(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
