@@ -336,6 +336,22 @@ function process_pending_queue()
 	end
 end
 
+-- strict access to the global environment
+setmetatable(_G,{
+	__newindex = function (t,k,v)
+		local d = debug.getinfo(2,"nl")
+		error(d.name..': '..d.currentline..
+			' :attempt to create new global '..k)
+	end;
+	__index = function(t,k)
+		local d = debug.getinfo(2,"nl")
+		error(d.name..': '..d.currentline..
+			' :attempt to read undefined global '..k)
+	end;
+})
+
+-- ============================= MAIN =====================================
+
 local commands = receive_delta(io.stdin)
 log('delta received')
 for i,cmd in ipairs(commands) do
