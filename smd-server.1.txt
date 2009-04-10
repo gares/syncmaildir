@@ -1,0 +1,29 @@
+NAME
+  smd-server - sends diffs and mails to smd-client
+
+SYNOPSIS
+  smd-server [-v] endpoint mailboxes
+
+DESCRIPTION
+  smd-server needs to know a name (endpoint) for the client (that must not
+  be used by others) and a list of mailboxes (directories).
+
+  smd-server first calls mddiff(1), then prints on stdout the generated
+  diff. It then accepts from stdin a small set of commands a client
+  may issue to request a file (or parts of it, like the header).
+
+  smd-server is in charge of committing the db file used by mddiff(1)
+  in case the client communicates a successful sync.
+
+OPTIONS
+  -v  Increase program verbosity (printed on stderr)
+
+NOTES
+  smd-server is a low level utility. You should use higher level tools like
+  smd-pull(1) and smd-push(1)
+
+SEE ALSO
+  mddiff(1), smd-client(1), smd-pull(1), smd-push(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
