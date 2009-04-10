@@ -2,8 +2,12 @@
 
 local MDDIFF = '/home/tassi/SYNC/smd/mddiff'
 
+local verbose = false
+
 function log(msg)
-	--io.stderr:write(msg,'\n')
+	if verbose then
+		io.stderr:write(msg,'\n')
+	end
 end
 
 function transmit(out, path, what)
@@ -64,30 +68,37 @@ setmetatable(_G,{
 
 -- ============================= MAIN =====================================
 
-local endpoint = arg[1]
-if endpoint == nil or not endpoint:match('^[a-zA-Z]+$') then
+if arg[1] == '-v' then
+	verbose = true
+	table.remove(arg,1)
+end
+
+if #arg < 2 then
 	io.stderr:write([[
-Usage: ]]..arg[0]..[[ endpointname [mailbox] [dbfile]
+Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...
 ]])
 	os.exit(1)
 end
 
-local mailbox = '~/Mail'
-if arg[2] ~= nil then mailbox = arg[2] end
-local mailbox_opt = ' ' .. mailbox
-
-local database = mailbox:gsub('/$','')..'.'..endpoint..'.db.txt'
-if arg[3] ~= nil then database = arg[3] end
-local database_opt = ' --db-file '..database
+local endpoint = arg[1]
+table.remove(arg,1)
+local HOME = os.getenv('HOME')
+os.execute('mkdir -p '..HOME..'/.smd')
+local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
+	..table.concat(arg,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
+local database_opt = ' --db-file '.. dbfile
+local mailbox_opt = ' ' .. table.concat(arg,' ')
 
 -- run mddiff and send the output to the client
-local r = io.popen(MDDIFF..database_opt..mailbox_opt,"r")
+local mddiff = MDDIFF..database_opt..mailbox_opt
+log('calling '.. mddiff)
+local r = io.popen(mddiff,"r")
 local sent = 0
 while true do
 	local l = r:read("*l")
 	if l ~= nil then
 		sent = sent + 1
-		--log('sending '..l..'\n')
+		log('sending '..l..'\n')
 		io.write(l,'\n')
 		log('sent '..sent..'\n')
 	else
@@ -115,11 +126,12 @@ while true do
 	if l:match('^COMMIT$') then
 		-- the client applied the diff, the new mailbox
 		-- fingerprint should be used for the next sync
-		os.rename(database..".new", database) 
+		os.rename(dbfile..".new", dbfile) 
 		os.exit(0)
 	elseif l:match('^ABORT$') then
 		-- the client failed in applying the diff
-		log('Client aborted\n')
+		log('Client aborted, removing '..dbfile..'.new\n')
+		os.remove(dbfile..".new")
 		os.exit(2)
 	elseif l:match('^GET ') then
 		local path = l:match('^GET ([^%s]+)$')
