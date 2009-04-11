@@ -21,6 +21,10 @@ function log(msg)
 	end
 end
 
+function log_error(msg)
+	io.stderr:write('ERROR: ',msg,'\n')
+end
+
 function transmit(out, path, what)
 	what = what or "all"
 	local f = assert(io.open(path,"r"))

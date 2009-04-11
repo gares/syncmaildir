@@ -43,7 +43,13 @@ function trace(x)
 end
 
 function receive(inf,outfile)
-	local outf = assert(io.open(outfile,"w"))
+	local outf = io.open(outfile,"w")
+	if not outf then
+			log_error("Unable to open "..outfile.." for writing.")
+			log_error('It may be caused by bad directory permissions, '..
+				'please check.')
+			os.exit(1)
+	end
 
 	local line = inf:read("*l")
 	local len = tonumber(line:match('^chunk (%d+)'))
@@ -66,7 +72,7 @@ function receive_delta(inf)
 		if line and line ~= "END" then cmds[#cmds+1] = line end
 	until not line or line == "END"
 	if line ~= "END" then
-		log_error('Delta not received correctly')
+		log_error('Unable to receive a complete diff')
 		os.exit(1)
 	end
 
@@ -81,7 +87,13 @@ function mkdir_p(path)
 	table.remove(t,#t)
 	local dir = table.concat(t,'/')
 	if not mkdir_p_cache[dir] then
-		os.execute('mkdir -p '..dir)
+		local rc = os.execute('mkdir -p '..dir)
+		if rc ~= 0 then
+			log_error("Unable to create directory "..dir)
+			log_error('It may be caused by bad directory permissions, '..
+				'please check.')
+			os.exit(1)
+		end
 		mkdir_p_cache[dir] = true
 	end
 end
