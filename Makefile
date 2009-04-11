@@ -4,13 +4,13 @@ PREFIX=usr/local
 DESTDIR=
 VERSION=0.9
 
-all: check-build $(BINARIES) $(MANPAGES)
+all: check-build $(BINARIES) 
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \
 		`pkg-config --cflags --libs glib-2.0 openssl`
 
-check-build: check-w-txt2man check-w-gcc
+check-build: check-w-gcc
 check-run: check-w-lua5.1 check-w-bash 
 
 check-w-%:
@@ -35,7 +35,7 @@ Mail.testcase.tgz:
 	tar -czf $@ Mail
 	rm -rf Mail
 
-%.1:%.1.txt
+%.1:%.1.txt check-w-txt2man
 	txt2man -t $* -v "smd (Sync Mail Dir) documentation" -s 1 $< > $@
 
 define install-replacing
@@ -60,8 +60,9 @@ install: $(BINARIES) $(MANPAGES)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
-	rm -rf $(BINARIES) test.[0-9]*/ *.1 
-	rm -f smd-$(VERSION) smd-$(VERSION).tar.gz
+	rm -rf $(BINARIES) $(MANPAGES)
+	rm -rf test.[0-9]*/ 
+	rm -rf smd-$(VERSION)/ smd-$(VERSION).tar.gz
 
 dist:
 	$(MAKE) clean
