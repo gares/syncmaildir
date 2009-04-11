@@ -2,7 +2,7 @@ BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
 PREFIX=usr/local
 DESTDIR=
-VERSION=0.9
+VERSION=0.9.0
 
 all: check-build $(BINARIES) 
 
