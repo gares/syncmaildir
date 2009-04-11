@@ -1,5 +1,5 @@
 BINARIES=mddiff
-MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 
+MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
 PREFIX=usr/local
 DESTDIR=
 VERSION=0.9
@@ -47,17 +47,17 @@ define mkdir-p
 	mkdir -p $(DESTDIR)/$(PREFIX)/$(1)
 endef
 
-install: all
+install: $(BINARIES) $(MANPAGES)
 	$(call mkdir-p,bin)
 	$(call mkdir-p,share/smd)
 	$(call mkdir-p,share/man/1)
-	cp mddiff $(DESTDIR)/$(PREFIX)/bin
+	cp $(BINARIES) $(DESTDIR)/$(PREFIX)/bin
 	$(call install-replacing,smd-server,bin)
 	$(call install-replacing,smd-client,bin)
 	$(call install-replacing,smd-pull,bin)
+	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-common,share/smd)
-	#install-replacing-mddiff-path smd-push
-	cp *.1 $(DESTDIR)/$(PREFIX)/share/man/1
+	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
 	rm -rf $(BINARIES) test.[0-9]*/ *.1 

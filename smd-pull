@@ -16,20 +16,7 @@ else
 	SMDROOT=$PREFIX/share/smd
 fi
 
-
 . $SMDROOT/smd-common
-
-mycat() { 
-	cat 
-}
-
-MITM=mycat
-VERBOSE=
-
-if [ "$DEBUG" = "true" ]; then
-	MITM=tee
-	VERBOSE=-v
-fi
 
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
@@ -42,16 +29,6 @@ CLIENT=$!
 
 ($SSH $SERVERNAME $SMDSERVER $VERBOSE $CLIENTNAME $MAILBOX < $LtS 2> $SL) > $StL &
 SERVER=$!
-
-cleanup() {
-	rm -f $CONFDIR/lock
-	kill $LOGGER1 2>/dev/null || true
-	kill $LOGGER2 2>/dev/null || true
-	kill $SERVER 2>/dev/null || true
-	kill $CLIENT 2>/dev/null || true
-}
-
-trap cleanup "EXIT" 
 
 wait $SERVER || grep ^ERROR $SL | sed 's/^/smd-server: /'
 wait $CLIENT || grep ^ERROR $CL | sed 's/^/smd-client: /'

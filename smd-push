@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# the idea is (where == is a bi-directional pipe) :
+#
+#   ssh foo smd-client == tee log == smd-server
+#
+
+set -e
+#set -x
+
+PREFIX="@PREFIX@"
+if [ `echo $PREFIX | cut -c -1` = "@" ]; then
+	SMDROOT=~/SYNC/smd
+	echo "smd-push not installed, assuming smd-common is in $SMDROOT"
+else
+	SMDROOT=$PREFIX/share/smd
+fi
+
+. $SMDROOT/smd-common
+
+($MITM $CtS > $LtS) < $CtL &
+LOGGER1=$!
+
+($MITM $StC > $LtC) < $StL &
+LOGGER2=$!
+
+($SMDSERVER $VERBOSE $SERVERNAME $MAILBOX < $LtC 2> $CL) > $CtL &
+CLIENT=$!
+
+($SSH $SERVERNAME $SMDCLIENT $VERBOSE < $LtS 2> $SL) > $StL &
+SERVER=$!
+
+wait $SERVER || grep ^ERROR $SL | sed 's/^/smd-client: /'
+wait $CLIENT || grep ^ERROR $CL | sed 's/^/smd-server: /'
+

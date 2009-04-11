@@ -1,14 +1,14 @@
 NAME
-  smd-pull - syncs the local mail dir letting the remote one untouched
+  smd-push - syncs the remote mail dir letting the local one untouched
 
 SYNOPSIS
-  smd-pull
+  smd-push
 
 DESCRIPTION
-  smd-pull performs in the local maildir all the changes that
-  were performed on remote one.
+  smd-push performs in the remote maildir all the changes that
+  were performed on the local one.
 
-  No changes are made on the remote maildir. Use smd-push(1) for that.
+  No changes are made on the local maildir. Use smd-pull(1) for that.
 
   The first time this program is run a new config file is created and
   the user is asked to edit it. That file is composed by the following
@@ -29,7 +29,7 @@ FILES
   ~/.smd/config
 
 SEE ALSO
-  mddiff(1), smd-server(1), smd-client(1), smd-push(1)
+  mddiff(1), smd-server(1), smd-client(1), smd-pull(1)
 
 AUTHOR
   Enrico Tassi <gares@fettunta.org>
