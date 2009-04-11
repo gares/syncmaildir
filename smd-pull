@@ -8,11 +8,14 @@
 set -e
 #set -x
 
-SMDROOT="@SMDROOT@"
-if [ `echo $SMDROOT | cut -c -1` = "@" ]; then
+PREFIX="@PREFIX@"
+if [ `echo $PREFIX | cut -c -1` = "@" ]; then
 	SMDROOT=~/SYNC/smd
-	echo "smd-pull not installed, assuming smd-common is in $SMDROOT/"
+	echo "smd-pull not installed, assuming smd-common is in $SMDROOT"
+else
+	SMDROOT=$PREFIX/share/smd
 fi
+
 
 . $SMDROOT/smd-common
 
