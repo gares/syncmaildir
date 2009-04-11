@@ -395,6 +395,7 @@ function execute(cmd)
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
 		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
+		log_error('REPLACE command not implement, sorry')
 		return (trace(false))
 
 	else
