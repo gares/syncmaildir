@@ -2,7 +2,7 @@ BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
 PREFIX=usr/local
 DESTDIR=
-VERSION=0.9.0
+VERSION=0.9.1
 
 all: check-build $(BINARIES) 
 
@@ -50,14 +50,14 @@ endef
 install: $(BINARIES) $(MANPAGES)
 	$(call mkdir-p,bin)
 	$(call mkdir-p,share/smd)
-	$(call mkdir-p,share/man/1)
+	$(call mkdir-p,share/man/man1)
 	cp $(BINARIES) $(DESTDIR)/$(PREFIX)/bin
 	$(call install-replacing,smd-server,bin)
 	$(call install-replacing,smd-client,bin)
 	$(call install-replacing,smd-pull,bin)
 	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-common,share/smd)
-	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/1
+	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
 
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
