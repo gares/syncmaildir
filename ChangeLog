@@ -1,0 +1,5 @@
+../4/2009 - first public release
+	* end-user tools: smd-pull, smd-push
+	* stupid endpoint: smd-server
+	* endpoint implementing politics: smd-client
+	* low-level tool: mddiff
