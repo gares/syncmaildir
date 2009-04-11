@@ -20,6 +20,10 @@ function log(msg)
 	end
 end
 
+function log_error(msg)
+	io.stderr:write('ERROR: ',msg,'\n')
+end
+
 function trace(x)
 	if verbose then
 		local t = {}
@@ -55,10 +59,13 @@ function receive_delta(inf)
 	local line = ""
 
 	repeat
-		log('receiving '..#cmds)
 		line = inf:read("*l")
 		if line and line ~= "END" then cmds[#cmds+1] = line end
 	until not line or line == "END"
+	if line ~= "END" then
+		log_error('Delta not received correctly')
+		os.exit(1)
+	end
 
 	return cmds
 end
@@ -76,17 +83,20 @@ function mkdir_p(path)
 	end
 end
 
-function tmp_for(path)
+function tmp_for(path,use_tmp)
+	local use_tmp = use_tmp or true
 	local t = {} 
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	local fname = t[#t]
 	table.remove(t,#t)
 	local i, found = 0, false
-	for i=#t,1,-1 do
-		if t[i] == 'cur' or t[i] == 'new' then 
-			t[i] = 'tmp' 
-			found = true
-			break
+	if use_tmp then
+		for i=#t,1,-1 do
+			if t[i] == 'cur' or t[i] == 'new' then 
+				t[i] = 'tmp' 
+				found = true
+				break
+			end
 		end
 	end
 	local newpath
@@ -138,12 +148,14 @@ function process_get_full_email_queue()
 			if rc then
 				log('added '..v.name)
 			else
-				log('failed to rename '..v.tmp..' to '..v.name)
+				log_error('Failed to rename '..v.tmp..' to '..v.name)
+				log_error('It may be caused by bad directory permissions, please check.')
 				os.remove(v.tmp)
 				return (trace(false)) -- fail rename tmpfile to actual name
 			end
 		else
-			log('got a different email for '..v.name)
+			log_error('The server sent a different email for '..v.name)
+			log_error('This problem should be transient, please retry.')
 			os.remove(v.tmp)
 			return (trace(false)) -- get full email failed, received wrong mail
 		end
@@ -212,7 +224,10 @@ function execute_add(cmd)
 			log('skipping '..name..' already there')
 			return (trace(true)) -- skipping add since already there
 		else
-			log('error '..name..' already there but different')
+			log_error('Failed to add '..name..' since a file with the same name')
+			log_error('exists but its content is different.')
+			log_error('To fix this problem you should rename '..name)
+			log_error('Executing `mv '..name..' '..tmp_for(name,false)..'` should work.')
 			return (trace(false)) -- skipping add since already there but !=
 		end
 	end
@@ -229,11 +244,16 @@ function execute_delete(cmd)
 				log('deleted '..name)
 				return (trace(true)) -- removed successfully
 			else
-				log('deletion of '..name..' failed')
+				log_error('Deletion of '..name..' failed.')
+				log_error('It may be caused by bad directory permissions, please check.')
 				return (trace(false)) -- os.remove failed
 			end
 		else
-			log('skipping removal '..name..' since differs')
+			log_error('Failed to delete '..name..' since the local copy of it has')
+			log_error('modifications.')
+			log_error('To fix this problem you have two options:')
+			log_error('- delete '..name..' by hand')
+			log_error('- run smd-push so that this file is added to the remote mailbox')
 			return (trace(false)) -- remove fails since local file is !=
 		end
 	end
@@ -251,8 +271,15 @@ function execute_copy(cmd)
 			log('skipping copy of '..name_src..' to '..name_tgt)
 			return (trace(true)) -- skip copy, already there
 		else
-			log('unable to copy '..name_src..' to '..name_tgt..' since'..
-				' target exists')
+			log_error('Failed to copy '..name_src..' to '..name_tgt)
+			log_error('The destination file already exists but its content differs.')
+			log_error('To fix this problem you have two options:')
+			log_error('- rename '..name_tgt..' by hand so that '..name_src..' can be')
+			log_error('  copied without replacing it.')
+			log_error('  Executing `mv '..name_tgt..' '..
+				tmp_for(name_tgt,false)..'` should work.')
+			log_error('- run smd-push so that your changes to '..name_tgt..' are')
+			log_error('  propagated to the remote mailbox')
 			return (trace(false)) -- fail copy, already there but !=
 		end
 	elseif ex_src and not ex_tgt then
@@ -264,6 +291,9 @@ function execute_copy(cmd)
 					return (trace(true)) -- copy successful
 				else 
 					log('copy '..name_src..' to '..name_tgt..' failed')
+					log_error('Failed to copy '..name_src..' to '..name_tgt)
+					log_error('It may be caused by bad directory permissions, '..
+						'please check.')
 					return (trace(false)) -- copy failed (cp command failed)
 				end
 		else
@@ -276,8 +306,16 @@ function execute_copy(cmd)
 				name_tgt ..' since target already there')
 			return (trace(true)) -- skip copy, already there (only the copy)
 		else
-			log('unable to copy non existent '..name_src..' to '..
-				name_tgt..' since'.. ' target exists')
+			log_error('Failed to copy '..name_src..' to '..name_tgt)
+			log_error('The source file has been locally removed.')
+			log_error('The destination file already exists but its content differs.')
+			log_error('To fix this problem you have two options:')
+			log_error('- rename '..name_tgt..' by hand so that '..name_src..' can be')
+			log_error('  copied without replacing it.')
+			log_error('  Executing `mv '..name_tgt..' '..
+				tmp_for(name_tgt,false)..'` should work.')
+			log_error('- run smd-push so that your changes to '..name_tgt..' are')
+			log_error('  propagated to the remote mailbox')
 			return (trace(false)) -- skip copy, already there and !=, no source
 		end
 	else
@@ -300,8 +338,9 @@ function get_header_and_merge(name,hsha,bsha)
 		log('changed header of '..name)
 		return (trace(true)) -- get header OK
 	else
-		log('got a different email for '..name)
 		os.remove(tmpfile)
+		log_error('The server sent a different email header for '..name)
+		log_error('This problem should be transient, please retry.')
 		return (trace(false)) -- get header fails, got a different header
 	end
 end
@@ -317,7 +356,10 @@ function execute_replaceheader(cmd)
 			log('header already changed for '..name)
 			return (trace(true)) -- replace header ok, already changend
 		else
-			log('header change failed, local modifications ..'..name)
+			log_error('Failed to replace '..name..' header since it has local')
+			log_error(' modifications.')
+			log_error('To fix this problem you should rename '..name)
+			log_error('Executing `mv '..name..' '..tmp_for(name,false)..'` should work.')
 			return (trace(false)) -- replace header fails, local header !=
 		end
 	else
@@ -338,7 +380,7 @@ function execute(cmd)
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
 		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
-		return (trace())
+		return (trace(false))
 
 	else
 		error('Unknown opcode '..opcode)
