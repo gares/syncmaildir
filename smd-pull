@@ -8,7 +8,13 @@
 set -e
 #set -x
 
-. ~/SYNC/smd/smd-common
+SMDROOT="@SMDROOT@"
+if [ `echo $SMDROOT | cut -c -1` = "@" ]; then
+	SMDROOT=~/SYNC/smd
+	echo "smd-pull not installed, assuming smd-common is in $SMDROOT/"
+fi
+
+. $SMDROOT/smd-common
 
 mycat() { 
 	cat 

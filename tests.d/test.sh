@@ -1,8 +1,8 @@
 #!/bin/bash
 
-export PATH="$PATH:$PWD"
 TOKILL=""
 ROOT=$PWD
+ORIGPATH=$PATH
 
 out(){
 	(
@@ -23,12 +23,14 @@ test_eq(){
 
 prepare(){
 	cd $ROOT
-	make --quiet
-	
 	rm -rf test.$N
 	mkdir test.$N
+	make --quiet
+	make --quiet install PREFIX=$ROOT/test.$N
+	
 	cd test.$N
 	export HOME=$PWD
+	export PATH=$PWD/bin:$ORIGPATH
 	tar -xzf ../Mail.testcase.tgz
 	
 	mkfifo s2c

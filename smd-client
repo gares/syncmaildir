@@ -1,6 +1,15 @@
-#!/usr/bin/env lua5.1
+#! /usr/bin/env lua5.1
+-- 
+-- Released under the terms of GPLv3 or at your option any later version.
+-- No warranties.
+-- Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-local MDDIFF = '/home/tassi/SYNC/smd/mddiff '
+local MDDIFF = '@MDDIFF@ '
+if MDDIFF == '@' .. 'MDDIFF' .. '@ ' then
+		MDDIFF = os.getenv('HOME')..'/SYNC/smd/mddiff '
+		io.stderr:write('smd-client not installed, assuming mddiff is: ',MDDIFF,'\n')
+end
+
 local queue_max_len = 50
 
 local verbose = false

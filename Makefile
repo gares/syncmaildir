@@ -38,12 +38,25 @@ Mail.testcase.tgz:
 %.1:%.1.txt
 	txt2man -t $* -v "smd (Sync Mail Dir) documentation" -s 1 $< > $@
 
+define install-replacing
+	sed 's?$(1)?/$(PREFIX)/$(2)?' $(3) > $(DESTDIR)/$(PREFIX)/bin/$(3)
+	chmod a+rx $(DESTDIR)/$(PREFIX)/bin/$(3)
+endef
+
+define mkdir-p
+	mkdir -p $(DESTDIR)/$(PREFIX)/$(1)
+endef
+
 install: all
-	mkdir -p $(DESTDIR)/$(PREFIX)/bin
-	mkdir -p $(DESTDIR)/$(PREFIX)/share/smd
-	mkdir -p $(DESTDIR)/$(PREFIX)/share/man/1
-	cp smd-common $(DESTDIR)/$(PREFIX)/share/smd
-	cp mddiff smd-server smd-client smd-pull $(DESTDIR)/$(PREFIX)/bin
+	$(call mkdir-p,bin)
+	$(call mkdir-p,share/smd)
+	$(call mkdir-p,share/man/1)
+	cp smd-common $(DESTDIR)/$(PREFIX)/share/smd/
+	cp mddiff $(DESTDIR)/$(PREFIX)/bin
+	$(call install-replacing,@MDDIFF@,bin/mddiff,smd-server)
+	$(call install-replacing,@MDDIFF@,bin/mddiff,smd-client)
+	$(call install-replacing,@SMDROOT@,share/smd,smd-pull)
+	#install-replacing-mddiff-path smd-push
 	cp *.1 $(DESTDIR)/$(PREFIX)/share/man/1
 
 clean: 
