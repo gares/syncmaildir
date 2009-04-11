@@ -412,45 +412,52 @@ function process_pending_queue()
 	end
 end
 
+-- ============================= MAIN =====================================
+
+function main()
+	if arg[1] == '-v' then
+		verbose = true
+	end
+	
+	local commands = receive_delta(io.stdin)
+	log('delta received')
+	for i,cmd in ipairs(commands) do
+		local rc = execute(cmd)
+		if not rc then
+			log('error executing command '..i..": "..cmd)
+			io.stdout:write('ABORT\n')
+			io.stdout:flush()
+			os.exit(1)
+		end
+		if #get_full_email_queue > queue_max_len then
+				process_pending_queue()
+		end
+	end
+	process_pending_queue()
+	
+	log('committing')
+	io.stdout:write('COMMIT\n')
+	io.stdout:flush()
+	os.exit(0)
+end
+
 -- strict access to the global environment
 setmetatable(_G,{
 	__newindex = function (t,k,v)
 		local d = debug.getinfo(2,"nl")
-		error(d.name..': '..d.currentline..
+		error((d.name or '?')..': '..(d.currentline or '?')..
 			' :attempt to create new global '..k)
 	end;
 	__index = function(t,k)
 		local d = debug.getinfo(2,"nl")
-		error(d.name..': '..d.currentline..
+		error((d.name or '?')..': '..(d.currentline or '?')..
 			' :attempt to read undefined global '..k)
 	end;
 })
 
--- ============================= MAIN =====================================
-
-if arg[1] == '-v' then
-	verbose = true
-end
-
-local commands = receive_delta(io.stdin)
-log('delta received')
-for i,cmd in ipairs(commands) do
-	local rc = execute(cmd)
-	if not rc then
-		log('error executing command '..i..": "..cmd)
-		io.stdout:write('ABORT\n')
-		io.stdout:flush()
-		os.exit(1)
-	end
-	if #get_full_email_queue > queue_max_len then
-			process_pending_queue()
-	end
-end
-process_pending_queue()
-
-log('committing')
-io.stdout:write('COMMIT\n')
-io.stdout:flush()
-os.exit(0)
+xpcall(main,function(msg)
+	log_error(tostring(msg))
+	os.exit(1)
+end)
 
 -- vim:set ts=4:
