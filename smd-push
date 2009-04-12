@@ -35,9 +35,9 @@ EXITCODE=0
 wait $SERVER || EXITCODE=1
 wait $CLIENT || EXITCODE=1 
 
-if [ $EXITCODE = 1 ]; do
+if [ $EXITCODE = 1 ]; then
 	grep ^ERROR $CL | sed 's/^/smd-server: /'
 	grep ^ERROR $SL | sed 's/^/smd-client: /'
-done
+fi
 
 exit $EXITCODE
