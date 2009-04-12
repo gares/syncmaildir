@@ -4,13 +4,13 @@
 -- No warranties.
 -- Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-local PREFIX = '@PREFIX@ '
+local PREFIX = '@PREFIX@'
 local MDDIFF
 if string.sub(PREFIX,1,1) == '@' then
 		MDDIFF = os.getenv('HOME')..'/SYNC/smd/mddiff '
 		io.stderr:write('smd-server not installed, assuming mddiff is: ',MDDIFF,'\n')
 else
-		MDDIFF = PREFIX .. '/bin/mddiff'
+		MDDIFF = PREFIX .. '/bin/mddiff '
 end
 
 local verbose = false
