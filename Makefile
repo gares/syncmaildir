@@ -66,7 +66,7 @@ clean:
 	rm -rf $(BINARIES) $(MANPAGES)
 	rm -rf test.[0-9]*/ 
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
-	rm $(HTML)
+	rm -f $(HTML)
 
 dist:
 	$(MAKE) clean
@@ -81,4 +81,7 @@ $(HTML): check-w-markdown
 	markdown README >> index.html
 	cat misc/tail.html >> index.html
 
+upload-website: $(HTML)
+	scp $(HTML) misc/style.css \
+		gareuselesinge,syncmaildir@web.sourceforge.net:htdocs
 
