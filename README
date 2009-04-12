@@ -1,3 +1,25 @@
+SYNC MAIL DIR
+=============
+
+Sync Mail Dir (smd) is a set of tools to synchronize a pair of mailboxes
+in Maildir format. 
+
+smd-pull
+--------
+
+smd-push
+--------
+
+SERVER/CLIENT interaction
+=========================
+
+smd-server
+----------
+
+smd-client
+----------
+
+
 MAILDIR DIFF
 ============
 
