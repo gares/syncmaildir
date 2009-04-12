@@ -1,6 +1,7 @@
 PROJECTNAME=syncmaildir
 BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
+HTML=index.html
 PREFIX=usr/local
 DESTDIR=
 VERSION=0.9.1
@@ -64,6 +65,7 @@ clean:
 	rm -rf $(BINARIES) $(MANPAGES)
 	rm -rf test.[0-9]*/ 
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
+	rm $(HTML)
 
 dist:
 	$(MAKE) clean
@@ -72,5 +74,10 @@ dist:
 		cp -r $$X $(PROJECTNAME)-$(VERSION); fi; done;
 	tar -cvzf $(PROJECTNAME)-$(VERSION).tar.gz $(PROJECTNAME)-$(VERSION)
 	rm -rf $(PROJECTNAME)-$(VERSION)
+
+$(HTML): check-w-markdown
+	cat misc/head.html > index.html
+	markdown README >> index.html
+	cat misc/tail.html >> index.html
 
 
