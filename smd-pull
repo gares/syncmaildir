@@ -31,6 +31,13 @@ CLIENT=$!
 ($SSH $SERVERNAME $SMDSERVER $VERBOSE $CLIENTNAME $MAILBOX < $LtS 2> $SL) > $StL &
 SERVER=$!
 
-wait $SERVER || grep ^ERROR $SL | sed 's/^/smd-server: /'
-wait $CLIENT || grep ^ERROR $CL | sed 's/^/smd-client: /'
+EXITCODE=0
+wait $SERVER || EXITCODE=1
+wait $CLIENT || EXITCODE=1 
 
+if [ $EXITCODE = 1 ]; do
+	grep ^ERROR $SL | sed 's/^/smd-server: /'
+	grep ^ERROR $CL | sed 's/^/smd-client: /'
+done
+
+exit $EXITCODE
