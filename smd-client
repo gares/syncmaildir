@@ -7,7 +7,7 @@
 local PREFIX = '@PREFIX@'
 local MDDIFF
 if string.sub(PREFIX,1,1) == '@' then
-		MDDIFF = os.getenv('HOME')..'/SYNC/smd/mddiff '
+		MDDIFF = os.getenv('HOME')..'/SYNC/syncmaildir/mddiff '
 		io.stderr:write('smd-client not installed, assuming mddiff is: ',MDDIFF,'\n')
 else
 		MDDIFF = PREFIX .. '/bin/mddiff '
