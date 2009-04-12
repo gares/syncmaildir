@@ -1,8 +1,60 @@
 SYNC MAIL DIR
 =============
 
-Sync Mail Dir (smd) is a set of tools to synchronize a pair of mailboxes
-in Maildir format. 
+Sync Mail Dir (`smd`) is a set of tools to synchronize a pair of mailboxes
+in Maildir format. It uses `ssh` to transmit and receive data, and to
+run commands on the remote host (but in principle it could use any 
+by-directional channel, it should be easy to adapt it to use `nc` instead).
+Sync Mail Dir needs to be installed on both hosts: we call server the host we
+push to and pull from, we call client the host we push from and pull to. In
+most common scenario, the server is our mail server, while the client is our
+laptop.
+
+The directory `~/.smd/` contains the configuration file, some fifo needed to
+short-circuit the softwares running on the client and on the server, and a
+cache file (called db-file from now on) that represents the status of the
+mailbox las time we successfully pushed.
+
+Sync Mail Dir is a layered set of tools, where low level tools are implemented
+in low level languages (to achieve decent performances) and high level tools
+are written in scripting languages (to achieve better flexibility). 
+
+- `mddiff` is a small and hopefully efficient C program that given a 
+  db-file (a snapshot of a previous mailbox status) generates a set of 
+  actions (a diff) a client should perform to synchronize its local
+  mailbox copy.
+- `smd-server` ...
+- `smd-client` ...
+- `smd-pull` ...
+- `smd-push` ...
+
+HOW-TO
+------
+
+Till now, two end-user tools are available:
+
+- `smd-pull` to obtain the changes made on the remote mailbox applied locally
+- `smd-push` viceversa
+
+Both tools read a configuration file in `~/.smd/config`, that is a simple
+shell script sourced by both. This file defines the following variables:
+
+- `SERVERNAME` is a valid alias for ssh. It should be defined in 
+  your `~/.ssh/config`, with compression enabled. For example:
+
+    Host smd-server-foo
+      Compression yes
+      Hostname your.real.server.name
+      Username you
+
+- `CLIENTNAME` a name for your client: the host name should be fine.
+
+- `MAILBOX` a list of roots to be synchronized. There is no support for
+  name mapping, thus they should be named the same on the remote host.
+
+The first time you run `smd-pull` or `smd-push` a template file will be 
+generated for you.
+
 
 smd-pull
 --------
