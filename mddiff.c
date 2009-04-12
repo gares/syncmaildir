@@ -18,13 +18,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <openssl/sha.h>
+#include <gcrypt.h>
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <glib.h>
+
+#define SHA_DIGEST_LENGTH 20
 
 #define __tostring(x) #x 
 #define tostring(x) __tostring(x)
@@ -311,8 +313,9 @@ void analize_file(const char* dir,const char* file) {
 	char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
-	unsigned char* sha1;
+	//unsigned char* sha1;
 	struct mail* alias, *bodyalias, *m;
+	gcry_md_hd_t gctx;
 
 	m = alloc_mail();
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
@@ -368,10 +371,16 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	// calculate sha1
-	sha1 = SHA1((const unsigned char*)addr, next - addr,NULL);
-	memcpy(m->hsha, sha1, SHA_DIGEST_LENGTH);
-	sha1 = SHA1((const unsigned char*)next, sb.st_size - (next - addr),NULL);
-	memcpy(m->bsha, sha1, SHA_DIGEST_LENGTH);
+	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
+	gcry_md_write(gctx, addr, next - addr);
+	gcry_md_final(gctx);
+	memcpy(m->hsha, gcry_md_read(gctx, 0), SHA_DIGEST_LENGTH);
+	gcry_md_close(gctx);
+	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
+	gcry_md_write(gctx, next, sb.st_size - (next - addr));
+	gcry_md_final(gctx);
+	memcpy(m->bsha, gcry_md_read(gctx, 0), SHA_DIGEST_LENGTH);
+	gcry_md_close(gctx);
 	
 	munmap(addr, sb.st_size);
 	close(fd);
@@ -470,7 +479,8 @@ int extra_sha_file(const char* file) {
 	char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
-	unsigned char* sha1;
+	//unsigned char* sha1;
+	gcry_md_hd_t gctx;
 
 	fd = open(file, O_RDONLY | O_NOATIME);
 	if (fd == -1) {
@@ -508,10 +518,16 @@ int extra_sha_file(const char* file) {
 	}
 
 	// calculate sha1
-	sha1 = SHA1((const unsigned char*)addr, next - addr,NULL);
-	fprintf(stdout, "%s ", txtsha(sha1,tmpbuff_1));
-	sha1 = SHA1((const unsigned char*)next, sb.st_size - (next - addr),NULL);
-	fprintf(stdout, "%s\n", txtsha(sha1,tmpbuff_1));
+	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
+	gcry_md_write(gctx, addr, next - addr);
+	gcry_md_final(gctx);
+	fprintf(stdout, "%s ", txtsha(gcry_md_read(gctx, 0),tmpbuff_1));
+	gcry_md_close(gctx);
+	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
+	gcry_md_write(gctx, next, sb.st_size - (next - addr));
+	gcry_md_final(gctx);
+	fprintf(stdout, "%s\n", txtsha(gcry_md_read(gctx, 0),tmpbuff_1));
+	gcry_md_close(gctx);
 	
 	munmap(addr, sb.st_size);
 	close(fd);
@@ -606,6 +622,12 @@ int main(int argc, char *argv[]) {
 	struct stat sb;
 	int c = 0;
 	int option_index = 0;
+
+  	if (!gcry_check_version (GCRYPT_VERSION)) {
+		fputs ("libgcrypt version mismatch\n", stderr);
+		exit (2);
+    }
+
 
 	for(;;) {
 		c = getopt_long(argc, argv, "vh", long_options, &option_index);
