@@ -1,0 +1,41 @@
+body {
+	background-color: #FFFFf2;
+	font-family: sans-serif;
+}
+
+h1 {
+	text-align: center;
+}
+
+h2 {
+	border-bottom-style: solid;
+        border-bottom-width: 2px;
+	border-bottom-color: #AAAAAA;
+}
+  
+a:hover {
+	color: #ffffff;
+	background-color: #1030f0;
+	text-decoration: none;
+}
+
+a.nohover:hover {
+	background-color: transparent;
+}
+
+a code { font-family: inherit; }
+
+blockquote p { margin:0pt; padding-left:0pt; }
+
+pre, blockquote {
+	display: block;
+	padding-left:1em;
+	padding-right:1em;
+	padding-top:1em;
+	padding-bottom:1em;
+	margin-left:4em;
+	margin-right:4em;
+	border-style: solid;
+	border-width: 1px;
+	background-color: #DDDDDD;
+}
