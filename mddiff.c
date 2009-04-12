@@ -387,10 +387,15 @@ void analize_file(const char* dir,const char* file) {
 
 	if (alias != NULL) {
 		if(sha_equal(alias->bsha,m->bsha)) {
-			COMMAND_REPLACE_HEADER(alias,m);
-			m->seen=SEEN;
-			alias->seen=CHANGED;
-			return;
+			if (sha_equal(alias->hsha, m->hsha)) {
+				alias->seen = m->seen = SEEN;
+				return;
+			} else {
+				COMMAND_REPLACE_HEADER(alias,m);
+				m->seen=SEEN;
+				alias->seen=CHANGED;
+				return;
+			}
 		} else {
 			COMMAND_REPLACE(alias,m);
 			m->seen=SEEN;
