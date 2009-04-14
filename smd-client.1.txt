@@ -2,9 +2,12 @@ NAME
   smd-client - receives diffs and performs actions
 
 SYNOPSIS
-  smd-client [-v]
+  smd-client [-v] endpoint mailboxes
 
 DESCRIPTION
+  smd-client needs to know a name (endpoint) for the client (that must not
+  be used by others) and a list of mailboxes (directories).
+
   smd-client waits on stdin a mail dir diff. It attempts to 
   execute these actions, eventually asking data printing commands
   on stdout and expecting the data on stdin. 
