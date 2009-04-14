@@ -29,7 +29,8 @@ prepare(){
 	make --quiet install PREFIX=$ROOT/test.$N
 	
 	cd test.$N
-	export HOME=$PWD
+	export HOMEC=$PWD/target
+	export HOMES=$PWD
 	export PATH=$PWD/bin:$ORIGPATH
 	tar -xzf ../Mail.testcase.tgz
 	

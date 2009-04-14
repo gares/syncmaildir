@@ -1,14 +1,14 @@
 #!/bin/bash
 
 run_server(){
-	smd-server -v test Mail < c2s 2> log.server.$1 | tee log.s2c > s2c &
+	HOME=$HOMES smd-server -v test Mail < c2s 2> log.server.$1 | tee log.s2c > s2c &
 	SERVER=$!
 	TOKILL="$TOKILL $SERVER"
 }
 
 run_client(){
 	cd target 
-	smd-client -v < ../s2c 2> ../log.client.$1 | tee ../log.c2s > ../c2s &
+	HOME=$HOMEC smd-client -v test Mail < ../s2c 2> ../log.client.$1 | tee ../log.c2s > ../c2s &
 	CLIENT=$!
 	TOKILL="$TOKILL $CLIENT"
 	cd ..
