@@ -4,66 +4,11 @@
 -- No warranties.
 -- Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-local PREFIX = '@PREFIX@'
-local MDDIFF
-if string.sub(PREFIX,1,1) == '@' then
-		MDDIFF = os.getenv('HOME')..'/SYNC/syncmaildir/mddiff '
-		io.stderr:write('smd-client not installed, assuming mddiff is: ',MDDIFF,'\n')
-else
-		MDDIFF = PREFIX .. '/bin/mddiff '
-end
+require 'syncmaildir'
+
+for k,v in pairs(syncmaildir) do _G[k] = v end
 
 local queue_max_len = 50
-
-local PROTOCOL_VERSION="1.0"
-
-local verbose = false
-
-function log(msg)
-	if verbose then
-		io.stderr:write(msg,'\n')
-	end
-end
-
-function log_error(msg)
-	io.stderr:write('ERROR: ',msg,'\n')
-end
-
-function trace(x)
-	if verbose then
-		local t = {}
-		local n = 2
-		while true do
-			local d = debug.getinfo(n,"nl")
-			if not d or not d.name then break end
-			t[#t+1] = d.name ..":".. (d.currentline or "?")
-			n=n+1
-		end
-		io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
-	end
-	return x
-end
-
-function receive(inf,outfile)
-	local outf = io.open(outfile,"w")
-	if not outf then
-			log_error("Unable to open "..outfile.." for writing.")
-			log_error('It may be caused by bad directory permissions, '..
-				'please check.')
-			os.exit(1)
-	end
-
-	local line = inf:read("*l")
-	local len = tonumber(line:match('^chunk (%d+)'))
-	while len > 0 do
-		local next_chunk = 16384
-		if len < next_chunk then next_chunk = len end
-		local data = inf:read(next_chunk)
-		len = len - data:len()
-		outf:write(data)
-	end
-	outf:close()
-end
 
 function receive_delta(inf)
 	local cmds = {}
@@ -81,59 +26,6 @@ function receive_delta(inf)
 	return cmds
 end
 
-local mkdir_p_cache = {}
-
-function mkdir_p(path)
-	local t = {} 
-	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
-	table.remove(t,#t)
-	local dir = table.concat(t,'/')
-	if not mkdir_p_cache[dir] then
-		local rc = os.execute('mkdir -p '..dir)
-		if rc ~= 0 then
-			log_error("Unable to create directory "..dir)
-			log_error('It may be caused by bad directory permissions, '..
-				'please check.')
-			os.exit(1)
-		end
-		mkdir_p_cache[dir] = true
-	end
-end
-
-function tmp_for(path,use_tmp)
-	local use_tmp = use_tmp or true
-	local t = {} 
-	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
-	local fname = t[#t]
-	table.remove(t,#t)
-	local i, found = 0, false
-	if use_tmp then
-		for i=#t,1,-1 do
-			if t[i] == 'cur' or t[i] == 'new' then 
-				t[i] = 'tmp' 
-				found = true
-				break
-			end
-		end
-	end
-	local newpath
-	if not found then
-		newpath = path .. '.new'
-	else
-		t[#t+1] = fname
-		newpath = table.concat(t,'/') 
-	end
-	mkdir_p(newpath)
-	while exists(newpath) do newpath = newpath .. 'x' end
-	return newpath
-end
-
-function sha_file(name)
-	local inf = io.popen(MDDIFF .. name)
-	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
-	inf:close()
-	return hsha, bsha
-end
 
 local get_full_email_queue = {}
 
@@ -189,25 +81,6 @@ function get_full_email(name,hsha,bsha)
 		bsha = bsha;
 	}
 	return true
-end
-
-function exists(name)
-	local f = io.open(name,'r')
-	if f ~= nil then
-		f:close()
-		return true
-	else
-		return false		
-	end
-end
-
-function exists_and_sha(name)
-	if exists(name) then
-		local h, b = sha_file(name)
-		return true, h, b
-	else
-		return false
-	end
 end
 
 function merge_mail(header,body,target)
@@ -415,59 +288,11 @@ function process_pending_queue()
 	end
 end
 
-function touch(f)
-	local h = io.open(f,'r')
-	if h == nil then
-		h = io.open(f,'w')
-		if h == nil then
-			log_error('Unable to touch '..f)
-			os.exit(1)
-		else
-			h:close()
-		end
-	else
-		h:close()
-	end
-end
-
-function handshake(dbfile)
-	-- send the protocol version and the dbfile sha1 sum
-	io.write('protocol ',PROTOCOL_VERSION,'\n')
-	touch(dbfile)
-	local inf = io.popen('sha1sum '.. dbfile,'r')
-	local db_sha = inf:read('*a'):match('^(%S+)')
-	io.write('dbfile ',db_sha,'\n')
-	io.flush()
-
-	-- check protocol version and dbfile sha
-	local protocol = io.read('*l'):match('^protocol (.+)$')
-	if protocol ~= PROTOCOL_VERSION then
-		log_error('Wrong protocol version.')
-		log_error('The same version of syncmaildir must be user on '..
-			'both endpoints')
-		os.exit(1)
-	end
-	local sha = io.read('*l'):match('^dbfile (%S+)$')
-	if sha ~= db_sha then
-		log_error('Local dbfile and remote db file differ.')
-		log_error('Remove both files and push/pull again.')
-		os.exit(1)
-	end
-end
-
-function dbfile_name(endpoint, mailboxes)
-	local HOME = os.getenv('HOME')
-	os.execute('mkdir -p '..HOME..'/.smd')
-	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
-		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
-	return dbfile
-end
-
 -- ============================= MAIN =====================================
 
 function main()
 	if arg[1] == '-v' then
-		verbose = true
+		set_verbose(true)
 		table.remove(arg,1)
 	end
 	
@@ -526,19 +351,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	os.exit(0)
 end
 
--- strict access to the global environment
-setmetatable(_G,{
-	__newindex = function (t,k,v)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to create new global '..k)
-	end;
-	__index = function(t,k)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to read undefined global '..k)
-	end;
-})
+set_strict()
 
 xpcall(main,function(msg)
 	log_error(tostring(msg))

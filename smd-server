@@ -4,118 +4,9 @@
 -- No warranties.
 -- Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-local PREFIX = '@PREFIX@'
-local MDDIFF
-if string.sub(PREFIX,1,1) == '@' then
-		MDDIFF = os.getenv('HOME')..'/SYNC/syncmaildir/mddiff '
-		io.stderr:write('smd-server not installed, assuming mddiff is: ',MDDIFF,'\n')
-else
-		MDDIFF = PREFIX .. '/bin/mddiff '
-end
+require 'syncmaildir'
 
-local PROTOCOL_VERSION="1.0"
-
-local verbose = false
-
-function log(msg)
-	if verbose then
-		io.stderr:write(msg,'\n')
-	end
-end
-
-function log_error(msg)
-	io.stderr:write('ERROR: ',msg,'\n')
-end
-
-function transmit(out, path, what)
-	what = what or "all"
-	local f = assert(io.open(path,"r"))
-	local size = assert(f:seek("end"))
-	f:seek("set")
-
-	if what == "header" then
-		local line
-		local header = {}
-		size = 0
-		while line ~= "" do
-			line = assert(f:read("*l"))
-			header[#header+1] = line
-			header[#header+1] = "\n"
-			size = size + 1 + string.len(line)
-		end
-		f:close()
-		out:write("chunk " .. size .. "\n")
-		out:write(unpack(header))
-		out:flush()
-		return
-	end
-
-	if what == "body" then
-		local line
-		while line ~= "" do
-			line = assert(f:read("*l"))
-			size = size -1 -string.len(line)
-		end
-	end
-
-	out:write("chunk " .. size .. "\n")
-	while true do
-		local data = f:read(16384)
-		if data == nil then break end
-		out:write(data)
-	end
-	out:flush()
-
-	f:close()
-end
-
-function dbfile_name(endpoint, mailboxes)
-	local HOME = os.getenv('HOME')
-	os.execute('mkdir -p '..HOME..'/.smd')
-	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
-		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
-	return dbfile
-end
-
-function touch(f)
-	local h = io.open(f,'r')
-	if h == nil then
-		h = io.open(f,'w')
-		if h == nil then
-			log_error('Unable to touch '..f)
-			os.exit(1)
-		else
-			h:close()
-		end
-	else
-		h:close()
-	end
-end
-
-function handshake(dbfile)
-	-- send the protocol version and the dbfile sha1 sum
-	io.write('protocol ',PROTOCOL_VERSION,'\n')
-	touch(dbfile)
-	local inf = io.popen('sha1sum '.. dbfile,'r')
-	local db_sha = inf:read('*a'):match('^(%S+)')
-	io.write('dbfile ',db_sha,'\n')
-	io.flush()
-
-	-- check protocol version and dbfile sha
-	local protocol = io.read('*l'):match('^protocol (.+)$')
-	if protocol ~= PROTOCOL_VERSION then
-		log_error('Wrong protocol version.')
-		log_error('The same version of syncmaildir must be user on '..
-			'both endpoints')
-		os.exit(1)
-	end
-	local sha = io.read('*l'):match('^dbfile (%S+)$')
-	if sha ~= db_sha then
-		log_error('Local dbfile and remote db file differ.')
-		log_error('Remove both files and push/pull again.')
-		os.exit(1)
-	end
-end
+for k,v in pairs(syncmaildir) do _G[k] = v end
 
 -- ============================= MAIN =====================================
 
@@ -216,19 +107,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	end
 end
 
--- strict access to the global environment
-setmetatable(_G,{
-	__newindex = function (t,k,v)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to create new global '..k)
-	end;
-	__index = function(t,k)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to read undefined global '..k)
-	end;
-})
+set_strict()
 
 xpcall(main,function(msg)
 	log_error(tostring(msg))
