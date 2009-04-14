@@ -15,6 +15,8 @@ end
 
 local queue_max_len = 50
 
+local PROTOCOL_VERSION="1.0"
+
 local verbose = false
 
 function log(msg)
@@ -141,9 +143,9 @@ function process_get_full_email_queue()
 		command[#command+1] = 'GET ' .. v.name
 	end
 	command[#command+1] = ''
-	io.stdout:write(table.concat(command,'\n'))
+	io.write(table.concat(command,'\n'))
 	command = nil
-	io.stdout:flush()
+	io.flush()
 	local tmp = {}
 	for _,v in ipairs(get_full_email_queue) do
 		tmp[#tmp+1] = tmp_for(v.name)
@@ -341,8 +343,8 @@ end
 
 function get_header_and_merge(name,hsha,bsha)
 	local tmpfile = tmp_for(name)
-	io.stdout:write('GETHEADER '..name..'\n')
-	io.stdout:flush()
+	io.write('GETHEADER '..name..'\n')
+	io.flush()
 	receive(io.stdin, tmpfile)
 	local hsha_l, _ = sha_file(tmpfile)
 	if hsha_l == hsha then
@@ -407,10 +409,58 @@ function process_pending_queue()
 	local rc = process_get_full_email_queue()
 	if not rc then
 		log('error getting full email')
-		io.stdout:write('ABORT\n')
-		io.stdout:flush()
+		io.write('ABORT\n')
+		io.flush()
 		os.exit(1)
 	end
+end
+
+function touch(f)
+	local h = io.open(f,'r')
+	if h == nil then
+		h = io.open(f,'w')
+		if h == nil then
+			log_error('Unable to touch '..f)
+			os.exit(1)
+		else
+			h:close()
+		end
+	else
+		h:close()
+	end
+end
+
+function handshake(dbfile)
+	-- send the protocol version and the dbfile sha1 sum
+	io.write('protocol ',PROTOCOL_VERSION,'\n')
+	touch(dbfile)
+	local inf = io.popen('sha1sum '.. dbfile,'r')
+	local db_sha = inf:read('*a'):match('^(%S+)')
+	io.write('dbfile ',db_sha,'\n')
+	io.flush()
+
+	-- check protocol version and dbfile sha
+	local protocol = io.read('*l'):match('^protocol (.+)$')
+	if protocol ~= PROTOCOL_VERSION then
+		log_error('Wrong protocol version.')
+		log_error('The same version of syncmaildir must be user on '..
+			'both endpoints')
+		os.exit(1)
+	end
+	local sha = io.read('*l'):match('^dbfile (%S+)$')
+	if sha ~= db_sha then
+		log_error('Local dbfile and remote db file differ.')
+		log_error('Remove both files and push/pull again.')
+		os.exit(1)
+	end
+end
+
+function dbfile_name(endpoint, mailboxes)
+	local HOME = os.getenv('HOME')
+	os.execute('mkdir -p '..HOME..'/.smd')
+	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
+		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
+	return dbfile
 end
 
 -- ============================= MAIN =====================================
@@ -418,7 +468,23 @@ end
 function main()
 	if arg[1] == '-v' then
 		verbose = true
+		table.remove(arg,1)
 	end
+	
+	if #arg < 2 then
+		io.stderr:write([[
+Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
+		os.exit(1)
+	end
+
+	local endpoint = arg[1]
+	table.remove(arg,1)
+	local dbfile = dbfile_name(endpoint, arg)
+	local xdelta = dbfile .. '.xdelta'
+	local newdb = dbfile .. '.new'
+	
+	-- we check the protocol version and dbfile fingerprint
+	handshake(dbfile)
 	
 	local commands = receive_delta(io.stdin)
 	log('delta received')
@@ -426,8 +492,8 @@ function main()
 		local rc = execute(cmd)
 		if not rc then
 			log('error executing command '..i..": "..cmd)
-			io.stdout:write('ABORT\n')
-			io.stdout:flush()
+			io.write('ABORT\n')
+			io.flush()
 			os.exit(1)
 		end
 		if #get_full_email_queue > queue_max_len then
@@ -437,8 +503,26 @@ function main()
 	process_pending_queue()
 	
 	log('committing')
-	io.stdout:write('COMMIT\n')
-	io.stdout:flush()
+	io.write('COMMIT\n')
+	io.flush()
+	receive(io.stdin, xdelta)
+	local rc = os.execute('xdelta patch '..xdelta..' '..dbfile..' '..newdb)
+	if rc ~= 0 and rc ~= 256 then
+		log_error('Unable to apply delta to dbfile.')
+		io.write('ABORT\n')
+		io.flush()
+		os.exit(1)
+	end
+	rc = os.rename(newdb,dbfile)
+	if not rc then
+		log_error('Unable to rename '..newdb..' to '..dbfile)
+		io.write('ABORT\n')
+		io.flush()
+		os.exit(1)
+	end
+	os.remove(xdelta)
+	io.write('DONE\n')
+	io.flush()
 	os.exit(0)
 end
 

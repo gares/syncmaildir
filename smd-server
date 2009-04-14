@@ -77,31 +77,27 @@ function dbfile_name(endpoint, mailboxes)
 	return dbfile
 end
 
--- ============================= MAIN =====================================
-
-function main()
-	if arg[1] == '-v' then
-		verbose = true
-		table.remove(arg,1)
+function touch(f)
+	local h = io.open(f,'r')
+	if h == nil then
+		h = io.open(f,'w')
+		if h == nil then
+			log_error('Unable to touch '..f)
+			os.exit(1)
+		else
+			h:close()
+		end
+	else
+		h:close()
 	end
-	
-	if #arg < 2 then
-		io.stderr:write([[
-Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
-		os.exit(1)
-	end
-	
-	local endpoint = arg[1]
-	table.remove(arg,1)
-	local dbfile = dbfile_name(endpoint, arg)
+end
 
-	local database_opt = '--db-file '.. dbfile
-	local mailbox_opt = table.concat(arg,' ')
-
+function handshake(dbfile)
 	-- send the protocol version and the dbfile sha1 sum
 	io.write('protocol ',PROTOCOL_VERSION,'\n')
+	touch(dbfile)
 	local inf = io.popen('sha1sum '.. dbfile,'r')
-	local db_sha = inf:read('*a'):match('^(%S)+%s+'..dbfile..'$')
+	local db_sha = inf:read('*a'):match('^(%S+)')
 	io.write('dbfile ',db_sha,'\n')
 	io.flush()
 
@@ -119,6 +115,33 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		log_error('Remove both files and push/pull again.')
 		os.exit(1)
 	end
+end
+
+-- ============================= MAIN =====================================
+
+function main()
+	if arg[1] == '-v' then
+		verbose = true
+		table.remove(arg,1)
+	end
+	
+	if #arg < 2 then
+		io.stderr:write([[
+Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
+		os.exit(1)
+	end
+	
+	local endpoint = arg[1]
+	table.remove(arg,1)
+	local dbfile = dbfile_name(endpoint, arg)
+	local xdelta = dbfile .. '.xdelta'
+	local newdb = dbfile .. '.new'
+
+	local database_opt = '--db-file '.. dbfile
+	local mailbox_opt = table.concat(arg,' ')
+
+	-- we check the protocol version and dbfile fingerprint
+	handshake(dbfile)
 	
 	-- run mddiff and send the output to the client
 	local mddiff = MDDIFF..database_opt..' '..mailbox_opt
@@ -160,18 +183,15 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		if l:match('^COMMIT$') then
 			-- the client applied the diff, the new mailbox
 			-- fingerprint should be used for the next sync
-			local xdelta = dbfile .. '.xdelta'
-			local newdb = dbfile .. '.new'
 			local rc
 			rc = os.execute('xdelta delta '..dbfile..' '..newdb..' '..xdelta)
-			if rf ~= 0 then
-				log_error('Failed running `xdelta delta` on db file.')
+			if rc ~= 0 and rc ~= 256 then
+				log_error('Failed running `xdelta delta` on db file: '..rc)
 				os.exit(1)
 			end
 			transmit(io.stdout, xdelta, "all")
-			-- XXX to be finished
-			
-
+			os.remove(xdelta)
+		elseif l:match('^DONE$') then
 			os.rename(newdb, dbfile) 
 			os.exit(0)
 		elseif l:match('^ABORT$') then
