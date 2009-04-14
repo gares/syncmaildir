@@ -248,8 +248,6 @@ void load_db(const char* dbname){
 		fields = fscanf(fd,
 			"%1$lu %2$40s %3$40s %4$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
 			&(m->mtime),  tmpbuff_1, tmpbuff_2, next_name());
-		shatxt(tmpbuff_1, m->hsha);
-		shatxt(tmpbuff_2, m->bsha);
 
 		if (fields == EOF) {
 			// deallocate mail entry
@@ -262,6 +260,9 @@ void load_db(const char* dbname){
 			ERROR(fscanf,"malformed db file '%s', please remove it\n",dbname);
 			exit(EXIT_FAILURE);
 		}
+
+		shatxt(tmpbuff_1, m->hsha);
+		shatxt(tmpbuff_2, m->bsha);
 
 		// allocate a name string
 		m->name = alloc_name();
