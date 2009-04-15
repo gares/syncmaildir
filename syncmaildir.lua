@@ -152,16 +152,26 @@ function mkdir_p(path)
 	local t = {} 
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	table.remove(t,#t)
-	local dir = table.concat(t,'/')
-	if not mkdir_p_cache[dir] then
-		local rc = os.execute('mkdir -p '..dir)
-		if rc ~= 0 then
-			log_error("Unable to create directory "..dir)
-			log_error('It may be caused by bad directory permissions, '..
-				'please check.')
-			os.exit(1)
+	local make = function(t)
+		local dir = table.concat(t,'/')
+		if not mkdir_p_cache[dir] then
+			local rc = os.execute('mkdir -p '..dir)
+			if rc ~= 0 then
+				log_error("Unable to create directory "..dir)
+				log_error('It may be caused by bad directory permissions, '..
+					'please check.')
+				os.exit(1)
+			end
+			mkdir_p_cache[dir] = true
 		end
-		mkdir_p_cache[dir] = true
+	end
+	make(t)
+	if t[#t] == "cur" then
+		t[#t] = "new"
+		make(t)
+	elseif t[#t] == "new" then
+		t[#t] = "cur"
+		make(t)
 	end
 end
 
