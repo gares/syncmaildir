@@ -156,6 +156,9 @@ void dealloc_name(){
 
 // =========================== global variables setup ======================
 
+// super hack
+time_t MTIME;
+
 guint sha_hash(gconstpointer key){
 	unsigned char * k = (unsigned char *) key;
 	return k[0] + (k[1] << 8) + (k[2] << 16) + (k[3] << 24);
@@ -220,7 +223,7 @@ void save_db(const char* dbname){
 	for(i=0; i < mailno; i++){
 		struct mail* m = &mails[i];
 		if (m->seen == SEEN) {
-			fprintf(fd,"%lu %s %s %s\n", m->mtime, 
+			fprintf(fd,"%lu %s %s %s\n", 0L/*m->mtime*/, 
 				txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), 
 				m->name);
 		}
@@ -233,6 +236,11 @@ void save_db(const char* dbname){
 void load_db(const char* dbname){
 	FILE* fd;
 	int fields;
+	struct stat sb;
+
+	stat(dbname,&sb);
+
+	MTIME = sb.st_mtime;
    
 	fd = fopen(dbname,"r");
 	if (fd == NULL) {
@@ -332,6 +340,9 @@ void analize_file(const char* dir,const char* file) {
 		ERROR(fstat,"unable to stat file '%s'\n",m->name);
 		goto err_alloc_cleanup;
 	}
+
+	// super hack
+	sb.st_mtime = MTIME;
 
 	m->mtime = sb.st_mtime;
 	
