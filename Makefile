@@ -19,12 +19,12 @@ check-run: check-w-lua5.1 check-w-bash
 check-w-%:
 	@which $* > /dev/null || echo $* not found
 
-test: all check-run Mail.testcase.tgz
+test: all check-run misc/Mail.testcase.tgz
 	@tests.d/test.sh $T
 	@tests.d/check.sh
 	@rm -rf test.[0-9]*/
 
-Mail.testcase.tgz: 
+misc/Mail.testcase.tgz: 
 	$(MAKE) check-w-polygen
 	mkdir -p Mail/cur
 	for i in `seq 100`; do \
