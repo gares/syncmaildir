@@ -10,6 +10,8 @@ local mkdir_p_cache = {}
 
 local PREFIX = '@PREFIX@'
 
+local __G = _G
+
 module('syncmaildir',package.seeall)
 
 MDDIFF = ""
@@ -233,18 +235,18 @@ end
 
 function set_strict()
 -- strict access to the global environment
-setmetatable(_G,{
-	__newindex = function (t,k,v)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to create new global '..k)
-	end;
-	__index = function(t,k)
-		local d = debug.getinfo(2,"nl")
-		error((d.name or '?')..': '..(d.currentline or '?')..
-			' :attempt to read undefined global '..k)
-	end;
-})
+	setmetatable(__G,{
+		__newindex = function (t,k,v)
+			local d = debug.getinfo(2,"nl")
+			error((d.name or '?')..': '..(d.currentline or '?')..
+				' :attempt to create new global '..k)
+		end;
+		__index = function(t,k)
+			local d = debug.getinfo(2,"nl")
+			error((d.name or '?')..': '..(d.currentline or '?')..
+				' :attempt to read undefined global '..k)
+		end;
+	})
 end
 
 -- vim:set ts=4:
