@@ -366,7 +366,7 @@ void analize_file(const char* dir,const char* file) {
 
 	// check if the cache lists a file with the same name and the same
 	// mtime. if so, this is an old, untouched, message we can skip
-	if (alias != NULL && lastcheck >= sb.st_mtime) {
+	if (alias != NULL && lastcheck > sb.st_mtime) {
 		alias->seen=SEEN;
 		COMMAND_SKIP(alias);
 		goto err_alloc_fd_cleanup;
