@@ -94,7 +94,6 @@ struct mail {
 	unsigned char bsha[SHA_DIGEST_LENGTH]; 	// body hash value
 	unsigned char hsha[SHA_DIGEST_LENGTH]; 	// header hash value
 	char *name;    							// file name
-	time_t mtime;  							// modification time
 	enum sight seen;     				// already seen (means do not delete)
 };
 
@@ -109,6 +108,7 @@ long unsigned int mailno, max_mailno;
 // hash tables for fast comparison of mails given their name/body-hash
 GHashTable *sha2mail;
 GHashTable *filename2mail;
+time_t lastcheck;
 
 // program options
 int verbose;
@@ -155,9 +155,6 @@ void dealloc_name(){
 }
 
 // =========================== global variables setup ======================
-
-// super hack
-time_t MTIME;
 
 guint sha_hash(gconstpointer key){
 	unsigned char * k = (unsigned char *) key;
@@ -207,7 +204,7 @@ void setup_globals(unsigned long int mno, unsigned int fnlen){
 // =========================== cache (de)serialization ======================
 
 // dump to file the mailbox status
-void save_db(const char* dbname){
+void save_db(const char* dbname, time_t timestamp){
 	long unsigned int i;
 	FILE * fd;
 	char new_dbname[PATH_MAX];
@@ -223,11 +220,23 @@ void save_db(const char* dbname){
 	for(i=0; i < mailno; i++){
 		struct mail* m = &mails[i];
 		if (m->seen == SEEN) {
-			fprintf(fd,"%lu %s %s %s\n", 0L/*m->mtime*/, 
+			fprintf(fd,"%s %s %s\n", 
 				txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), 
 				m->name);
 		}
 	}
+
+	fclose(fd);
+
+	snprintf(new_dbname,PATH_MAX,"%s.mtime",dbname);
+
+	fd = fopen(new_dbname,"w");
+	if (fd == NULL){
+		ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
+		exit(1);
+	}
+
+	fprintf(fd,"%lu",timestamp);
 
 	fclose(fd);
 }
@@ -236,11 +245,23 @@ void save_db(const char* dbname){
 void load_db(const char* dbname){
 	FILE* fd;
 	int fields;
-	struct stat sb;
+	char new_dbname[PATH_MAX];
 
-	stat(dbname,&sb);
+	snprintf(new_dbname,PATH_MAX,"%s.mtime",dbname);
 
-	MTIME = sb.st_mtime;
+	fd = fopen(new_dbname,"r");
+	if (fd == NULL){
+		ERROR(fopen,"unable to load db file '%s'\n",new_dbname);
+		lastcheck = 0L;
+	} else {
+		fields = fscanf(fd,"%1$lu",&lastcheck);
+		if (fields != 1) {
+			ERROR(fscanf,"malformed db file '%s', please remove it\n",
+					new_dbname);
+			exit(EXIT_FAILURE);
+		}
+		fclose(fd);
+	}
    
 	fd = fopen(dbname,"r");
 	if (fd == NULL) {
@@ -254,8 +275,8 @@ void load_db(const char* dbname){
 
 		// read one entry
 		fields = fscanf(fd,
-			"%1$lu %2$40s %3$40s %4$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
-			&(m->mtime),  tmpbuff_1, tmpbuff_2, next_name());
+			"%1$40s %2$40s %3$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
+			tmpbuff_1, tmpbuff_2, next_name());
 
 		if (fields == EOF) {
 			// deallocate mail entry
@@ -264,7 +285,7 @@ void load_db(const char* dbname){
 		}
 		
 		// sanity checks
-		if (fields != 4) {
+		if (fields != 3) {
 			ERROR(fscanf,"malformed db file '%s', please remove it\n",dbname);
 			exit(EXIT_FAILURE);
 		}
@@ -341,16 +362,11 @@ void analize_file(const char* dir,const char* file) {
 		goto err_alloc_cleanup;
 	}
 
-	// super hack
-	sb.st_mtime = MTIME;
-
-	m->mtime = sb.st_mtime;
-	
 	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
 
 	// check if the cache lists a file with the same name and the same
 	// mtime. if so, this is an old, untouched, message we can skip
-	if (alias != NULL && alias->mtime == m->mtime) {
+	if (alias != NULL && lastcheck >= sb.st_mtime) {
 		alias->seen=SEEN;
 		COMMAND_SKIP(alias);
 		goto err_alloc_fd_cleanup;
@@ -401,7 +417,6 @@ void analize_file(const char* dir,const char* file) {
 		if(sha_equal(alias->bsha,m->bsha)) {
 			if (sha_equal(alias->hsha, m->hsha)) {
 				alias->seen = SEEN;
-				alias->mtime = m->mtime;
 				goto err_alloc_fd_cleanup;
 			} else {
 				COMMAND_REPLACE_HEADER(alias,m);
@@ -640,6 +655,7 @@ int main(int argc, char *argv[]) {
 	struct stat sb;
 	int c = 0;
 	int option_index = 0;
+	time_t bigbang;
 
   	if (!gcry_check_version (GCRYPT_VERSION)) {
 		fputs ("libgcrypt version mismatch\n", stderr);
@@ -698,11 +714,12 @@ int main(int argc, char *argv[]) {
 
 	load_db(dbfile);
 
+	bigbang = time(NULL);
 	analize_dirs(&argv[optind],argc - optind);
 
 	generate_deletions();
 
-	save_db(dbfile);
+	save_db(dbfile, bigbang);
 
 	exit(EXIT_SUCCESS);
 }
