@@ -12,7 +12,7 @@ for k,v in pairs(syncmaildir) do _G[k] = v end
 
 function main()
 	if arg[1] == '-v' then
-		verbose = true
+		set_verbose(true)
 		table.remove(arg,1)
 	end
 	
