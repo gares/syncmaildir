@@ -166,10 +166,9 @@ function mkdir_p(path)
 		end
 	end
 	make(t)
-	if t[#t] == "cur" then
+	if t[#t] == "tmp" then
 		t[#t] = "new"
 		make(t)
-	elseif t[#t] == "new" then
 		t[#t] = "cur"
 		make(t)
 	end
