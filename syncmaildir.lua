@@ -103,6 +103,7 @@ function receive(inf,outfile)
 			os.exit(1)
 	end
 
+	-- XXX the server may reply with ABORT
 	local line = inf:read("*l")
 	local len = tonumber(line:match('^chunk (%d+)'))
 	while len > 0 do
