@@ -238,7 +238,8 @@ The db file format
 
 The db file is composed by two files, a real database file (extension .txt)
 and a timestamp (extension .txt.mtime). The latter contains just a number
-(date +%s). The former is line oriented, every line has 3 fields:
+(date +%s). The former is line oriented, every line has 3, space separated,
+fields:
 - the sha1 sum of the header
 - the sha1 sum of the body
 - the name of the file
@@ -246,5 +247,13 @@ and a timestamp (extension .txt.mtime). The latter contains just a number
 The commands
 ------------
 
-...to be finished for version 1.0
+From now on, name refers to a file name, hsha to the sha1 sum of its header
+and bsha to the sha1 sum of its body.
 
+`ADD name hsha bsha`
+`COPY name hsha bsha TO newname`
+`DELETE name hsha bsha`
+`REPLACEHEADER name hsha bsha WITH newhsha`
+`REPLACE ... ` ... fix for version 1.0
+
+...to be finished for version 1.0
