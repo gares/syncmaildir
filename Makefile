@@ -1,7 +1,7 @@
 PROJECTNAME=syncmaildir
 BINARIES=mddiff
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
-HTML=index.html
+HTML=index.html design.html
 PREFIX=usr/local
 DESTDIR=
 VERSION=0.9.1
@@ -82,6 +82,9 @@ $(HTML): check-w-markdown
 	cat misc/head.html > index.html
 	markdown README >> index.html
 	cat misc/tail.html >> index.html
+	cat misc/head.html > design.html
+	markdown DESIGN >> design.html
+	cat misc/tail.html >> design.html
 
 upload-website: $(HTML)
 	scp $(HTML) misc/style.css \
