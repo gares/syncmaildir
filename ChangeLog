@@ -1,4 +1,22 @@
-../4/2009 - first public release
+../4/2009 - major bugfix release
+	* major bugfix: 
+	  - the db file must be in sync too to grant all changes are detected
+	  - the mtime has not to be the same on client and server (thus
+	    has to be removed from the db file)
+	  - adopt xdelta to calculate a patch for the db file (should be
+	    better than diff and can scale to binary, compressed, db file)
+	* new client/server protocol: 
+	  - allows the server to ABORT
+	  - handshake checking protocol version and dbfile hash
+	  - at the end transmit and apply the xdelta patch
+	* db file format changed:
+	  - no more mtime column
+	  - added db.txt.mtime auxiliary file to stores a global timestamp 
+	    for the whole db
+	* minor bugfixes in the code (mostly better error reporting)
+	* more documentation
+
+12/4/2009 - first public release
 	* end-user tools: smd-pull, smd-push
 	* stupid endpoint: smd-server
 	* endpoint implementing politics: smd-client
