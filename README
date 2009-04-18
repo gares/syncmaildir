@@ -50,7 +50,7 @@ flexibility).
   input and output to `smd-client` over a network may not be straightforward,
   thus users should not call it directly.
 - `smd-client` a quite complex script applying a diff locally, eventually
-  requesting data to the server. In case the diff cannot be appllied
+  requesting data to the server. In case the diff cannot be applied
   cleanly, it outputs an error message that higher level tools should display
   to the user. As `smd-server` it is a quite high level tool, but should not
   be called directly by the average user.
@@ -72,7 +72,7 @@ desktops):
 
 - `smd-pull` to obtain the changes made on the remote mailbox applied
   locally
-- `smd-push` viceversa
+- `smd-push` vice versa
 
 Both tools read a configuration file in `~/.smd/config`, that is a simple
 shell script sourced by both. This file defines the following variables:
@@ -111,7 +111,16 @@ Design
 ======
 
 The design of the software is detailed in the [design document](design.html).
-If you are interested in hacking on `smd`, it may be helpful.
+If you are interested in hacking `smd`, it may be helpful.
+
+Author
+======
+
+The software is distributed as-is, with no warranties, so if your mailbox 
+is irremediably lost due to Sync Mail Dir, you will get nothing back, but
+you can complain with me, of course. If you find the software useful, 
+an happy-user report is also welcome. For patches, bug-reports, etc. refer to
+Enrico Tassi, gareuselesinge at users dot sourceforge dot net.
 
 ...to be finished for version 1.0
 
