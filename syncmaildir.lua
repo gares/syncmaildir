@@ -103,8 +103,12 @@ function receive(inf,outfile)
 			os.exit(1)
 	end
 
-	-- XXX the server may reply with ABORT
 	local line = inf:read("*l")
+	if line == "ABORT" then
+		log_error("Data transmission failed.")
+		log_error("This problem is transient, please retry.")
+		error('server sent ABORT')
+	end
 	local len = tonumber(line:match('^chunk (%d+)'))
 	while len > 0 do
 		local next_chunk = 16384
