@@ -1,4 +1,4 @@
-../4/2009 - major bugfix release
+19/4/2009 - major bugfix release
 	* major bugfix: 
 	  - the db file must be in sync too to grant all changes are detected
 	  - the mtime has not to be the same on client and server (thus
