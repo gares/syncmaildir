@@ -70,7 +70,7 @@ clean:
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 
-dist:
+dist $(PROJECTNAME)-$(VERSION).tar.gz:
 	$(MAKE) clean
 	mkdir $(PROJECTNAME)-$(VERSION)
 	for X in *; do if [ $$X != $(PROJECTNAME)-$(VERSION) ]; then \
@@ -89,4 +89,7 @@ $(HTML): check-w-markdown
 upload-website: $(HTML)
 	scp $(HTML) misc/style.css \
 		gareuselesinge,syncmaildir@web.sourceforge.net:htdocs
+
+upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
+	scp $< frs.sourceforge.net:uploads
 
