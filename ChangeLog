@@ -1,3 +1,7 @@
+.../4/2009 - 
+	* track only mailmessage:
+	  - scans only files in cur/ and new/
+
 19/4/2009 - major bugfix release
 	* major bugfix: 
 	  - the db file must be in sync too to grant all changes are detected
