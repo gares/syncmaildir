@@ -467,9 +467,14 @@ void analize_dir(const char* path){
 	}
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
-		if (DT_REG == dir_entry->d_type)
-			analize_file(path,dir_entry->d_name);
-		else if (DT_DIR == dir_entry->d_type && 
+		if (DT_REG == dir_entry->d_type){
+			const char* bname = basename(path);	
+			if ( !strcmp(bname,"cur") || !strcmp(bname,"new"))
+				analize_file(path,dir_entry->d_name);
+			else
+				VERBOSE(analize_dir,"skipping '%s/%s', outside maildir\n",
+					path,dir_entry->d_name);
+		} else if (DT_DIR == dir_entry->d_type && 
 				strcmp(dir_entry->d_name,"tmp") &&
 				strcmp(dir_entry->d_name,".") &&
 				strcmp(dir_entry->d_name,"..")){
