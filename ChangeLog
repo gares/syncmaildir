@@ -1,6 +1,15 @@
-.../4/2009 - 
-	* track only mailmessage:
+.../4/2009 - minor fix and minor feature release
+	* track only mailmessages (skip other stuff like dovecott indexes):
 	  - scans only files in cur/ and new/
+	* add COPYBODY command to mddiff:
+	  - mails that are moved around and then flagged by MUA
+	    are not deteceted anymore as new messages, only the new header
+	    is transmitted
+	  - smd-client honors the command
+	* smd-client better reports network errors:
+	  - if no data at all is readable from stdin, it means that
+	    the transport (ssh) is not working and this is reported to
+	    the user as such
 
 19/4/2009 - major bugfix release
 	* major bugfix: 

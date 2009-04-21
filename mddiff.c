@@ -322,6 +322,11 @@ void load_db(const char* dbname){
 		m->name,txtsha(m->hsha, tmpbuff_1),\
 		txtsha(m->bsha, tmpbuff_2),n->name)
 
+#define COMMAND_COPYBODY(m,n) \
+	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
+		m->name,txtsha(m->bsha, tmpbuff_1),\
+		n->name,txtsha(n->hsha, tmpbuff_2))
+
 #define COMMAND_DELETE(m) \
 	fprintf(stdout,"DELETE %s %s %s\n",m->name, \
 		txtsha(m->hsha, tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
@@ -439,6 +444,9 @@ void analize_file(const char* dir,const char* file) {
 			COMMAND_COPY(bodyalias,m);
 			m->seen=SEEN;
 			return;
+		} else {
+			COMMAND_COPYBODY(bodyalias,m);
+			m->seen=SEEN;
 		}
 	}
 

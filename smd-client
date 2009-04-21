@@ -214,7 +214,7 @@ function execute_copy(cmd)
 	end
 end
 
-function get_header_and_merge(name,hsha,bsha)
+function get_header_and_merge(name,hsha)
 	local tmpfile = tmp_for(name)
 	io.write('GETHEADER '..name..'\n')
 	io.flush()
@@ -241,7 +241,7 @@ function execute_replaceheader(cmd)
 	if exists(name) then
 		local hsha_l, bsha_l = sha_file(name)
 		if hsha == hsha_l and bsha == bsha_l then
-			return (get_header_and_merge(name,hsha_new,bsha))
+			return (get_header_and_merge(name,hsha_new))
 		elseif hsha_l == hsha_new and bsha == bsha_l then
 			log('header already changed for '..name)
 			return (trace(true)) -- replace header ok, already changend
@@ -258,6 +258,46 @@ function execute_replaceheader(cmd)
 	end
 end
 
+function execute_copybody(cmd)
+	local name, bsha, newname, hsha = 
+		cmd:match('^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
+	local exn, hsha_ln, bsha_ln = exists_and_sha(newname)
+	if not exn then
+		local ex, _, bsha_l = exists_and_sha(name)
+		if ex and bsha_l == bsha then
+			local ok = os.execute('cp '..name..' '..newname)
+			if ok == 0 then 
+				ok = get_header_and_merge(newname,hsha)
+				if ok then
+					return (trace(true)) -- copybody OK
+				else
+					os.remove(newname)
+					return (trace(false)) -- copybody failed, bad new header
+				end
+			else 
+				log('copy '..name..' to '..newname..' failed')
+				log_error('Failed to copy '..name..' to '..newname)
+				log_error('It may be caused by bad directory permissions, '..
+					'please check.')
+				return (trace(false)) -- copybody failed (cp command failed)
+			end
+		else
+			return(get_full_email(newname,hsha,bsha))
+		end
+	else
+		if bsha == bsha_ln and hsha == hsha_ln then
+			log('skipping copybody, already there')	
+			return (trace(true)) -- copybody OK (already there)
+		else
+			log_error('Failed to copy body of '..name..' to '..newname)
+			log_error('To fix this problem you should rename '..newname)
+			log_error('Executing `mv '..newname..' '..
+				tmp_for(newname,false)..'` should work.')
+			return (trace(false)) -- copybody failed (already there, != )
+		end
+	end
+end
+
 function execute(cmd)
 	local opcode = cmd:match('^(%S+)')
 
@@ -265,7 +305,7 @@ function execute(cmd)
 	elseif opcode == "DELETE"        then return (execute_delete(cmd))
 	elseif opcode == "COPY"          then return (execute_copy(cmd))
 	elseif opcode == "REPLACEHEADER" then return (execute_replaceheader(cmd))
-
+	elseif opcode == "COPYBODY"      then return (execute_copybody(cmd))
 
 	elseif opcode == "REPLACE" then
 		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
