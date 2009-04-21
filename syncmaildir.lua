@@ -130,14 +130,29 @@ function handshake(dbfile)
 	io.flush()
 
 	-- check protocol version and dbfile sha
-	local protocol = io.read('*l'):match('^protocol (.+)$')
+	local line = io.read('*l')
+	if line == nil then
+		log_error("Network error.")
+		log_error("Unable to get any data from the other endpoint.")
+		log_error("This problem may be transient, please retry.")
+		log_error("Hint: did you correctly setup the SERVERNAME variable")
+		log_error("on your client? Did you add an entry for it in your ssh")
+		log_error("configuration file?")
+		os.exit(1)
+	end
+	local protocol = line:match('^protocol (.+)$')
 	if protocol ~= PROTOCOL_VERSION then
 		log_error('Wrong protocol version.')
 		log_error('The same version of syncmaildir must be user on '..
 			'both endpoints')
 		os.exit(1)
 	end
-	local sha = io.read('*l'):match('^dbfile (%S+)$')
+	line = io.read('*l')
+	if line == nil then
+		log_error "The client disconnected during handshake"
+		os.exit(1)
+	end
+	local sha = line:match('^dbfile (%S+)$')
 	if sha ~= db_sha then
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
