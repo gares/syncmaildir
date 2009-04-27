@@ -11,7 +11,7 @@ cd
 
 PREFIX="@PREFIX@"
 if [ `echo $PREFIX | cut -c -1` = "@" ]; then
-	SMDROOT=~/Progetti/syncmaildir
+	SMDROOT=~/Projects/syncmaildir
 	echo "smd-pull not installed, assuming smd-common is in $SMDROOT"
 else
 	SMDROOT=$PREFIX/share/syncmaildir

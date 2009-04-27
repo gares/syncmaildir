@@ -2,7 +2,7 @@ NAME
   smd-push - syncs the remote mail dir letting the local one untouched
 
 SYNOPSIS
-  smd-push
+  smd-push [endpoint]
 
 DESCRIPTION
   smd-push performs in the remote maildir all the changes that
@@ -22,11 +22,19 @@ DESCRIPTION
   smd-server-foo.  The default config file contains an example of how to set up
   an alias for ssh.
 
+  The field CLIENTNAME is just an ID for the local host. If you plan to sync
+  the same host with multiple remote hosts, you MUST use different values
+  for CLIENTNAME for every configuration file.
+
   The config file is a regular shell script, refer to bash(1) for 
   its syntax.
 
+OPTIONS
+  endpoint  Is the suffix for the name of the configuration file to use.
+            If it is omitted, the configuration file ~/.smd/config.default is
+            used.
 FILES
-  ~/.smd/config
+  ~/.smd/config.*
 
 SEE ALSO
   mddiff(1), smd-server(1), smd-client(1), smd-pull(1)

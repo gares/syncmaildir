@@ -1,3 +1,8 @@
+	* support for multiple servers/clients:
+	  - config file is now ~/.smd/config.$FOO and smd-push/pull
+	    can get an extra argument for FOO, defulat value of FOO is 
+	    `default`.
+
 21/4/2009 - minor fix and minor feature release
 	* track only mailmessages (skip other stuff like dovecott indexes):
 	  - scans only files in cur/ and new/

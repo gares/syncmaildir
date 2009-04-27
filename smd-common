@@ -1,7 +1,7 @@
 
 if [ `echo $PREFIX | cut -c -1` = "@" ]; then
-	SMDSERVER=~/Progetti/syncmaildir/smd-server 
-	SMDCLIENT=~/Progetti/syncmaildir/smd-client 
+	SMDSERVER=~/Projects/syncmaildir/smd-server 
+	SMDCLIENT=~/Projects/syncmaildir/smd-client 
 else
 	SMDSERVER=$PREFIX/bin/smd-server 
 	SMDCLIENT=$PREFIX/bin/smd-client 
@@ -10,10 +10,35 @@ fi
 H=$HOME
 CONFDIR=$H/.smd
 SSH=ssh
+LOCKFILE=$CONFDIR/lock
 
-if [ ! -f $CONFDIR/config ]; then
+REPNAME=
+if [ ! -z "$1" ]; then
+	REPNAME=$1
+else
+	REPNAME=default
+fi
+CONFFILE=$CONFDIR/config.$REPNAME
+
+# backward compatibility code
+if [ ! -f $CONFFILE ] && \
+   [ "$REPNAME" = "default" ] && \
+   [ -f $CONFDIR/config ]; then
+	# we import the old conffile
+	mkdir -p $CONFDIR/log
+	mkdir -p $CONFDIR/fifo
+	echo "From version 0.9.4, configuration files are named"
+	echo "$CONFDIR/config.\$FOO, where FOO is an optional argument"
+	echo "to smd-pull/smd-push. The default value of FOO is 'default'."
+	echo "I'm renaming $CONFDIR/config to $CONFFILE."
+	mv $CONFDIR/config $CONFFILE
+fi
+
+if [ ! -f $CONFFILE ]; then
 	mkdir -p $CONFDIR/
-	cat > $CONFDIR/config <<- EOT
+	mkdir -p $CONFDIR/log
+	mkdir -p $CONFDIR/fifo
+	cat > $CONFFILE <<- EOT
 	# No config file found, this is a template. You want to edit it.
 
 	# Host name to be used with ssh as the server (use ~/.ssh/config 
@@ -27,13 +52,16 @@ if [ ! -f $CONFDIR/config ]; then
 	#     Hostname your.real.server.name
 	#     Username you
 	#
-	SERVERNAME=smd-server-foo
+	SERVERNAME=smd-server-$REPNAME
+
 
 	# Host name to be used as the client. 
-	# smd-pull will use this just as an id for the client, while smd-push
-	# will ignore it.
+	# smd-pull will use this just as an id for the client. If you
+	# plan to sync with multiple endpoints, you must use a different
+	# client id for any of them, thus a pair localhostname-remotehostname
+	# should be used
 	#
-	CLIENTNAME=`hostname`
+	CLIENTNAME=`hostname`-$REPNAME
 
 	# The mailbox to sync, the path is the same on both hosts, but
 	# can be relative to the current working directory.
@@ -45,27 +73,28 @@ if [ ! -f $CONFDIR/config ]; then
 	DEBUG=false
 	EOT
 	echo No config file found: created a default one
-	echo Please edit it: $CONFDIR/config
+	echo Please edit it: $CONFFILE
 	exit 1
 fi
 
-if [ -f $CONFDIR/lock ]; then
-	echo Already running
+if [ -f $LOCKFILE ]; then
+	echo Already running.
+	echo If this is not the case, remove $LOCKFILE by hand.
 	exit 1
 fi
 
-touch $CONFDIR/lock
+touch $LOCKFILE
 
-. $CONFDIR/config
+. $CONFFILE
 
-CtL=$CONFDIR/c2l
-LtC=$CONFDIR/l2c
-LtS=$CONFDIR/l2s
-StL=$CONFDIR/s2l
-CtS=$CONFDIR/c2s.log
-StC=$CONFDIR/s2c.log
-CL=$CONFDIR/client.log
-SL=$CONFDIR/server.log
+CtL=$CONFDIR/fifo/c2l.$REPNAME
+LtC=$CONFDIR/fifo/l2c.$REPNAME
+LtS=$CONFDIR/fifo/l2s.$REPNAME
+StL=$CONFDIR/fifo/s2l.$REPNAME
+CtS=$CONFDIR/log/c2s.$REPNAME.log
+StC=$CONFDIR/log/s2c.$REPNAME.log
+CL=$CONFDIR/log/client.$REPNAME.log
+SL=$CONFDIR/log/server.$REPNAME.log
 
 [ -p $CtL ] || mkfifo $CtL 
 [ -p $LtC ] || mkfifo $LtC
