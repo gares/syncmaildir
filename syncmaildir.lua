@@ -73,7 +73,7 @@ function transmit(out, path, what)
 		local line
 		local header = {}
 		size = 0
-		while line and line ~= "" do
+		while line ~= "" do
 			line = assert(f:read("*l"))
 			header[#header+1] = line
 			header[#header+1] = "\n"
@@ -88,7 +88,7 @@ function transmit(out, path, what)
 
 	if what == "body" then
 		local line
-		while line and line ~= "" do
+		while line ~= "" do
 			line = assert(f:read("*l"))
 			size = size -1 -string.len(line)
 		end
