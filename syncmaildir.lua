@@ -54,15 +54,26 @@ end
 
 function transmit(out, path, what)
 	what = what or "all"
-	local f = assert(io.open(path,"r"))
-	local size = assert(f:seek("end"))
+	local f, err = io.open(path,"r")
+	if not f then
+		log_error("Unable to open "..path..": "..(err or "no error"))
+		log_error("The problem should be transient, please retry.")
+		error('Unable to open requested file.')
+	end
+	local size, err = f:seek("end")
+	if not size then
+		log_error("Unable to calculate the size of "..path)
+		log_error("If it is not a regular file, please move it away.")
+		log_error("If it is a regular file, please report the problem.")
+		error('Unable to calculate the size of the requested file.')
+	end
 	f:seek("set")
 
 	if what == "header" then
 		local line
 		local header = {}
 		size = 0
-		while line ~= "" do
+		while line and line ~= "" do
 			line = assert(f:read("*l"))
 			header[#header+1] = line
 			header[#header+1] = "\n"
@@ -77,7 +88,7 @@ function transmit(out, path, what)
 
 	if what == "body" then
 		local line
-		while line ~= "" do
+		while line and line ~= "" do
 			line = assert(f:read("*l"))
 			size = size -1 -string.len(line)
 		end
@@ -104,10 +115,10 @@ function receive(inf,outfile)
 	end
 
 	local line = inf:read("*l")
-	if line == "ABORT" then
+	if line == nil or line == "ABORT" then
 		log_error("Data transmission failed.")
 		log_error("This problem is transient, please retry.")
-		error('server sent ABORT')
+		error('server sent ABORT or connection died')
 	end
 	local len = tonumber(line:match('^chunk (%d+)'))
 	while len > 0 do
