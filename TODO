@@ -1,4 +1,1 @@
 - implement the REPLACE command in smd-client
-- add COPYBODY to mddif, since moving a new message directly to the trash bin
-  in mutt also changes the header, thus it is deteceted as an ADD, not
-  as a COPY + REPLACEHEADER
