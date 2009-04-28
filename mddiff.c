@@ -447,6 +447,7 @@ void analize_file(const char* dir,const char* file) {
 		} else {
 			COMMAND_COPYBODY(bodyalias,m);
 			m->seen=SEEN;
+			return;
 		}
 	}
 
