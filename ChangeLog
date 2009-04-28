@@ -1,7 +1,18 @@
+28/4/2009 - minor fix and minor feature release
 	* support for multiple servers/clients:
 	  - config file is now ~/.smd/config.$FOO and smd-push/pull
 	    can get an extra argument for FOO, defulat value of FOO is 
 	    `default`.
+	  - backward-compatibility code added to automatically migrate 
+	    the old config file name to the new one
+	* cleanup in ~/.smd/:
+	  - fifos are now in the fifo/ subdirectory
+	  - logs are now in the log/ subdirectory
+	* bugfix to mddiff: 
+	  - COPYBODY action used to be always followed by an ADD action,
+	    that was unnecessary (but not dangerous either).
+	* better error reporting:
+	  - syncmaildir.lua improved to better report some errors
 
 21/4/2009 - minor fix and minor feature release
 	* track only mailmessages (skip other stuff like dovecott indexes):
