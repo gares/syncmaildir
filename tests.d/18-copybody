@@ -14,6 +14,9 @@ test_eq Mail target/Mail
 X=`grep '^COPYBODY ' log.s2c | wc -l`
 assert $X 1 "missing COPY in s2c"
 
+X=`grep '^ADD ' log.s2c | wc -l`
+assert $X 0 "COPYBODY+ADD in s2c"
+
 X=`grep '^GETHEADER ' log.c2s | wc -l`
 assert $X 1 "no GETHEADEr in c2s"
 
