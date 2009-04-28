@@ -70,12 +70,14 @@ Till now, two end-user tools are available (more will be added in the
 future, possibly equipped with an eye-candy notification icon for modern
 desktops):
 
-- `smd-pull` to obtain the changes made on the remote mailbox applied
+- `smd-pull [name]` to obtain the changes made on the remote mailbox applied
   locally
-- `smd-push` vice versa
+- `smd-push [name]` vice versa
 
-Both tools read a configuration file in `~/.smd/config`, that is a simple
-shell script sourced by both. This file defines the following variables:
+Both tools read a configuration file in `~/.smd/config.name`, that is a simple
+shell script sourced by both when called with argument `name`. If no argument
+is given, they source `~/.smd/config.default`.
+This file defines the following variables:
 
 - `SERVERNAME` is a valid alias for ssh. It should be defined in 
   your `~/.ssh/config`, with compression enabled. For example:
@@ -85,7 +87,10 @@ shell script sourced by both. This file defines the following variables:
       Hostname your.real.server.name
       Username you
 
-- `CLIENTNAME` a name for your client: the host name should be fine.
+- `CLIENTNAME` a name for your client: the host name concatenated with
+   the server name should be fine. Note that you can pull and push from
+   different hosts, and each of them needs a unique CLIENTNAME in its
+   configuration file.
 
 - `MAILBOX` a list of roots to be synchronized. There is no support for
   name mapping, thus they should be named the same on the remote host.
