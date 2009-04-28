@@ -29,7 +29,7 @@ we push to and pull from, we call client the host we push from and pull to.
 In the most common scenario, the server is our mail server, while the
 client is our laptop.
 
-The directory `~/.smd/` contains the configuration file, some `fifo` needed
+The directory `~/.smd/` contains the configuration file(s), some `fifo` needed
 to short-circuit the softwares running on the client and on the server, and
 a cache file (called db-file from now on) that represents the status of the
 mailbox las time we successfully pushed. The configuration file is needed
@@ -111,6 +111,22 @@ mails, but it shows the extra work the tool is doing (like calculating
 `sha1` sums for every mail, or the client-server protocol overhead) makes
 `smd` not so inefficient.  Once the mailbox has been copied, running
 `smd-pull` again to check for updates is almost instantaneous.
+
+Advanced Usage
+==============
+
+From verion `0.9.4` multiple configuration files are supported. This means
+you can push/pull from/to different remote mailboxes (one at a time). This
+proved to be useful when migrating a mailbox:
+
+    smd-pull oldserver
+    smd-push newserver
+
+Note that you can run this for a while, not just one time. This can smooth
+the transition from a mail-address to another, since simply forwarding mail
+from the old to the new one makes you believe you changed the subscription
+to all your mailling lists, that is obviously not always the case since
+nobody remembers all the mailing lists he is subscribed to.
 
 Design
 ======
