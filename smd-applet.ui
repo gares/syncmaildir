@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkMenu" id="mMain">
+    <property name="visible">True</property>
+    <child>
+      <object class="GtkImageMenuItem" id="miAbout">
+        <property name="label">gtk-about</property>
+        <property name="visible">True</property>
+        <property name="tooltip_text" translatable="yes">About smd-applet</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="always_show_image">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="miQuit">
+        <property name="label">gtk-quit</property>
+        <property name="visible">True</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="always_show_image">True</property>
+      </object>
+    </child>
+  </object>
+</interface>
