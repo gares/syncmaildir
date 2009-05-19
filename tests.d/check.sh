@@ -25,3 +25,8 @@ for N in `combine $tmpa not $tmpb`; do
 	smd-client
 done
 rm $tmpa $tmpb
+
+echo
+echo "Generated tags:"
+echo
+grep ^TAG test.[0-9]*/log.client* | cut -d : -f 2- | cut -d \( -f 1 | sort -u
