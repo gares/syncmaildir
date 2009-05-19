@@ -12,7 +12,7 @@ perform() {
 	local cmd=$1
 	local endpoint=$2
 
-	echo $cmd -v $endpoint | sed "s/@@ENDPOINT@@/$endoint/"
+	$cmd -v $endpoint 
 }
 
 if [ ! -f ~/.smd/loop ]; then
