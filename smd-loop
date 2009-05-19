@@ -1,0 +1,38 @@
+#!/bin/bash
+
+TIME=1
+
+perform() {
+	local cmd=$1
+	local endpoint=$2
+
+	echo $cmd $endpoint
+	if [ $? -ne 0 ]; then
+		# if human intervention needed
+		exit 1
+	fi
+}
+
+if [ ! -f ~/.smd/loop ]; then
+	cat > ~/.smd/loop <<-EOT
+	# smd-loop configuration file
+	#
+	# syntax:
+	# pull-frequency push-frequency endpoint-name
+	3 10 default
+	EOT
+fi
+
+while true; do
+	while read pull push endpoint; do
+		do_pull=1
+		do_push=1
+		if [ $pull -gt 0 ]; then do_pull=$((TIME % pull)); fi
+		if [ $push -gt 0 ]; then do_push=$((TIME % push)); fi
+	
+		if [ $do_pull -eq 0 ]; then perform smd-pull $endpoint; fi
+		if [ $do_push -eq 0 ]; then perform smd-push $endpoint; fi
+	done < <(grep -v '#' ~/.smd/loop)
+	TIME=$((TIME+1))
+	sleep 60
+done
