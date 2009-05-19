@@ -220,10 +220,15 @@ function mkdir_p(path)
 end
 
 function tmp_for(path,use_tmp)
-	local use_tmp = use_tmp or true
+	if use_tmp == nil then use_tmp = true end
 	local t = {} 
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	local fname = t[#t]
+	local time, pid, host, tags = fname:match('^(%d+)%.(%d+)%.([^:]+)(.*)$')
+	time = time or os.date("%s")
+	pid = pid or "1"
+	host = host or "localhost"
+	tags = tags or ""
 	table.remove(t,#t)
 	local i, found = 0, false
 	if use_tmp then
@@ -237,13 +242,26 @@ function tmp_for(path,use_tmp)
 	end
 	local newpath
 	if not found then
-		newpath = path .. '.new'
+		time = os.date("%s")
+		t[#t+1] = time..'.'..pid..'.'..host..tags
+		newpath = table.concat(t,'/') 
 	else
 		t[#t+1] = fname
 		newpath = table.concat(t,'/') 
 	end
 	mkdir_p(newpath)
-	while exists(newpath) do newpath = newpath .. 'x' end
+	local attempts = 0
+	while exists(newpath) do 
+		if attempts > 10 then
+			error('unable to generate a fresh tmp name')			
+		else 
+			time = os.date("%s")
+			host = host .. 'x'
+			t[#t] = time..'.'..pid..'.'..host..tags
+			newpath = table.concat(t,'/') 
+			attempts = attempts + 1
+		end
+	end
 	return newpath
 end
 
