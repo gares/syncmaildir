@@ -287,6 +287,10 @@ function touch(f)
 	end
 end
 
+function quote(s)
+	return "'" .. s:gsub("'","\\'"):gsub("%)","\\)").. "'"
+end
+
 function set_strict()
 -- strict access to the global environment
 	setmetatable(__G,{
