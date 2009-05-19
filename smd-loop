@@ -1,26 +1,34 @@
 #!/bin/bash
 
+set -e
+
+# The length of a minute, decrease to debug
+MINUTE=60
+
+# The clock, incremented every $MINUTE
 TIME=1
 
 perform() {
 	local cmd=$1
 	local endpoint=$2
 
-	echo $cmd $endpoint
-	if [ $? -ne 0 ]; then
-		# if human intervention needed
-		exit 1
-	fi
+	echo $cmd -v $endpoint | sed "s/@@ENDPOINT@@/$endoint/"
 }
 
 if [ ! -f ~/.smd/loop ]; then
 	cat > ~/.smd/loop <<-EOT
 	# smd-loop configuration file
 	#
-	# syntax:
+	# Line starting with '#' are comments.
+	# Frequences are in minutes.
+	#
 	# pull-frequency push-frequency endpoint-name
-	3 10 default
+	  3              10             default
 	EOT
+
+	echo No config file found: created a default one
+	echo Please edit it: ~/.smd/loop
+	exit 1
 fi
 
 while true; do
@@ -32,7 +40,7 @@ while true; do
 	
 		if [ $do_pull -eq 0 ]; then perform smd-pull $endpoint; fi
 		if [ $do_push -eq 0 ]; then perform smd-push $endpoint; fi
-	done < <(grep -v '#' ~/.smd/loop)
+	done < <(grep -v '^#' ~/.smd/loop)
 	TIME=$((TIME+1))
-	sleep 60
+	sleep $MINUTE 
 done
