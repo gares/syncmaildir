@@ -36,8 +36,20 @@ wait $SERVER || EXITCODE=1
 wait $CLIENT || EXITCODE=1 
 
 if [ $EXITCODE = 1 ]; then
-	grep ^ERROR $SL | sed 's/^/smd-server: /'
-	grep ^ERROR $CL | sed 's/^/smd-client: /'
+	grep ^ERROR $SL \
+		| sed 's/^/smd-server: /'
+	grep ^ERROR $CL \
+		| sed 's/^/smd-client: /'
+fi
+if [ $VERBOSE = 1 ]; then
+	grep ^TAG $SL \
+		| sed 's/^/smd-server: /' \
+		| sed "s/@@INVERSECOMMAND@@/smd-push/" \
+		| sed "s/@@ENDPOINT@@/$REPNAME/"
+	grep ^TAG $CL \
+		| sed 's/^/smd-client: /' \
+		| sed "s/@@INVERSECOMMAND@@/smd-push/" \
+		| sed "s/@@ENDPOINT@@/$REPNAME/"
 fi
 
 exit $EXITCODE
