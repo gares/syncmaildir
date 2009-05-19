@@ -20,6 +20,7 @@ function receive_delta(inf)
 	until not line or line == "END"
 	if line ~= "END" then
 		log_error('Unable to receive a complete diff')
+		log_tags("receive-delta","network",false,"retry")
 		os.exit(1)
 	end
 
@@ -114,10 +115,16 @@ function execute_add(cmd)
 			log('skipping '..name..' already there')
 			return (trace(true)) -- skipping add since already there
 		else
-			log_error('Failed to add '..name..' since a file with the same name')
+			log_error('Failed to add '..name..
+				' since a file with the same name')
 			log_error('exists but its content is different.')
 			log_error('To fix this problem you should rename '..name)
-			log_error('Executing `mv '..name..' '..tmp_for(name,false)..'` should work.')
+			log_error('Executing `cd; mv -n '..quote(name)..' '..
+				quote(tmp_for(name,false))..'` should work.')
+
+			log_tags("mail-addition","concurrent-mailbox-edit",true,
+				"run(cd; mv -n "..quote(name).." "..
+					quote(tmp_for(name,false)) ..")")
 			return (trace(false)) -- skipping add since already there but !=
 		end
 	end
@@ -135,15 +142,26 @@ function execute_delete(cmd)
 				return (trace(true)) -- removed successfully
 			else
 				log_error('Deletion of '..name..' failed.')
-				log_error('It may be caused by bad directory permissions, please check.')
+				log_error('It may be caused by bad directory permissions, '..
+					'please check.')
+
+				log_tags("delete-message","bad-directory-permission",true,
+					"display-permissions("..quote(name)..")")
 				return (trace(false)) -- os.remove failed
 			end
 		else
-			log_error('Failed to delete '..name..' since the local copy of it has')
+			log_error('Failed to delete '..name..
+				' since the local copy of it has')
 			log_error('modifications.')
 			log_error('To fix this problem you have two options:')
 			log_error('- delete '..name..' by hand')
-			log_error('- run smd-push so that this file is added to the remote mailbox')
+			log_error('- run @@INVERSECOMMAND@@ so that this file is added '..
+				'to the other mailbox')
+
+			log_tags("delete-message", "concurrent-mailbox-edit",true,
+				"display-mail("..quote(name)..")",
+				"run(cd; rm "..quote(name)..")",
+				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- remove fails since local file is !=
 		end
 	end
@@ -162,28 +180,38 @@ function execute_copy(cmd)
 			return (trace(true)) -- skip copy, already there
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
-			log_error('The destination file already exists but its content differs.')
+			log_error('The destination already exists but its content differs.')
 			log_error('To fix this problem you have two options:')
-			log_error('- rename '..name_tgt..' by hand so that '..name_src..' can be')
-			log_error('  copied without replacing it.')
-			log_error('  Executing `mv '..name_tgt..' '..
-				tmp_for(name_tgt,false)..'` should work.')
-			log_error('- run smd-push so that your changes to '..name_tgt..' are')
-			log_error('  propagated to the remote mailbox')
+			log_error('- rename '..name_tgt..' by hand so that '..name_src)
+			log_error('  can be copied without replacing it.')
+			log_error('  Executing `cd; mv -n '..quote(name_tgt)..' '..
+				quote(tmp_for(name_tgt,false))..'` should work.')
+			log_error('- run @@INVERSECOMMAND@@ so that your changes to '..
+				name_tgt)
+			log_error('  are propagated to the other mailbox')
+
+			log_tags("copy-message","concurrent-mailbox-edit",true,
+				"run(cd; mv -n "..quote(name_tgt).." "..
+					quote(tmp_for(name_tgt,false))..")",
+				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- fail copy, already there but !=
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				log('copy '..name_src..' to '..name_tgt)
 				mkdir_p(name_tgt)
-				local ok = os.execute('cp '..name_src..' '..name_tgt)
+				local ok = os.execute('cp -n '..quote(name_src)..' '..
+					quote(name_tgt))
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
 				else 
 					log('copy '..name_src..' to '..name_tgt..' failed')
 					log_error('Failed to copy '..name_src..' to '..name_tgt)
-					log_error('It may be caused by bad directory permissions, '..
-						'please check.')
+					log_error('It may be caused by bad directory permissions, '
+						..  'please check.')
+
+					log_tags("delete-message","bad-directory-permission",true,
+						"display-permissions("..quote(name_tgt)..")")
 					return (trace(false)) -- copy failed (cp command failed)
 				end
 		else
@@ -198,14 +226,22 @@ function execute_copy(cmd)
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
 			log_error('The source file has been locally removed.')
-			log_error('The destination file already exists but its content differs.')
+			log_error('The destination file already exists but its '..
+				'content differs.')
 			log_error('To fix this problem you have two options:')
-			log_error('- rename '..name_tgt..' by hand so that '..name_src..' can be')
+			log_error('- rename '..name_tgt..' by hand so that '..
+				name_src..' can be')
 			log_error('  copied without replacing it.')
-			log_error('  Executing `mv '..name_tgt..' '..
-				tmp_for(name_tgt,false)..'` should work.')
-			log_error('- run smd-push so that your changes to '..name_tgt..' are')
-			log_error('  propagated to the remote mailbox')
+			log_error('  Executing `cd; mv -n '..quote(name_tgt)..' '..
+				quote(tmp_for(name_tgt,false))..'` should work.')
+			log_error('- run @@INVERSECOMMAND@@ so that your changes to '..
+				name_tgt..' are')
+			log_error('  propagated to the other mailbox')
+
+			log_tags("copy-message","concurrent-mailbox-edit",true,
+				"run(cd; mv -n "..quote(name_tgt).." "..
+					quote(tmp_for(name_tgt,false))..")",
+				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- skip copy, already there and !=, no source
 		end
 	else
@@ -231,6 +267,8 @@ function get_header_and_merge(name,hsha)
 		os.remove(tmpfile)
 		log_error('The server sent a different email header for '..name)
 		log_error('This problem should be transient, please retry.')
+
+		log_tags("receive-header","modify-while-update",false,"retry")
 		return (trace(false)) -- get header fails, got a different header
 	end
 end
@@ -249,7 +287,11 @@ function execute_replaceheader(cmd)
 			log_error('Failed to replace '..name..' header since it has local')
 			log_error(' modifications.')
 			log_error('To fix this problem you should rename '..name)
-			log_error('Executing `mv '..name..' '..tmp_for(name,false)..'` should work.')
+			log_error('Executing `cd; mv -n '..quote(name)..' '..
+				quote(tmp_for(name,false))..'` should work.')
+			log_tags("header-replacement","concurrent-mailbox-edit",true,
+				"run(cd; mv -n "..quote(name).." "..
+					quote(tmp_for(name,false))..")")
 			return (trace(false)) -- replace header fails, local header !=
 		end
 	else
@@ -265,7 +307,7 @@ function execute_copybody(cmd)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
-			local ok = os.execute('cp '..name..' '..newname)
+			local ok = os.execute('cp -n '..quote(name)..' '..quote(newname))
 			if ok == 0 then 
 				ok = get_header_and_merge(newname,hsha)
 				if ok then
@@ -279,6 +321,9 @@ function execute_copybody(cmd)
 				log_error('Failed to copy '..name..' to '..newname)
 				log_error('It may be caused by bad directory permissions, '..
 					'please check.')
+					
+				log_tags("copy-message","bad-directory-permission",true,
+					"display-permissions("..quote(newname)..")")
 				return (trace(false)) -- copybody failed (cp command failed)
 			end
 		else
@@ -291,8 +336,12 @@ function execute_copybody(cmd)
 		else
 			log_error('Failed to copy body of '..name..' to '..newname)
 			log_error('To fix this problem you should rename '..newname)
-			log_error('Executing `mv '..newname..' '..
-				tmp_for(newname,false)..'` should work.')
+			log_error('Executing `cd; mv -n '..quote(newname)..' '..
+				quote(tmp_for(newname,false))..'` should work.')
+
+			log_tags("copy-body","concurrent-mailbox-edit",true,
+				"run(cd; mv -n "..quote(newname).." "..
+					quote(tmp_for(newname,false))..")")
 			return (trace(false)) -- copybody failed (already there, != )
 		end
 	end
