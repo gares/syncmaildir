@@ -37,6 +37,20 @@ function log_error(msg)
 	io.stderr:write('ERROR: ',msg,'\n')
 end
 
+function log_tag(tag)
+	io.stderr:write('TAG: ',tag,'\n')
+end
+
+function log_tags(context, cause, human, ...)
+	if human then human = "necessary" else human = "avoidable" end
+	log_tag("error::context::"..context)
+	log_tag("error::probable-cause::"..cause)
+	log_tag("error::human-intervention::"..human)
+	for i=1,select('#',...) do
+		log_tag("error::suggested-action::"..select(i,...))
+	end
+end
+
 function trace(x)
 	if verbose then
 		local t = {}
