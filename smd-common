@@ -11,11 +11,11 @@ H=$HOME
 CONFDIR=$H/.smd
 SSH=ssh
 LOCKFILE=$CONFDIR/lock
-VERBOSE=0
+SHOWTAGS=0
 
 if [ "$1" = "-v" ]; then
 	shift
-	VERBOSE=1
+	SHOWTAGS=1
 fi
 
 REPNAME=

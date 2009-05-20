@@ -41,7 +41,7 @@ if [ $EXITCODE = 1 ]; then
 	grep ^ERROR $CL \
 		| sed 's/^/smd-client: /'
 fi
-if [ $VERBOSE = 1 ]; then
+if [ $SHOWTAGS = 1 ]; then
 	grep ^TAG $SL \
 		| sed 's/^/smd-server: /' \
 		| sed "s/@@INVERSECOMMAND@@/smd-push/" \
