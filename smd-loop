@@ -2,21 +2,34 @@
 
 set -e
 
+# The config file name
+CONFFILE=~/.smd/loop
+
 # The length of a minute, decrease to debug
 MINUTE=60
 
 # The clock, incremented every $MINUTE
 TIME=1
 
+# Verbose
+VERBOSE=0
+
+if [ "$1" = "-v" ]; then
+	VERBOSE=1
+fi
+
 perform() {
 	local cmd=$1
 	local endpoint=$2
 
+	if [ "$VERBOSE" = 1 ]; then
+		echo $cmd $endpoint
+	fi
 	$cmd -v $endpoint 
 }
 
-if [ ! -f ~/.smd/loop ]; then
-	cat > ~/.smd/loop <<-EOT
+if [ ! -f $CONFFILE ]; then
+	cat > $CONFFILE <<-EOT
 	# smd-loop configuration file
 	#
 	# Line starting with '#' are comments.
@@ -27,7 +40,7 @@ if [ ! -f ~/.smd/loop ]; then
 	EOT
 
 	echo No config file found: created a default one
-	echo Please edit it: ~/.smd/loop
+	echo Please edit it: $CONFFILE
 	exit 1
 fi
 
@@ -40,7 +53,7 @@ while true; do
 	
 		if [ $do_pull -eq 0 ]; then perform smd-pull $endpoint; fi
 		if [ $do_push -eq 0 ]; then perform smd-push $endpoint; fi
-	done < <(grep -v '^#' ~/.smd/loop)
+	done < <(grep -v '^#' $CONFFILE)
 	TIME=$((TIME+1))
 	sleep $MINUTE 
 done
