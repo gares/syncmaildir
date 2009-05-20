@@ -4,7 +4,7 @@ MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1
 HTML=index.html design.html
 PREFIX=usr/local
 DESTDIR=
-VERSION=0.9.5
+VERSION=0.9.6
 
 all: check-build $(BINARIES) 
 
@@ -63,6 +63,8 @@ install: $(BINARIES) $(MANPAGES)
 	$(call install-replacing,smd-client,bin)
 	$(call install-replacing,smd-pull,bin)
 	$(call install-replacing,smd-push,bin)
+	$(call install-replacing,smd-loop,bin)
+	$(call install-replacing,smd-applet,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
