@@ -18,7 +18,7 @@ module('syncmaildir',package.seeall)
 
 MDDIFF = ""
 if string.sub(PREFIX,1,1) == '@' then
-		MDDIFF = os.getenv('HOME')..'/SYNC/syncmaildir/mddiff '
+		MDDIFF = os.getenv('HOME')..'/Projects/syncmaildir/mddiff '
 		io.stderr:write('smd-client not installed, assuming mddiff is: ',
 			MDDIFF,'\n')
 else
