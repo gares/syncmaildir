@@ -22,10 +22,11 @@ perform() {
 	local cmd=$1
 	local endpoint=$2
 
+	local cmd_line="$cmd -v $endpoint"
 	if [ "$VERBOSE" = 1 ]; then
-		echo $cmd $endpoint
+		echo smd-loop: $cmd_line
 	fi
-	$cmd -v $endpoint 
+	$cmd_line
 }
 
 if [ ! -f $CONFFILE ]; then
