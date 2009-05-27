@@ -74,6 +74,7 @@ function transmit(out, path, what)
 	if not f then
 		log_error("Unable to open "..path..": "..(err or "no error"))
 		log_error("The problem should be transient, please retry.")
+		log_tags("transmit", "simultaneous-mailbox-edit",false,"retry")
 		error('Unable to open requested file.')
 	end
 	local size, err = f:seek("end")
@@ -81,6 +82,8 @@ function transmit(out, path, what)
 		log_error("Unable to calculate the size of "..path)
 		log_error("If it is not a regular file, please move it away.")
 		log_error("If it is a regular file, please report the problem.")
+		log_tags("transmit", "non-regular-file",true,
+			"display-permissions("..quote(path)..")")
 		error('Unable to calculate the size of the requested file.')
 	end
 	f:seek("set")
@@ -127,7 +130,9 @@ function receive(inf,outfile)
 			log_error("Unable to open "..outfile.." for writing.")
 			log_error('It may be caused by bad directory permissions, '..
 				'please check.')
-			os.exit(1)
+			log_tags("receive", "non-writeable-file",true,
+				"display-permissions("..quote(outfile)..")")
+			error("Unable to write incoming data")
 	end
 
 	local line = inf:read("*l")
@@ -165,25 +170,30 @@ function handshake(dbfile)
 		log_error("Hint: did you correctly setup the SERVERNAME variable")
 		log_error("on your client? Did you add an entry for it in your ssh")
 		log_error("configuration file?")
-		os.exit(1)
+		log_tags("handshake", "network-error",false,"retry")
+		error('Network error')
 	end
 	local protocol = line:match('^protocol (.+)$')
 	if protocol ~= PROTOCOL_VERSION then
 		log_error('Wrong protocol version.')
-		log_error('The same version of syncmaildir must be user on '..
+		log_error('The same version of syncmaildir must be used on '..
 			'both endpoints')
-		os.exit(1)
+		log_tags("handshake", "protocol-mismatch",true)
+		error('Protocol version mismatch')
 	end
 	line = io.read('*l')
 	if line == nil then
 		log_error "The client disconnected during handshake"
-		os.exit(1)
+		log_tags("handshake", "network-error",false,"retry")
+		error('Network error')
 	end
 	local sha = line:match('^dbfile (%S+)$')
 	if sha ~= db_sha then
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
-		os.exit(1)
+		log_tags("handshake", "db-mismatch",true,"run(cd; rm "..
+			quote(dbfile)..")")
+		error('Database mismatch')
 	end
 end
 
@@ -207,7 +217,9 @@ function mkdir_p(path)
 				log_error("Unable to create directory "..dir)
 				log_error('It may be caused by bad directory permissions, '..
 					'please check.')
-				os.exit(1)
+				log_tags("mkdir", "wrong-permissions",true,
+					"display-permissions("..quote(dir)..")")
+				error("Directory creation failed")
 			end
 			mkdir_p_cache[dir] = true
 		end
