@@ -309,8 +309,10 @@ function touch(f)
 	if h == nil then
 		h = io.open(f,'w')
 		if h == nil then
-			log_error('Unable to touch '..f)
-			os.exit(1)
+			log_error('Unable to touch '..quote(f))
+			log_tags("touch","bad-permissions",true,
+				"display-permissions("..quote(f)..")")
+			error("Unable to touch a file")
 		else
 			h:close()
 		end

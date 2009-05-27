@@ -26,7 +26,7 @@ function receive_delta(inf)
 	if line ~= "END" then
 		log_error('Unable to receive a complete diff')
 		log_tags("receive-delta","network",false,"retry")
-		os.exit(1)
+		error("network error while receiving delta")
 	end
 
 	return cmds
