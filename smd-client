@@ -9,6 +9,11 @@ require 'syncmaildir'
 for k,v in pairs(syncmaildir) do _G[k] = v end
 
 local queue_max_len = 50
+local statistics = {
+	added = 0,
+	removed = 0,
+	changed = 0,
+}
 
 function receive_delta(inf)
 	local cmds = {}
@@ -56,6 +61,7 @@ function process_get_full_email_queue()
 			mkdir_p(v.name)
 			local rc = os.rename(v.tmp, v.name) 
 			if rc then
+				statistics.added = statistics.added + 1
 				log('added '..v.name)
 			else
 				log_error('Failed to rename '..v.tmp..' to '..v.name)
@@ -139,6 +145,7 @@ function execute_delete(cmd)
 			local rc = os.remove(name) 
 			if rc then
 				log('deleted '..name)
+				statistics.removed = statistics.remved + 1
 				return (trace(true)) -- removed successfully
 			else
 				log_error('Deletion of '..name..' failed.')
@@ -262,6 +269,7 @@ function get_header_and_merge(name,hsha)
 		os.remove(tmpfile)
 		os.rename(tmpfile1, name)
 		log('changed header of '..name)
+		statistics.changed = statistics.changed + 1
 		return (trace(true)) -- get header OK
 	else
 		os.remove(tmpfile)
@@ -437,6 +445,9 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	os.remove(xdelta)
 	io.write('DONE\n')
 	io.flush()
+	log_tag('statistic::mail-added('..statistics.added..')')
+	log_tag('statistic::mail-removed('..statistics.removed..')')
+	log_tag('statistic::mail-changed('..statistics.changed..')')
 	os.exit(0)
 end
 
