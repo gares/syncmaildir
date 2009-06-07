@@ -9,7 +9,8 @@ VERSION=0.9.6
 all: check-build $(BINARIES) 
 
 %: %.vala 
-	valac --pkg gtk+-2.0 --pkg libnotify --pkg gconf-2.0 -o $@ $<
+	valac -o $@ $< --thread --pkg glib-2.0 --pkg gtk+-2.0 \
+		--pkg libnotify --pkg gconf-2.0 --pkg posix
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \
