@@ -36,12 +36,10 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	
 	-- run mddiff and send the output to the client
 	local mddiff = MDDIFF..database_opt..' '..mailbox_opt
-	log('checking '.. MDDIFF)
 	if os.execute('test -e '..MDDIFF) ~= 0 then
 		log_error('Cannot execute '..MDDIFF,'\n')
-		os.exit(4)
+		os.exit(2)
 	end
-	log('calling '.. mddiff)
 	local r = io.popen(mddiff,"r")
 	local sent = 0
 	while true do
@@ -54,7 +52,6 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		end
 	end
 	r:close()
-	log('done\n')
 	
 	
 	-- end the first phase, now the client should
@@ -78,7 +75,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			rc = os.execute('xdelta delta '..dbfile..' '..newdb..' '..xdelta)
 			if rc ~= 0 and rc ~= 256 then
 				log_error('Failed running `xdelta delta` on db file: '..rc)
-				os.exit(1)
+				os.exit(4)
 			end
 			transmit(io.stdout, xdelta, "all")
 			os.remove(xdelta)
@@ -89,7 +86,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			-- the client failed in applying the diff
 			log_error('Client aborted, removing '..dbfile..'.new\n')
 			os.remove(dbfile..".new")
-			os.exit(2)
+			os.exit(5)
 		elseif l:match('^GET ') then
 			local path = l:match('^GET ([^%s]+)$')
 			transmit(io.stdout, path, "all")
@@ -102,7 +99,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		else
 			-- protocol error
 			log_error('Invalid command '..l..'\n')
-			os.exit(1)
+			os.exit(6)
 		end
 	end
 end
@@ -111,7 +108,7 @@ set_strict()
 
 xpcall(main,function(msg)
 	log_error(tostring(msg))
-	os.exit(1)
+	os.exit(7)
 end)
 
 -- vim:set ts=4:

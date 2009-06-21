@@ -12,7 +12,6 @@ local queue_max_len = 50
 local statistics = {
 	added = 0,
 	removed = 0,
-	changed = 0,
 }
 
 function receive_delta(inf)
@@ -55,14 +54,12 @@ function process_get_full_email_queue()
 	for _,v in ipairs(get_full_email_queue) do
 		local hsha_l, bsha_l = inf:read('*l'):match('^(%S+) (%S+)$') 
 		if hsha_l == nil or bsha_l == nil then
-			log('mddiff returned less messages')
 			error('mddiff incorrect behaviour')
 		elseif hsha_l == v.hsha and bsha_l == v.bsha then
 			mkdir_p(v.name)
 			local rc = os.rename(v.tmp, v.name) 
 			if rc then
 				statistics.added = statistics.added + 1
-				log('added '..v.name)
 			else
 				log_error('Failed to rename '..v.tmp..' to '..v.name)
 				log_error('It may be caused by bad directory permissions, please check.')
@@ -118,7 +115,6 @@ function execute_add(cmd)
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
-			log('skipping '..name..' already there')
 			return (trace(true)) -- skipping add since already there
 		else
 			log_error('Failed to add '..name..
@@ -144,7 +140,6 @@ function execute_delete(cmd)
 		if hsha == hsha_l and bsha == bsha_l then
 			local rc = os.remove(name) 
 			if rc then
-				log('deleted '..name)
 				statistics.removed = statistics.removed + 1
 				return (trace(true)) -- removed successfully
 			else
@@ -172,7 +167,6 @@ function execute_delete(cmd)
 			return (trace(false)) -- remove fails since local file is !=
 		end
 	end
-	log('already deleted '..name)
 	return (trace(true)) -- already removed
 end
 
@@ -183,7 +177,6 @@ function execute_copy(cmd)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
 	if ex_src and ex_tgt then
 		if hsha_src == hsha_tgt and bsha_src == bsha_tgt then
-			log('skipping copy of '..name_src..' to '..name_tgt)
 			return (trace(true)) -- skip copy, already there
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
@@ -205,14 +198,12 @@ function execute_copy(cmd)
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
-				log('copy '..name_src..' to '..name_tgt)
 				mkdir_p(name_tgt)
 				local ok = os.execute('cp -n '..quote(name_src)..' '..
 					quote(name_tgt))
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
 				else 
-					log('copy '..name_src..' to '..name_tgt..' failed')
 					log_error('Failed to copy '..name_src..' to '..name_tgt)
 					log_error('It may be caused by bad directory permissions, '
 						..  'please check.')
@@ -227,8 +218,6 @@ function execute_copy(cmd)
 		end
 	elseif not ex_src and ex_tgt then
 		if hsha == hsha_tgt and bsha == bsha_tgt then
-			log('skipping copy of non existent '..name_src..' to '..
-				name_tgt ..' since target already there')
 			return (trace(true)) -- skip copy, already there (only the copy)
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
@@ -252,7 +241,6 @@ function execute_copy(cmd)
 			return (trace(false)) -- skip copy, already there and !=, no source
 		end
 	else
-		log('add '..name_tgt..' as a copy of the not existing '..name_src)
 		return (get_full_email(name_tgt,hsha,bsha))
 	end
 end
@@ -268,8 +256,6 @@ function get_header_and_merge(name,hsha)
 		merge_mail(tmpfile,name,tmpfile1)
 		os.remove(tmpfile)
 		os.rename(tmpfile1, name)
-		log('changed header of '..name)
-		statistics.changed = statistics.changed + 1
 		return (trace(true)) -- get header OK
 	else
 		os.remove(tmpfile)
@@ -289,7 +275,6 @@ function execute_replaceheader(cmd)
 		if hsha == hsha_l and bsha == bsha_l then
 			return (get_header_and_merge(name,hsha_new))
 		elseif hsha_l == hsha_new and bsha == bsha_l then
-			log('header already changed for '..name)
 			return (trace(true)) -- replace header ok, already changend
 		else
 			log_error('Failed to replace '..name..' header since it has local')
@@ -303,7 +288,6 @@ function execute_replaceheader(cmd)
 			return (trace(false)) -- replace header fails, local header !=
 		end
 	else
-		log('added '..name)
 		return (get_full_email(name,hsha_new,bsha))
 	end
 end
@@ -325,7 +309,6 @@ function execute_copybody(cmd)
 					return (trace(false)) -- copybody failed, bad new header
 				end
 			else 
-				log('copy '..name..' to '..newname..' failed')
 				log_error('Failed to copy '..name..' to '..newname)
 				log_error('It may be caused by bad directory permissions, '..
 					'please check.')
@@ -339,7 +322,6 @@ function execute_copybody(cmd)
 		end
 	else
 		if bsha == bsha_ln and hsha == hsha_ln then
-			log('skipping copybody, already there')	
 			return (trace(true)) -- copybody OK (already there)
 		else
 			log_error('Failed to copy body of '..name..' to '..newname)
@@ -378,7 +360,6 @@ end
 function process_pending_queue()
 	local rc = process_get_full_email_queue()
 	if not rc then
-		log('error getting full email')
 		io.write('ABORT\n')
 		io.flush()
 		os.exit(1)
@@ -396,7 +377,7 @@ function main()
 	if #arg < 2 then
 		io.stderr:write([[
 Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
-		os.exit(1)
+		os.exit(2)
 	end
 
 	local endpoint = arg[1]
@@ -409,14 +390,12 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	handshake(dbfile)
 	
 	local commands = receive_delta(io.stdin)
-	log('delta received')
 	for i,cmd in ipairs(commands) do
 		local rc = execute(cmd)
 		if not rc then
-			log('error executing command '..i..": "..cmd)
 			io.write('ABORT\n')
 			io.flush()
-			os.exit(1)
+			os.exit(3)
 		end
 		if #get_full_email_queue > queue_max_len then
 				process_pending_queue()
@@ -424,7 +403,6 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	end
 	process_pending_queue()
 	
-	log('committing')
 	io.write('COMMIT\n')
 	io.flush()
 	receive(io.stdin, xdelta)
@@ -433,21 +411,20 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		log_error('Unable to apply delta to dbfile.')
 		io.write('ABORT\n')
 		io.flush()
-		os.exit(1)
+		os.exit(4)
 	end
 	rc = os.rename(newdb,dbfile)
 	if not rc then
 		log_error('Unable to rename '..newdb..' to '..dbfile)
 		io.write('ABORT\n')
 		io.flush()
-		os.exit(1)
+		os.exit(5)
 	end
 	os.remove(xdelta)
 	io.write('DONE\n')
 	io.flush()
-	log_tag('statistic::mail-added('..statistics.added..')')
-	log_tag('statistic::mail-removed('..statistics.removed..')')
-	log_tag('statistic::mail-changed('..statistics.changed..')')
+	log_tag('statistics::mails('..
+		statistics.added..','..statistics.removed..')')
 	os.exit(0)
 end
 
@@ -455,7 +432,7 @@ set_strict()
 
 xpcall(main,function(msg)
 	log_error(tostring(msg))
-	os.exit(1)
+	os.exit(6)
 end)
 
 -- vim:set ts=4:
