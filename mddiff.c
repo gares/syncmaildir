@@ -25,6 +25,11 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <glib.h>
+#include <libgen.h>
+
+#ifndef O_NOATIME
+# define O_NOATIME 0
+#endif
 
 #define SHA_DIGEST_LENGTH 20
 
@@ -477,7 +482,10 @@ void analize_dir(const char* path){
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
 		if (DT_REG == dir_entry->d_type){
-			const char* bname = basename(path);	
+			// This cast removes a warning and is correct on systems
+			// equipped with GNU libc (defining _GNU_SOURCE makes
+			// basename not modifying its argument).
+			const char* bname = basename((char*)path);	
 			if ( !strcmp(bname,"cur") || !strcmp(bname,"new"))
 				analize_file(path,dir_entry->d_name);
 			else
