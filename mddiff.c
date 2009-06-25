@@ -25,7 +25,6 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <glib.h>
-#include <libgen.h>
 
 #ifndef O_NOATIME
 # define O_NOATIME 0
@@ -482,10 +481,7 @@ void analize_dir(const char* path){
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
 		if (DT_REG == dir_entry->d_type){
-			// This cast removes a warning and is correct on systems
-			// equipped with GNU libc (defining _GNU_SOURCE makes
-			// basename not modifying its argument).
-			const char* bname = basename((char*)path);	
+			const char* bname = g_path_get_basename(path);	
 			if ( !strcmp(bname,"cur") || !strcmp(bname,"new"))
 				analize_file(path,dir_entry->d_name);
 			else
