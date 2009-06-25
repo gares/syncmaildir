@@ -645,8 +645,7 @@ const char* long_options_doc[] = {
 // print help and bail out
 void help(char* argv0, int rc){
 	int i;
-	char *bname = strdup(argv0);
-	bname = basename(bname);
+	char *bname = g_path_get_basename(argv0);
 
 	fprintf(stdout,"\nUsage: %s [options] paths...\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
