@@ -14,8 +14,7 @@ all: check-build $(BINARIES)
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \
-		`pkg-config --cflags --libs glib-2.0` \
-		`libgcrypt-config --cflags --libs`	
+		`pkg-config --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc
 check-run: check-w-lua5.1 check-w-bash 

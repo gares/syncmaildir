@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <gcrypt.h>
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
@@ -349,12 +348,12 @@ void load_db(const char* dbname){
 
 // the hearth 
 void analize_file(const char* dir,const char* file) {    
-	char *addr,*next;
+	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
-	//unsigned char* sha1;
 	struct mail* alias, *bodyalias, *m;
-	gcry_md_hd_t gctx;
+	GChecksum* ctx;
+	gsize ctx_len;
 
 	m = alloc_mail();
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
@@ -408,17 +407,18 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	// calculate sha1
-	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
-	gcry_md_write(gctx, addr, next - addr);
-	gcry_md_final(gctx);
-	memcpy(m->hsha, gcry_md_read(gctx, 0), SHA_DIGEST_LENGTH);
-	gcry_md_close(gctx);
-	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
-	gcry_md_write(gctx, next, sb.st_size - (next - addr));
-	gcry_md_final(gctx);
-	memcpy(m->bsha, gcry_md_read(gctx, 0), SHA_DIGEST_LENGTH);
-	gcry_md_close(gctx);
-	
+	ctx = g_checksum_new(G_CHECKSUM_SHA1);
+	ctx_len = SHA_DIGEST_LENGTH;
+	g_checksum_update(ctx, addr, next - addr);
+	g_checksum_get_digest(ctx, m->hsha, &ctx_len);
+	g_checksum_reset(ctx);
+
+	ctx = g_checksum_new(G_CHECKSUM_SHA1);
+	ctx_len = SHA_DIGEST_LENGTH;
+	g_checksum_update(ctx, next, sb.st_size - (next - addr));
+	g_checksum_get_digest(ctx, m->bsha, &ctx_len);
+	g_checksum_free(ctx);
+
 	munmap(addr, sb.st_size);
 	close(fd);
 
@@ -534,11 +534,10 @@ void generate_deletions(){
 }
 
 int extra_sha_file(const char* file) {    
-	char *addr,*next;
+	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
-	//unsigned char* sha1;
-	gcry_md_hd_t gctx;
+	gchar* sha1;
 
 	fd = open(file, O_RDONLY | O_NOATIME);
 	if (fd == -1) {
@@ -576,16 +575,13 @@ int extra_sha_file(const char* file) {
 	}
 
 	// calculate sha1
-	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
-	gcry_md_write(gctx, addr, next - addr);
-	gcry_md_final(gctx);
-	fprintf(stdout, "%s ", txtsha(gcry_md_read(gctx, 0),tmpbuff_1));
-	gcry_md_close(gctx);
-	gcry_md_open(&gctx, GCRY_MD_SHA1, 0);
-	gcry_md_write(gctx, next, sb.st_size - (next - addr));
-	gcry_md_final(gctx);
-	fprintf(stdout, "%s\n", txtsha(gcry_md_read(gctx, 0),tmpbuff_1));
-	gcry_md_close(gctx);
+	fprintf(stdout, "%s ", 
+		sha1 = g_compute_checksum_for_data(G_CHECKSUM_SHA1, addr, next - addr));
+	g_free(sha1);
+	fprintf(stdout, "%s\n", 
+		sha1 = g_compute_checksum_for_data(G_CHECKSUM_SHA1, 
+				next, sb.st_size - (next - addr)));
+	g_free(sha1);
 	
 	munmap(addr, sb.st_size);
 	close(fd);
@@ -681,11 +677,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	time_t bigbang;
 
-  	if (!gcry_check_version (GCRYPT_VERSION)) {
-		fputs ("libgcrypt version mismatch\n", stderr);
-		exit (2);
-    }
-
+	glib_check_version(2,16,0);
 
 	for(;;) {
 		c = getopt_long(argc, argv, "vh", long_options, &option_index);
