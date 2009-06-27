@@ -115,18 +115,23 @@ class smdApplet {
 		try {
 			GLib.MatchInfo info = null;
 			var stats = new GLib.Regex(
-				"^smd-client: TAG: statistics::mails\\(([0-9]+),([0-9]+)\\)");
+				"^([^:]+): smd-(client|server): "+
+				"TAG: statistics::mails\\(([0-9]+),([0-9]+)\\)$");
 			if (stats.match(s,0,out info)) {
-				int new_mails = info.fetch(1).to_int();	
-				int del_mails = info.fetch(2).to_int();	
+				int new_mails = info.fetch(3).to_int();	
+				int del_mails = info.fetch(4).to_int();	
 				string message = null;
 				if (del_mails > 0) {
-					message = "foo %d %d".printf(new_mails,del_mails);
+					message = " %d new mails\n %d mails were deleted".
+						printf(new_mails,del_mails);
 				} else {
-					message = "bar %d".printf(new_mails);
+					message = " %d new mails".
+						printf(new_mails);
 				}
 				events_lock.lock();
-				events.append(new Event(message));
+				events.append(new Event(
+					"Mail synchronization with <i>%s</i>:\n%s".
+					printf(info.fetch(1),message)));
 				events_lock.unlock();
 				return false;
 			} else {
@@ -139,7 +144,7 @@ class smdApplet {
 
 	public bool run_smd_loop() {
 		//string[] cmd = { smd_loop_cmd, "-v" };
-		string[] cmd = {"/bin/echo","smd-client: TAG: statistics::mails(1,3)"};
+		string[] cmd = {"/bin/echo","default: smd-client: TAG: statistics::mails(1,3)"};
 		int child_in;
 		int child_out;
 		int child_err;
