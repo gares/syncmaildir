@@ -2,6 +2,7 @@
 // No warranties.
 // Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
+// TODO : use glib checksum functions instead of gcrypt
 
 // a simple class to pass data from the child process to the
 // notofier
@@ -107,86 +108,98 @@ class smdApplet {
 			rc = run_smd_loop();
 		}
 	
-		Posix.exit(Posix.EXIT_FAILURE);
 		return null;
 	}
 
-	public bool run_smd_loop() {
-		int fatal_exit_code = 133;
-		int[] p = new int[2]; 
-		if (Posix.pipe(p) != 0) {
-			stderr.printf("pipe() failed\n");
-			return false;
-		}
-		Posix.pid_t pid;
-		string cmd = smd_loop_cmd;
-		if ( (pid = Posix.fork()) == 0 ){
-			// son
-			Posix.dup2(p[1],1);
-			Posix.execl(cmd,cmd,"-v");
-			stderr.printf("Unable to execute "+cmd+"\n");
-			Posix.exit(fatal_exit_code);
-		} else if (pid > 0) {
-			int size = 10;
-			char[] buff = new char[size];
-			Posix.timeval t = Posix.timeval();
-			t.tv_sec = 1;
-			t.tv_usec = 0;
-			Posix.fd_set fds = Posix.fd_set();
-			while(true){
-				Posix.FD_ZERO(fds);
-				Posix.FD_SET(p[0],fds);
-				int n = Posix.select(p[0]+1,fds,null,null,t);
-				if (n == 0) {
-					int rc;
-					int pi = Posix.waitpid(pid,out rc,1); // WNOHANG
-					if (pi == pid) {
-						if ( (rc & 0x7f) == 0 && // WIFEXITED
-							((rc & 0xff00)>>8) == fatal_exit_code){//WEXITSTATUS
-						stderr.printf(cmd+" cannot be executed, aborting\n");
-						Posix.exit(Posix.EXIT_FAILURE);
-						} else {
-							break;
-						}
-					}
-				}
-				if (n > 0) {
-					ssize_t nread = Posix.read(p[0], buff, size);
-					Posix.write(1,buff,nread);
+	public bool eval_smd_loop_message(string s){
+		try {
+			GLib.MatchInfo info = null;
+			var stats = new GLib.Regex(
+				"^smd-client: TAG: statistics::mails\\(([0-9]+),([0-9]+)\\)");
+			if (stats.match(s,0,out info)) {
+				int new_mails = info.fetch(1).to_int();	
+				int del_mails = info.fetch(2).to_int();	
+				string message = null;
+				if (del_mails > 0) {
+					message = "foo %d %d".printf(new_mails,del_mails);
 				} else {
-					break;
+					message = "bar %d".printf(new_mails);
 				}
+				events_lock.lock();
+				events.append(new Event(message));
+				events_lock.unlock();
+				return false;
+			} else {
+				stderr.printf("unhandled smd-loop message: %s\n",s);
+				return true;
 			}
-		} else {
-			stderr.printf("fork() failed\n");
+		} catch (GLib.RegexError e) { stderr.printf("%s\n",e.message); }
+		return true;
+	}
+
+	public bool run_smd_loop() {
+		//string[] cmd = { smd_loop_cmd, "-v" };
+		string[] cmd = {"/bin/echo","smd-client: TAG: statistics::mails(1,3)"};
+		int child_in;
+		int child_out;
+		int child_err;
+		char[] buff = new char[1024];
+		GLib.Pid pid;
+		GLib.SpawnFlags flags = 0;
+		try {
+			bool rc = GLib.Process.spawn_async_with_pipes(
+				null,cmd,null,flags,null,
+				out pid, out child_in, out child_out, out child_err);
+			if (rc) {
+				var input = GLib.FileStream.fdopen(child_out,"r");
+				string s = null;
+				bool stop = false;
+				while ( !stop && (s = input.gets(buff)) != null ) {
+					stop = eval_smd_loop_message(s);
+				}
+				return false;
+			} else {
+				stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
+				Posix.exit(Posix.EXIT_FAILURE);
+			}
+		} catch (GLib.Error e) {
+			stderr.printf("Unable to execute "+
+				smd_loop_cmd+": "+e.message+"\n");
 			return false;
 		}
+
 		return true;
 	}
 
 	// process an event in the events queue by notifying the user
 	// with its message
 	bool eat_event() {
+		Event e = null;
+
 		events_lock.lock();
-
-		if ( events.length() > 0 && gconf.get_bool(key_newmail) ){
-
-			Event e = events.nth(0).data;
+		if ( events.length() > 0) {
+			e = events.nth(0).data;
 			events.remove(e);
+		}
+		events_lock.unlock();
+
+		if ( e != null && gconf.get_bool(key_newmail) ){
 			var not = new Notify.Notification(
 				"Syncmaildir",e.message,"gtk-about",null);
 			not.attach_to_status_icon(si);
+
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		}
-
-		events_lock.unlock();
 
 		return true; // re-schedule me please
 	}
 	
 	// starts the thread and the timeout handler
 	public void run() { 
+		// the timout function that will eventually notify the user
+		GLib.Timeout.add(1000, eat_event);
+		
 		// the thread fills the event queue
 		try { thread = GLib.Thread.create(smdThread,true); }
 		catch (GLib.ThreadError e) { 
@@ -194,8 +207,6 @@ class smdApplet {
 			Posix.exit(Posix.EXIT_FAILURE);
 		}
 
-		// the timout function that will eventually notify the user
-		GLib.Timeout.add(1000, eat_event);
 		Gtk.main(); 
 		thread.join();
 	}
