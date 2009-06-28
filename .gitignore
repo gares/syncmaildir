@@ -1,5 +1,6 @@
 mddiff
 smd-applet
+config.vala
 *.1
 *.html
 syncmaildir-*.tar.gz

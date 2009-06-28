@@ -14,6 +14,9 @@ class Event {
 	}
 }
 
+static const string SMD_LOOP = "/bin/smd-loop";
+static const string SMD_APPLET_UI = "/share/smd-applet/smd-applet.ui";
+
 // the main class containing all the data smd-applet will use
 class smdApplet {
 
@@ -116,7 +119,11 @@ class smdApplet {
 			GLib.MatchInfo info = null;
 			var stats = new GLib.Regex(
 				"^([^:]+): smd-(client|server): "+
-				"TAG: statistics::mails\\(([0-9]+),([0-9]+)\\)$");
+				"TAGS: statistics::mails\\(([0-9]+),([0-9]+)\\)$");
+			var error = new GLib.Regex(
+				"^([^:]+): smd-(client|server): "+
+				"TAGS: error::(.*)$");
+			var skip = new GLib.Regex("^ERROR:");
 			if (stats.match(s,0,out info)) {
 				int new_mails = info.fetch(3).to_int();	
 				int del_mails = info.fetch(4).to_int();	
@@ -134,6 +141,29 @@ class smdApplet {
 					printf(info.fetch(1),message)));
 				events_lock.unlock();
 				return false;
+			} else if (error.match(s,0,out info)) {
+				var context = new GLib.Regex("context\\(([^\\)]+)\\)");
+				var cause = new GLib.Regex("probable-cause\\(([^\\)]+)\\)");
+				var human = new GLib.Regex("human-intervention\\(([^\\)]+)\\)");
+				//var actions = new GLib.Regex("suggested-action\\(([^\\)]+)\\)");
+				GLib.MatchInfo i_ctx = null, i_cause = null, i_human = null;
+				//GLib.MatchInfo i_act = null;
+				if (! context.match(info.fetch(3),0,out i_ctx)){
+					stderr.printf("smd-loop error with no context: %s\n",info.fetch(2));
+					return true;
+				}
+				if (! cause.match(info.fetch(3),0,out i_cause)){
+					stderr.printf("smd-loop error with no cause: %s\n",s);
+					return true;
+				}
+				if (! human.match(info.fetch(3),0,out i_human)){
+					stderr.printf("smd-loop error with no human: %s\n",s);
+					return true;
+				}
+				stderr.printf("IMPLEMENT ME\n");
+				return false;
+			} else if (skip.match(s,0,out info)) {
+				return false; // skip that message, not for us
 			} else {
 				stderr.printf("unhandled smd-loop message: %s\n",s);
 				return true;
@@ -144,7 +174,8 @@ class smdApplet {
 
 	public bool run_smd_loop() {
 		//string[] cmd = { smd_loop_cmd, "-v" };
-		string[] cmd = {"/bin/echo","default: smd-client: TAG: statistics::mails(1,3)"};
+		//string[] cmd = {"/bin/echo","default: smd-client: TAGS: statistics::mails(1,3)"};
+		string[] cmd = {"/bin/echo","default: smd-client: TAGS: error::context(foo), probable-cause(dunno), human-intervention(required), sugged-action('foo')"};
 		int child_in;
 		int child_out;
 		int child_err;
@@ -220,14 +251,12 @@ class smdApplet {
 // =================== main =====================================
 
 static int main(string[] args){
-	// XXX should be read by a conf file (or included)
-	string PREFIX = "@PREFIX@";
+	string PREFIX = SMDConf.PREFIX;
 
 	// handle prefix
-	if (PREFIX[0] == '@') {
+	if (! GLib.FileUtils.test(PREFIX + SMD_APPLET_UI,GLib.FileTest.EXISTS)) {
 		smdApplet.smd_loop_cmd = GLib.Environment.get_variable("HOME") + 
-			"/Projects/syncmaildir/smd-pull";
-			//"/Projects/syncmaildir/smd-loop";
+			"/Projects/syncmaildir/smd-loop";
 		stderr.printf("smd-applet not installed, " +
 			"assuming smd-loop is: %s\n", smdApplet.smd_loop_cmd);
 		smdApplet.smd_applet_ui = GLib.Environment.get_variable("HOME") + 
@@ -235,8 +264,8 @@ static int main(string[] args){
 		stderr.printf("smd-applet not installed, " +
 			"assuming smd-applet.ui is: %s\n", smdApplet.smd_applet_ui);
 	} else {
-		smdApplet.smd_loop_cmd = PREFIX + "/bin/smd-loop";
-		smdApplet.smd_applet_ui = PREFIX + "/share/smd-applet/smd-applet.ui";
+		smdApplet.smd_loop_cmd = PREFIX + SMD_LOOP;
+		smdApplet.smd_applet_ui = PREFIX + SMD_APPLET_UI; 
 	}
 
 	// we init gtk+ and notify

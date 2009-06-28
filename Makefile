@@ -8,8 +8,11 @@ VERSION=0.9.6
 
 all: check-build $(BINARIES) 
 
-%: %.vala 
-	valac -o $@ $< --thread --pkg glib-2.0 --pkg gtk+-2.0 \
+%: %.vala Makefile 
+	echo "class SMDConf { public static string PREFIX = \"/$(PREFIX)\"; }" \
+		> config.vala
+	valac -o $@ $< config.vala --thread \
+		--pkg glib-2.0 --pkg gtk+-2.0 \
 		--pkg libnotify --pkg gconf-2.0 --pkg posix
 
 %: %.c
@@ -49,6 +52,11 @@ define install-replacing
 	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
 endef
 
+define install
+	cp $(1) $(DESTDIR)/$(PREFIX)/$(2)/$(1)
+	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
+endef
+
 define mkdir-p
 	mkdir -p $(DESTDIR)/$(PREFIX)/$(1)
 endef
@@ -64,7 +72,7 @@ install: $(BINARIES) $(MANPAGES)
 	$(call install-replacing,smd-pull,bin)
 	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-loop,bin)
-	$(call install-replacing,smd-applet,bin)
+	$(call install,smd-applet,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
@@ -74,6 +82,7 @@ clean:
 	rm -rf test.[0-9]*/ 
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
+	rm -f config.vala
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz:
 	$(MAKE) clean

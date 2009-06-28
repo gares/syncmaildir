@@ -40,17 +40,20 @@ function log_error(msg)
 end
 
 function log_tag(tag)
-	io.stderr:write('TAG: ',tag,'\n')
+	io.stderr:write('TAGS: ',tag,'\n')
 end
 
 function log_tags(context, cause, human, ...)
 	if human then human = "necessary" else human = "avoidable" end
-	log_tag("error::context::"..context)
-	log_tag("error::probable-cause::"..cause)
-	log_tag("error::human-intervention::"..human)
+	local suggestions = {}
+	if select('#',...) then suggestions[#suggesions+1] = "" end
 	for i=1,select('#',...) do
-		log_tag("error::suggested-action::"..select(i,...))
+		suggestions[#suggestions+1] = "suggested-action("..select(i,...)..")"
 	end
+	local suggestions_string = table.concat(suggestions,", ")
+	log_tag("error::context("..context.."), "..
+		"probable-cause("..cause.."), "..
+		"human-intervention("..human..")".. suggestions_string)
 end
 
 function trace(x)
