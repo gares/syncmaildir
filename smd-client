@@ -423,8 +423,8 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	os.remove(xdelta)
 	io.write('DONE\n')
 	io.flush()
-	log_tag('statistics::mails('..
-		statistics.added..','..statistics.removed..')')
+	log_tag('stats::new-mails('..  statistics.added..
+		'), del-mails('..statistics.removed..')')
 	os.exit(0)
 end
 

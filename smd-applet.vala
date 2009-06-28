@@ -118,15 +118,22 @@ class smdApplet {
 		try {
 			GLib.MatchInfo info = null;
 			var stats = new GLib.Regex(
-				"^([^:]+): smd-(client|server): "+
-				"TAGS: statistics::mails\\(([0-9]+),([0-9]+)\\)$");
+				"^([^:]+): smd-(client|server)@([^:]+): TAGS: stats::(.*)$");
 			var error = new GLib.Regex(
-				"^([^:]+): smd-(client|server): "+
-				"TAGS: error::(.*)$");
+				"^([^:]+): smd-(client|server)@([^:]+): TAGS: error::(.*)$");
 			var skip = new GLib.Regex("^ERROR:");
 			if (stats.match(s,0,out info)) {
-				int new_mails = info.fetch(3).to_int();	
-				int del_mails = info.fetch(4).to_int();	
+				var neW = new GLib.Regex("new-mails\\(([0-9]+)\\)");
+				var del = new GLib.Regex("del-mails\\(([0-9]+)\\)");
+				GLib.MatchInfo i_new = null, i_del = null;
+
+				// check if matches
+				neW.match(info.fetch(4),0,out i_new);
+				del.match(info.fetch(4),0,out i_del);
+
+				int new_mails = i_new.fetch(1).to_int();	
+				int del_mails = i_del.fetch(1).to_int();	
+
 				string message = null;
 				if (del_mails > 0) {
 					message = " %d new mails\n %d mails were deleted".
@@ -148,6 +155,7 @@ class smdApplet {
 				//var actions = new GLib.Regex("suggested-action\\(([^\\)]+)\\)");
 				GLib.MatchInfo i_ctx = null, i_cause = null, i_human = null;
 				//GLib.MatchInfo i_act = null;
+
 				if (! context.match(info.fetch(3),0,out i_ctx)){
 					stderr.printf("smd-loop error with no context: %s\n",info.fetch(2));
 					return true;
@@ -174,7 +182,7 @@ class smdApplet {
 
 	public bool run_smd_loop() {
 		//string[] cmd = { smd_loop_cmd, "-v" };
-		//string[] cmd = {"/bin/echo","default: smd-client: TAGS: statistics::mails(1,3)"};
+		//string[] cmd = {"/bin/echo","default: smd-client: TAGS: statistics::new-mails(1), del-mails(3)"};
 		string[] cmd = {"/bin/echo","default: smd-client: TAGS: error::context(foo), probable-cause(dunno), human-intervention(required), sugged-action('foo')"};
 		int child_in;
 		int child_out;

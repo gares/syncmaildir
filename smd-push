@@ -43,11 +43,11 @@ if [ $EXITCODE = 1 ]; then
 fi
 if [ $SHOWTAGS = 1 ]; then
 	grep ^TAGS $CL \
-		| sed "s/^/$REPNAME: smd-server: /" \
+		| sed "s/^/$REPNAME: smd-server@localhost: /" \
 		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
 		| sed "s/@@ENDPOINT@@/$REPNAME/"
 	grep ^TAGS $SL \
-		| sed "s/^/$REPNAME: smd-client: /" \
+		| sed "s/^/$REPNAME: smd-client@$SERVERNAME: /" \
 		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
 		| sed "s/@@ENDPOINT@@/$REPNAME/"
 fi
