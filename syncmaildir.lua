@@ -50,9 +50,9 @@ function log_tags(context, cause, human, ...)
 	for i=1,select('#',...) do
 		suggestions[#suggestions+1] = "suggested-action("..select(i,...)..")"
 	end
-	local suggestions_string = table.concat(suggestions,", ")
-	log_tag("error::context("..context.."), "..
-		"probable-cause("..cause.."), "..
+	local suggestions_string = table.concat(suggestions," ")
+	log_tag("error::context("..context..") "..
+		"probable-cause("..cause..") "..
 		"human-intervention("..human..")".. suggestions_string)
 end
 
