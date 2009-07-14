@@ -2,6 +2,8 @@
 // No warranties.
 // Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
+errordomain Exit { ABORT }
+
 // a simple class to pass data from the child process to the
 // notofier
 class Event {
@@ -85,7 +87,7 @@ class smdApplet {
 		try { builder.add_from_file (smd_applet_ui); } 
 		catch (GLib.Error e) { 
 			stderr.printf("%s\n",e.message); 
-			Posix.exit(Posix.EXIT_FAILURE);
+			throw new Exit.ABORT("Unable to load the ui file");
 		}
 	
 		// events queue and mutex
@@ -356,7 +358,7 @@ class smdApplet {
 				return false;
 			} else {
 				stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
-				Posix.exit(Posix.EXIT_FAILURE);
+				throw new Exit.ABORT("Unable to run smd-loop");
 			}
 		} catch (GLib.Error e) {
 			stderr.printf("Unable to execute "+
@@ -404,7 +406,7 @@ class smdApplet {
 	}
 	
 	// starts the thread and the timeout handler
-	public void run() { 
+	public void run() throws Exit { 
 		// the timout function that will eventually notify the user
 		GLib.Timeout.add(1000, eat_event);
 		
@@ -412,7 +414,7 @@ class smdApplet {
 		try { thread = GLib.Thread.create(smdThread,true); }
 		catch (GLib.ThreadError e) { 
 			stderr.printf("Unable to start a thread\n"); 
-			Posix.exit(Posix.EXIT_FAILURE);
+			throw new Exit.ABORT("Unable to spawn a thread");
 		}
 
 		Gtk.main(); 
@@ -446,9 +448,10 @@ static int main(string[] args){
 
 	// go!
 	var smd_applet = new smdApplet();
-	smd_applet.run();
+	try { smd_applet.run(); }
+	catch (Exit e) { stderr.printf("abort: %s\n",e.message); }
 	
-	return Posix.EXIT_SUCCESS;
+	return 0;
 }
 
 // vim:set ts=4:
