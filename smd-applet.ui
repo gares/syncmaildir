@@ -301,6 +301,7 @@
                                 <property name="vscrollbar_policy">automatic</property>
                                 <child>
                                   <object class="GtkTextView" id="tvMail">
+                                    <property name="height_request">200</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="editable">False</property>
@@ -362,7 +363,19 @@
                             <property name="visible">True</property>
                             <property name="left_padding">12</property>
                             <child>
-                              <placeholder/>
+                              <object class="GtkVBox" id="vbRun">
+                                <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
                             </child>
                           </object>
                         </child>

@@ -2,15 +2,34 @@
 // No warranties.
 // Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-// TODO : use glib checksum functions instead of gcrypt
-
 // a simple class to pass data from the child process to the
 // notofier
 class Event {
 	public string message;
+	public bool enter_error_mode;
 
-	Event(string s) {
-		message = s;
+	public static Event error(string account, string host) {
+		var e = new Event();
+		e.message = "An error occurred";
+		e.enter_error_mode = true;
+		return e;
+	}
+
+	public static Event stats(
+		string account,string host,int new_mails,int del_mails) 
+	{
+		string preamble = "Synchronize with %s:\n".printf(account);
+		var e = new Event();
+		e.enter_error_mode = false;
+		if (new_mails > 0 && del_mails > 0) {
+			e.message = "%s%d new messages\n%d deleted messages".
+				printf(preamble,new_mails,del_mails);
+		} else if (new_mails > 0) {
+			e.message = "%s%d new messages".printf(preamble,new_mails);
+		} else {
+			e.message = "%s%d deleted messages".printf(preamble,del_mails);
+		}
+		return e;
 	}
 }
 
@@ -33,10 +52,14 @@ class smdApplet {
 
 	// =================== the data =====================================
 
+	// The builder
+	Gtk.Builder builder = null;
+
 	// main widgets
 	Gtk.Menu menu = null;
 	Gtk.StatusIcon si = null;
 	Gtk.Window win = null;
+	Gtk.Window err_win = null;
 
 	// the gconf client handler
 	GConf.Client gconf = null;
@@ -49,12 +72,16 @@ class smdApplet {
 	GLib.Mutex events_lock = null;
 	List<Event> events = null; 
 
+	// if the program is stuck
+	bool error_mode;
+	GLib.HashTable<Gtk.Widget,string> command_hash = null;
+
 	// =================== the code =====================================
 
 	// initialize data structures and build gtk+ widgets
 	smdApplet() {
 		// load the ui file
-		Gtk.Builder builder = new Gtk.Builder ();
+		builder = new Gtk.Builder ();
 		try { builder.add_from_file (smd_applet_ui); } 
 		catch (GLib.Error e) { 
 			stderr.printf("%s\n",e.message); 
@@ -70,6 +97,7 @@ class smdApplet {
 
 		// load widgets and attach callbacks
 		win = builder.get_object("wPrefs") as Gtk.Window;
+		err_win = builder.get_object("wError") as Gtk.Window;
 		var close = builder.get_object("bClose") as Gtk.Button;
 		close.clicked += (b) =>  { win.hide(); };
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
@@ -95,12 +123,19 @@ class smdApplet {
 		prefs.activate += (b) => {  win.show(); };
 
 		// notification area icon (XXX draw a decent one)
-		si = new Gtk.StatusIcon.from_stock(Gtk.STOCK_NETWORK);
+		si = new Gtk.StatusIcon.from_stock(Gtk.STOCK_INFO);
 		si.activate += (s) => { 
-			menu.popup(null,null,si.position_menu,0,
-				Gtk.get_current_event_time());
+			if ( error_mode ) 
+				err_win.show();
+			else
+				menu.popup(null,null,si.position_menu,0,
+					Gtk.get_current_event_time());
 		};
 		si.set_visible(true);
+
+		// error mode
+		command_hash = new GLib.HashTable<Gtk.Widget,string>(
+			GLib.direct_hash,GLib.str_equal);
 	}
 
 	// This thread fills the event queue, parsing the
@@ -117,60 +152,177 @@ class smdApplet {
 	public bool eval_smd_loop_message(string s){
 		try {
 			GLib.MatchInfo info = null;
-			var stats = new GLib.Regex(
-				"^([^:]+): smd-(client|server)@([^:]+): TAGS: stats::(.*)$");
-			var error = new GLib.Regex(
-				"^([^:]+): smd-(client|server)@([^:]+): TAGS: error::(.*)$");
-			var skip = new GLib.Regex("^ERROR:");
-			if (stats.match(s,0,out info)) {
-				var neW = new GLib.Regex("new-mails\\(([0-9]+)\\)");
-				var del = new GLib.Regex("del-mails\\(([0-9]+)\\)");
+			var r_tags = new GLib.Regex(
+				"^([^:]+): smd-(client|server)@([^:]+): TAGS:(.*)$");
+			var r_skip = new GLib.Regex(
+				"^([^:]+): smd-(client|server)@([^:]+): ERROR");
+
+			if (r_skip.match(s,0,null)) { return false; }
+			if (!r_tags.match(s,0,out info)) {
+				stderr.printf("unhandled smd-loop message: %s\n",s);
+				return true;
+			}
+			
+			var account = info.fetch(1);
+			var host = info.fetch(3);
+			var tags = info.fetch(4);
+			
+			GLib.MatchInfo i_args = null;
+			var r_stats = new GLib.Regex(" stats::(.*)$");
+			var r_error = new GLib.Regex(" error::(.*)$");
+
+			if (r_stats.match(tags,0,out i_args)) {
+				var r_neW = new GLib.Regex("new-mails\\(([0-9]+)\\)");
+				var r_del = new GLib.Regex("del-mails\\(([0-9]+)\\)");
 				GLib.MatchInfo i_new = null, i_del = null;
+				var args = i_args.fetch(1);
 
 				// check if matches
-				neW.match(info.fetch(4),0,out i_new);
-				del.match(info.fetch(4),0,out i_del);
+				var has_new = r_neW.match(args,0,out i_new); 
+				var has_del = r_del.match(args,0,out i_del);
 
-				int new_mails = i_new.fetch(1).to_int();	
-				int del_mails = i_del.fetch(1).to_int();	
+				int new_mails = 0;
+				if (has_new) { new_mails = i_new.fetch(1).to_int();	}
+				int del_mails = 0;
+				if (has_del) { del_mails = i_del.fetch(1).to_int();	}
 
-				string message = null;
-				if (del_mails > 0) {
-					message = " %d new mails\n %d mails were deleted".
-						printf(new_mails,del_mails);
+				if (host == "localhost" && (new_mails > 0 || del_mails > 0)) {
+					events_lock.lock();
+					events.append(
+						Event.stats(account,host,new_mails, del_mails));
+					events_lock.unlock();
 				} else {
-					message = " %d new mails".
-						printf(new_mails);
+					// we skip non-error messages from the remote host
 				}
-				events_lock.lock();
-				events.append(new Event(
-					"Mail synchronization with <i>%s</i>:\n%s".
-					printf(info.fetch(1),message)));
-				events_lock.unlock();
+
 				return false;
-			} else if (error.match(s,0,out info)) {
+			} else if (r_error.match(tags,0,out i_args)) {
 				var context = new GLib.Regex("context\\(([^\\)]+)\\)");
 				var cause = new GLib.Regex("probable-cause\\(([^\\)]+)\\)");
 				var human = new GLib.Regex("human-intervention\\(([^\\)]+)\\)");
-				//var actions = new GLib.Regex("suggested-action\\(([^\\)]+)\\)");
-				GLib.MatchInfo i_ctx = null, i_cause = null, i_human = null;
-				//GLib.MatchInfo i_act = null;
+				var actions=new GLib.Regex("suggested-action\\((.*)\\) *$");
 
-				if (! context.match(info.fetch(3),0,out i_ctx)){
-					stderr.printf("smd-loop error with no context: %s\n",info.fetch(2));
+				GLib.MatchInfo i_ctx = null, i_cause = null, i_human = null;
+				GLib.MatchInfo i_act = null;
+				var args = i_args.fetch(1);
+
+				if (! context.match(args,0,out i_ctx)){
+					stderr.printf("smd-loop error with no context: %s\n",s);
 					return true;
 				}
-				if (! cause.match(info.fetch(3),0,out i_cause)){
+				if (! cause.match(args,0,out i_cause)){
 					stderr.printf("smd-loop error with no cause: %s\n",s);
 					return true;
 				}
-				if (! human.match(info.fetch(3),0,out i_human)){
+				if (! human.match(args,0,out i_human)){
 					stderr.printf("smd-loop error with no human: %s\n",s);
 					return true;
 				}
-				stderr.printf("IMPLEMENT ME\n");
+				var has_actions = actions.match(args,0,out i_act);
+
+				// widget setup
+				var l_ctx = builder.get_object("lContext") as Gtk.Label;
+				l_ctx.set_text(i_ctx.fetch(1));
+				var l_cause = builder.get_object("lCause") as Gtk.Label;
+				l_cause.set_text(i_cause.fetch(1));
+				if ( i_human.fetch(1) != "required" ){
+					stderr.printf("smd-loop giving an avoidable error: %s\n",
+						i_human.fetch(1));
+					return true;
+				}
+				bool display_permissions = false;
+				bool display_mail = false;
+				bool display_commands = false;
+				
+				if (has_actions) {
+					command_hash.remove_all();
+					string acts = i_act.fetch(1);
+					
+					var r_perm = new GLib.Regex(
+						"display-permissions\\(([^\\)]+)\\)");
+					var r_mail = new GLib.Regex(
+						"display-mail\\(([^\\)]+)\\)");
+					var r_cmd = new GLib.Regex(
+						"run\\(([^\\)]+)\\)");
+
+					int from = 0;
+					for (;acts != null && acts.len() > 0;){
+						stderr.printf("--- %s\n",acts);
+						MatchInfo i_cmd = null;
+						if ( r_perm.match(acts,0,out i_cmd) ){
+							display_permissions = true;
+							i_cmd.fetch_pos(0,null,out from);
+							string file = i_cmd.fetch(1);
+							string output = null;
+							try {
+								GLib.Process.spawn_command_line_sync(
+									"ls -ld " + file, out output, null);
+								var l = builder.get_object("lPermissions") 
+									as Gtk.Label;
+								l.set_text(output);
+							} catch (GLib.SpawnError e) {
+								stderr.printf("Spawning ls: %s\n",e.message);
+							}
+						} else if ( r_mail.match(acts,0,out i_cmd) ){
+							display_mail = true;
+							i_cmd.fetch_pos(0,null,out from);
+							string file = i_cmd.fetch(1);
+							string output = null;
+							try {
+								GLib.Process.spawn_command_line_sync(
+									"cat " + file, out output, null);
+								var l = builder.get_object("tvMail") 
+									as Gtk.TextView;
+								Gtk.TextBuffer b = l.get_buffer();
+								b.set_text(output,(int)output.size());
+								Gtk.TextIter it,subj;
+								b.get_start_iter(out it);
+								it.forward_search("Subject:",
+									Gtk.TextSearchFlags.TEXT_ONLY,
+									out subj,null,null);
+								var insert = b.get_insert();
+								b.select_range(subj,subj);
+								l.scroll_to_mark(insert,0.0,true,0.0,0.0);
+							} catch (GLib.SpawnError e) {
+								stderr.printf("Spawning ls: %s\n",e.message);
+							}
+						} else if ( r_cmd.match(acts,0,out i_cmd) ){
+							display_commands = true;
+							string command = i_cmd.fetch(1);
+							i_cmd.fetch_pos(0,null,out from);
+							var vb = builder.get_object("vbRun") as Gtk.VBox;
+							var hb = new Gtk.HBox(false,10);
+							var lbl = new Gtk.Label(command);
+							lbl.set_alignment(0.0f,0.5f);
+							var but = new Gtk.Button.from_stock("gtk-execute");
+							command_hash.insert(but,command);
+							but.clicked += (b) => {
+								stderr.printf("%s\n",command_hash.lookup(b));
+							};
+							hb.pack_end(lbl,true,true,0);
+							hb.pack_end(but,false,false,0);
+							vb.pack_end(hb,true,true,0);
+							hb.show_all();
+						} else {
+							stderr.printf("Unrecognized action: %s\n",acts);
+							break;
+						}
+						acts = acts.substring(from);
+					}
+				}
+
+				var x = builder.get_object("fDisplayPermissions") as Gtk.Widget;
+				x.visible=display_permissions;
+				x = builder.get_object("fDisplayMail") as Gtk.Widget; 
+				x.visible=display_mail;
+				x = builder.get_object("fRun") as Gtk.Widget; 
+				x.visible=display_commands;
+				
+				events_lock.lock();
+				events.append(Event.error(account,host));
+				events_lock.unlock();
 				return false;
-			} else if (skip.match(s,0,out info)) {
+			} else if (r_skip.match(s,0,out info)) {
 				return false; // skip that message, not for us
 			} else {
 				stderr.printf("unhandled smd-loop message: %s\n",s);
@@ -182,8 +334,8 @@ class smdApplet {
 
 	public bool run_smd_loop() {
 		//string[] cmd = { smd_loop_cmd, "-v" };
-		//string[] cmd = {"/bin/echo","default: smd-client: TAGS: statistics::new-mails(1), del-mails(3)"};
-		string[] cmd = {"/bin/echo","default: smd-client: TAGS: error::context(foo), probable-cause(dunno), human-intervention(required), sugged-action('foo')"};
+		//string[] cmd = {"/bin/echo","default: smd-client@localhost: TAGS: stats::new-mails(1), del-mails(3)"};
+		string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-action( display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
 		int child_in;
 		int child_out;
 		int child_err;
@@ -220,6 +372,10 @@ class smdApplet {
 	bool eat_event() {
 		Event e = null;
 
+		// in error mode no events are processed
+		if ( error_mode ) return true;
+
+		// fetch the event
 		events_lock.lock();
 		if ( events.length() > 0) {
 			e = events.nth(0).data;
@@ -227,6 +383,7 @@ class smdApplet {
 		}
 		events_lock.unlock();
 
+		// regular notification
 		if ( e != null && gconf.get_bool(key_newmail) ){
 			var not = new Notify.Notification(
 				"Syncmaildir",e.message,"gtk-about",null);
@@ -234,6 +391,13 @@ class smdApplet {
 
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		}
+
+		// error notification
+		if ( e != null && e.enter_error_mode ) {
+			si.set_from_icon_name("error");
+			si.set_blinking(true);
+			error_mode = true;
 		}
 
 		return true; // re-schedule me please
