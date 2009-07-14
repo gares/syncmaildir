@@ -285,7 +285,7 @@
                     <property name="visible">True</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkFrame" id="frame6">
+                      <object class="GtkFrame" id="fDisplayMail">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
                         <property name="shadow_type">none</property>
@@ -294,10 +294,18 @@
                             <property name="visible">True</property>
                             <property name="left_padding">12</property>
                             <child>
-                              <object class="GtkTextView" id="tvMail">
+                              <object class="GtkScrolledWindow" id="scrolledwindow1">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="editable">False</property>
+                                <property name="hscrollbar_policy">automatic</property>
+                                <property name="vscrollbar_policy">automatic</property>
+                                <child>
+                                  <object class="GtkTextView" id="tvMail">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="editable">False</property>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -315,7 +323,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkFrame" id="frame5">
+                      <object class="GtkFrame" id="fDisplayPermissions">
                         <property name="visible">True</property>
                         <property name="label_xalign">0</property>
                         <property name="shadow_type">none</property>
@@ -350,7 +358,7 @@
                         <property name="label_xalign">0</property>
                         <property name="shadow_type">none</property>
                         <child>
-                          <object class="GtkAlignment" id="alignment4">
+                          <object class="GtkAlignment" id="fRunAlign">
                             <property name="visible">True</property>
                             <property name="left_padding">12</property>
                             <child>
