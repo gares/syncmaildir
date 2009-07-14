@@ -32,7 +32,7 @@ prepare(){
 	export HOMEC=$PWD/target
 	export HOMES=$PWD
 	export PATH=$PWD/bin:$ORIGPATH
-	export LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'..package.path"
+	export LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'"
 	tar -xzf ../misc/Mail.testcase.tgz
 	
 	mkfifo s2c
