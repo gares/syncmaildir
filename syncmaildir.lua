@@ -46,7 +46,7 @@ end
 function log_tags(context, cause, human, ...)
 	if human then human = "necessary" else human = "avoidable" end
 	local suggestions = {}
-	if select('#',...) then suggestions[#suggesions+1] = "" end
+	if select('#',...) > 0 then suggestions[#suggestions+1] = "" end
 	for i=1,select('#',...) do
 		suggestions[#suggestions+1] = "suggested-action("..select(i,...)..")"
 	end
