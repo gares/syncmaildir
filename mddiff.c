@@ -411,7 +411,7 @@ void analize_file(const char* dir,const char* file) {
 	ctx_len = SHA_DIGEST_LENGTH;
 	g_checksum_update(ctx, addr, next - addr);
 	g_checksum_get_digest(ctx, m->hsha, &ctx_len);
-	g_checksum_reset(ctx);
+	g_checksum_free(ctx);
 
 	ctx = g_checksum_new(G_CHECKSUM_SHA1);
 	ctx_len = SHA_DIGEST_LENGTH;
