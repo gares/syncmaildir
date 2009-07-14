@@ -72,7 +72,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			-- the client applied the diff, the new mailbox
 			-- fingerprint should be used for the next sync
 			local rc
-			rc = os.execute('xdelta delta '..dbfile..' '..newdb..' '..xdelta)
+			rc = os.execute(XDELTA..' delta '..dbfile..' '..newdb..' '..xdelta)
 			if rc ~= 0 and rc ~= 256 then
 				log_error('Failed running `xdelta delta` on db file: '..rc)
 				os.exit(4)

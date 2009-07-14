@@ -16,6 +16,7 @@ local __G = _G
 
 module('syncmaildir',package.seeall)
 
+-- set mddiff path
 MDDIFF = ""
 if string.sub(PREFIX,1,1) == '@' then
 		MDDIFF = os.getenv('HOME')..'/Projects/syncmaildir/mddiff '
@@ -23,6 +24,18 @@ if string.sub(PREFIX,1,1) == '@' then
 			MDDIFF,'\n')
 else
 		MDDIFF = PREFIX .. '/bin/mddiff '
+end
+
+-- set sha1sum executable name
+SHA1SUM = '@SHA1SUM@'
+if string.sub(SHA1SUM,1,1) == '@' then
+		SHA1SUM = 'sha1sum'
+end
+
+-- set xdelta executable name
+XDELTA = '@XDELTA@'
+if string.sub(XDELTA,1,1) == '@' then
+		XDELTA = 'xdelta'
 end
 
 function set_verbose(v)
@@ -159,7 +172,7 @@ function handshake(dbfile)
 	-- send the protocol version and the dbfile sha1 sum
 	io.write('protocol ',PROTOCOL_VERSION,'\n')
 	touch(dbfile)
-	local inf = io.popen('sha1sum '.. dbfile,'r')
+	local inf = io.popen(SHA1SUM..' '.. dbfile,'r')
 	local db_sha = inf:read('*a'):match('^(%S+)')
 	io.write('dbfile ',db_sha,'\n')
 	io.flush()

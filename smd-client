@@ -406,7 +406,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	io.write('COMMIT\n')
 	io.flush()
 	receive(io.stdin, xdelta)
-	local rc = os.execute('xdelta patch '..xdelta..' '..dbfile..' '..newdb)
+	local rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
 	if rc ~= 0 and rc ~= 256 then
 		log_error('Unable to apply delta to dbfile.')
 		io.write('ABORT\n')
