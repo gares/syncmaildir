@@ -72,7 +72,6 @@ install: $(BINARIES) $(MANPAGES)
 	$(call install-replacing,smd-pull,bin)
 	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-loop,bin)
-	$(call install,smd-applet,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
