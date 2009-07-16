@@ -1,0 +1,33 @@
+NAME
+  smd-loop - iterates smd-pull and smd-push
+
+SYNOPSIS
+  smd-loop [-v]
+
+DESCRIPTION
+  smd-loop runs smd-loop and smd-pool at regular intervals as defined
+  by the user in the ~/.smd/loop configuration file. On errors that
+  are reported to be transient, its retries a second time before failing.
+
+  The configuration file is like oriented. Each line is composed of
+  three space separated fields: pull-frequency, push-frequency and
+  endpoint-name. Frequencies are expressed in minutes, while endpoint
+  name is a valid name for smd-pull(1) and smd-push(1). Lines
+  beginning with # are considered as comments. The following example
+  calls the command smd-pull default every 3 minutes, and smd-push default
+  every 10. Example:
+
+    # pull-frequency push-frequency endpoint-name
+      3              10             default
+
+OPTIONS
+  -v  Increase program verbosity (printed on stderr)
+
+FILES
+  ~/.smd/loop
+
+SEE ALSO
+  mddiff(1), smd-server(1), smd-pull(1), smd-push(1), smd-pull(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
