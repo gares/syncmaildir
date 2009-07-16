@@ -40,6 +40,8 @@ if [ $EXITCODE = 1 ]; then
 		| sed 's/^/smd-server: /'
 	grep ^ERROR $CL \
 		| sed 's/^/smd-client: /'
+	grep ^ssh: $SL \
+		| sed 's/^/smd-server: ERROR: /'
 fi
 if [ $SHOWTAGS = 1 ]; then
 	grep ^TAGS $SL \
@@ -50,6 +52,12 @@ if [ $SHOWTAGS = 1 ]; then
 		| sed "s/^/$REPNAME: smd-client@localhost: /" \
 		| sed "s/@@INVERSECOMMAND@@/smd-push/" \
 		| sed "s/@@ENDPOINT@@/$REPNAME/"
+	if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
+	   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
+		# it may be that ssh failed to resolve the hostname
+		# so we generate a fake tag for it
+		echo "$REPNAME: smd-server@$SERVERNAME: TAGS: error::context(ssh) probable-cause(network) human-intervention(avoidable) suggested-actions(retry)"
+	fi
 fi
 
 exit $EXITCODE
