@@ -15,7 +15,7 @@ unison may work too, but not benefit from the fact that they are
 synchronizing mail messages. Sync Mail Dir is similar to Maildirsync in its
 design and requirements, but is more efficient, having its mechanisms
 written in C (around 700 lines), while policies are written in scripting
-languages (other 700 lines).
+languages (other 900 lines).
 
 Overview
 --------
@@ -62,13 +62,26 @@ flexibility).
   `smd-serer` on the client host. This allows to push local changes to
   apply them on the remote host.  The local mailbox is left untouched. This
   tool is meant to be called by the user.
+- `smd-loop` runs runs smd-push and smd-sull at regular intervals as defined
+  by the user in a configuration file, in the style of a crontab, but
+  catches recoverable errors (like a, non recurrent, network problem),
+  vailing out only in cases where human intervention is needed. This is 
+  the utility you may want to run if you are using a textual environment or
+  a graphical one not base on GNOME.
+- `smd-applet` is an appled for the GNOME notification area, that runs 
+  `smd-loop`, eventually nofying the user for critical events and allowing
+  him to solve them clicking on buttons instead of running commands from
+  the shell.
 
 HOW-TO
 ------
 
-Till now, two end-user tools are available (more will be added in the
-future, possibly equipped with an eye-candy notification icon for modern
-desktops):
+Four end-user tools are provided. You need to configure them bottom-up,
+starting from the simpler ones (`smd-pull` and `smd-push`), that already 
+allow to synchronize two mailboxes. Anyway it is recommended to use 
+higher level tools like `smd-loop` or `smd-applet`.
+
+### smd-push and smd-pull
 
 - `smd-pull [name]` to obtain the changes made on the remote mailbox applied
   locally
@@ -99,6 +112,31 @@ This file defines the following variables:
 
 The first time you run `smd-pull` or `smd-push` a template file will be 
 generated for you. 
+
+### smd-loop
+
+`smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
+by the user in the `~/.smd/loop` configuration file. On errors that
+are reported to be transient, its retries a second time before failing.
+
+The first time you run `smd-loop` a sample config file is created for you. 
+The configuration file is like oriented. Each line is composed of three space
+separated fields: 
+
+- `pull-frequency`
+- `push-frequency`
+- `endpoint-name` 
+
+Frequencies are expressed in minutes, while endpoint
+name is a valid name for `smd-pull` and `smd-push`. Lines
+beginning with # are considered as comments. The following example
+calls the command `smd-pull default` every 3 minutes, and `smd-push default`
+every 10. 
+
+    # pull-frequency push-frequency endpoint-name
+      3              10             default
+
+### smd-applet
 
 Notes on performances
 ---------------------

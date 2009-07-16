@@ -1,7 +1,7 @@
 DESIGN
 ======
 
-What follows is my best effort in giving the big-ascii-a-picture
+What follows is my best effort in giving the big-ascii-picture
 of what happens when `smd-pull` is run. `smd-push` simply 
 swaps `smd-server` and `smd-client`. Note that the sync direction is 
 from `smd-server` to `smd-client`, so running them on the opposite hosts
@@ -42,6 +42,33 @@ replaced by `cat`. Viceversa `smd-push` performs what follows
 They are both implemented in `bash`, since their main activity is to
 redirect standard file descriptors and call other tools, check their exit
 status and eventually notify the user with an extract of their logs.
+
+smd-loop
+--------
+
+The idea is to mimic cron, but retry a failed sync attempt if the 
+given error is transient. `smd-client` and `smd-server` output TAGS
+that specify if the occurred error need human intervention or not, and
+also suggest some actions, like retry. `smd-loop` understands these tags,
+and gives a second chance to a commnd that fails with an error that does not
+require human intervention and for which the suggested action is retry.
+
+It is implemented in bash, since it is mostly a while true loop. Arrays
+(non posix shell compliant) are used to record failures, and give only a
+second chance to every `smd-push` or `smd-pull` command.
+
+smd-applet
+----------
+
+To write an hopefully eye-candy applet for GNOME, the language vala was an
+intriguing choice, since it is based on smart and sound ideas (that is
+to avoid the C++ non-standardized calling conventions) to provide a modern
+object oriented programming language built around gobject and glib. Bindings
+for GTK+, GConf, libnotify, etc... are available, and require no compiled 
+glue code, just bare text .vapi files. 
+
+If you are used to languages where writing bindings is not a trivial task,
+you'd better look at vala, where bindings are simple by design.
 
 SERVER/CLIENT interaction
 =========================
