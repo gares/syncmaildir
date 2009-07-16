@@ -59,11 +59,13 @@ end
 function log_tags(context, cause, human, ...)
 	if human then human = "necessary" else human = "avoidable" end
 	local suggestions = {}
-	if select('#',...) > 0 then suggestions[#suggestions+1] = "" end
-	for i=1,select('#',...) do
-		suggestions[#suggestions+1] = "suggested-action("..select(i,...)..")"
+	local suggestions_string = nil
+	if select('#',...) > 0 then 
+			suggestions[#suggestions+1] = 
+				"suggested-actions("..table.concat({...}," ")..")"
+	else 
+			suggestions_string = "" 
 	end
-	local suggestions_string = table.concat(suggestions," ")
 	log_tag("error::context("..context..") "..
 		"probable-cause("..cause..") "..
 		"human-intervention("..human..")".. suggestions_string)

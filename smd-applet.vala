@@ -202,7 +202,7 @@ class smdApplet {
 				var context = new GLib.Regex("context\\(([^\\)]+)\\)");
 				var cause = new GLib.Regex("probable-cause\\(([^\\)]+)\\)");
 				var human = new GLib.Regex("human-intervention\\(([^\\)]+)\\)");
-				var actions=new GLib.Regex("suggested-action\\((.*)\\) *$");
+				var actions=new GLib.Regex("suggested-actions\\((.*)\\) *$");
 
 				GLib.MatchInfo i_ctx = null, i_cause = null, i_human = null;
 				GLib.MatchInfo i_act = null;
@@ -337,7 +337,7 @@ class smdApplet {
 	public bool run_smd_loop() {
 		//string[] cmd = { smd_loop_cmd, "-v" };
 		//string[] cmd = {"/bin/echo","default: smd-client@localhost: TAGS: stats::new-mails(1), del-mails(3)"};
-		string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-action( display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
+		string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-actions(display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
 		int child_in;
 		int child_out;
 		int child_err;
