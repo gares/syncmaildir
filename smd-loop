@@ -4,8 +4,6 @@
 # No warranties.
 # Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
-set -e
-
 # The config file name
 CONFFILE=~/.smd/loop
 
@@ -18,9 +16,58 @@ TIME=1
 # Verbose
 VERBOSE=0
 
-if [ "$1" = "-v" ]; then
-	VERBOSE=1
-fi
+# Temp file, used to store subprocesses' output
+OUTPUT=`mktemp`
+
+# List of commands that failed
+STOP_TAG="__STOP__"
+declare -a FAILURES=("$STOP_TAG")
+
+remove_from_failures() {
+	local item="$1"
+	for ((i=0; ; i++)); do
+		if [ "${FAILURES[$i]}" = "$item" ]; then
+			unset FAILURES[$i]
+		fi
+
+		if [ "${FAILURES[$i]}" = "$STOP_TAG" ]; then
+			break
+		fi
+	done
+}
+
+add_to_failures() {
+	local item="$1"
+	for ((i=0; ; i++)); do
+		if [ "${FAILURES[$i]}" = "" ]; then
+			FAILURES[$i]="$item"
+			break
+		fi
+
+		if [ "${FAILURES[$i]}" = "$STOP_TAG" ]; then
+			FAILURES[$i]="$item"
+			FAILURES[`expr $i + 1`]="$STOP_TAG"
+			break
+		fi
+	done
+}
+
+has_not_failed() {
+	local item="$1"
+	local found=0
+
+	for ((i=0; ; i++)); do
+		if [ "${FAILURES[$i]}" = "$item" ]; then
+			found=1
+		fi
+
+		if [ "${FAILURES[$i]}" = "$STOP_TAG" ]; then
+			break
+		fi
+	done
+
+	return $found
+}
 
 perform() {
 	local cmd=$1
@@ -30,8 +77,35 @@ perform() {
 	if [ "$VERBOSE" = 1 ]; then
 		echo smd-loop: $cmd_line
 	fi
-	$cmd_line
+	$cmd_line > $OUTPUT 2>&1
+	if [ $? = 0 ]; then
+		cat $OUTPUT
+		remove_from_failures "$cmd_line"
+	else
+		if grep -q 'human-intervention(avoidable)' $OUTPUT &&
+		   grep -q 'suggested-actions(retry)' $OUTPUT &&
+		   has_not_failed "$cmd_line"; then
+			if [ "$VERBOSE" = 1 ]; then
+				echo smd-loop: warning: failed: $cmd_line
+				echo smd-loop: warning: will retry later
+			fi
+			add_to_failures "$cmd_line"
+		else
+			cat $OUTPUT
+			exit 1
+		fi
+	fi
 }
+
+cleanup() {
+	rm -f $OUTPUT
+}
+
+trap cleanup "EXIT" 
+
+if [ "$1" = "-v" ]; then
+	VERBOSE=1
+fi
 
 if [ ! -f $CONFFILE ]; then
 	cat > $CONFFILE <<-EOT
