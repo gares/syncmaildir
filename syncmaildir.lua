@@ -59,7 +59,7 @@ end
 function log_tags(context, cause, human, ...)
 	if human then human = "necessary" else human = "avoidable" end
 	local suggestions = {}
-	local suggestions_string = nil
+	local suggestions_string = ""
 	if select('#',...) > 0 then 
 			suggestions[#suggestions+1] = 
 				"suggested-actions("..table.concat({...}," ")..")"
