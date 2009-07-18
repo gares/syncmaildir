@@ -1,3 +1,30 @@
+../7/2009 - major feature release
+	* smd-applet, eye-candy applet for smd-loop:
+	  - attaches to the notification are
+	  - stores its configuration using GConf
+	  - notifies the user using libnotify
+	  - runs smd-loop, interpreting its output
+	  - shows the user possible errors and allow him to
+	    perform suggested actions by clicking on buttons
+	* error-report:
+	  - smd-client and smd-server output tags describing the 
+	    error that caused a sync failure:
+	    - context: which part of the software failed, like ssh, 
+	      message-deletion, copy-message, ...
+	    - probable-cause: something like network, bad file permissions, ...
+	    - human-intervention: avoidable or necessary
+	    - suggested-actions: run( command ), display-mail, retry, ...
+	  - smd-push/smd-pull catch early network errors, so that
+	    some tags are output even if smd-client/smd-server is
+	    not even run
+	* statistics:
+	  - smd-client outputs tags describing its last run, comprising
+	    the number of added/deleted messages
+	* smd-loop, cron like push/pull iterator:
+	  - use a line based configuration file ~/.smd/loop
+	  - catches some transient errors giving them a second chance;
+	    i.e. if the suggested solution is retry, it does so once
+
 28/4/2009 - minor fix and minor feature release
 	* support for multiple servers/clients:
 	  - config file is now ~/.smd/config.$FOO and smd-push/pull
