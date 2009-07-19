@@ -12,7 +12,7 @@ class Event {
 
 	public static Event error(string account, string host) {
 		var e = new Event();
-		e.message = "An error occurred";
+		e.message = "An error occurred, click on the icon for more details";
 		e.enter_error_mode = true;
 		return e;
 	}
@@ -114,6 +114,16 @@ class smdApplet {
 			try { gconf.set_bool(key_newmail,b.active); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		};
+		var bc = builder.get_object("bClose") as Gtk.Button;
+		bc.clicked += (b) => {
+			err_win.hide();	
+			error_mode = false;
+			si.set_from_icon_name("gtk-info");
+			si.set_blinking(false);
+			// XXX do something else?
+		};
+		win.delete_event += win.hide_on_delete;
+		err_win.delete_event += err_win.hide_on_delete;
 
 		// menu popped up when the user clicks on the notification area
         menu = builder.get_object ("mMain") as Gtk.Menu;
@@ -133,9 +143,9 @@ class smdApplet {
 				menu.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
 		};
-		si.set_visible(true);
+		si.set_visible(true); // XXX read from gconf: key_icon
 
-		// error mode
+		// error mode data
 		command_hash = new GLib.HashTable<Gtk.Widget,string>(
 			GLib.direct_hash,GLib.str_equal);
 	}
@@ -271,6 +281,9 @@ class smdApplet {
 							string file = i_cmd.fetch(1);
 							string output = null;
 							try {
+								var fn = builder.get_object("eMailName") 
+									as Gtk.Entry;
+								fn.set_text(file);
 								GLib.Process.spawn_command_line_sync(
 									"cat " + file, out output, null);
 								var l = builder.get_object("tvMail") 
@@ -445,6 +458,21 @@ static int main(string[] args){
 	// we init gtk+ and notify
 	Gtk.init (ref args);
 	Notify.init("smd-applet");
+
+	bool foo=false;
+	GLib.OptionEntry[] oe = new GLib.OptionEntry[2];
+	oe[0].long_name = "foo";
+	oe[0].short_name = 'f';
+	oe[0].flags = GLib.OptionFlags.NO_ARG;
+	oe[0].arg = GLib.OptionArg.NONE;
+	oe[0].arg_data = &foo;
+	oe[0].description = "ffff";
+	oe[0].arg_description = null;
+	oe[1].long_name = null;
+	var oc = new GLib.OptionContext(" - syncmaildir applet");
+	oc.add_main_entries(oe,null);
+	oc.parse(ref args);
+	// XXX if foo then just show the confi win
 
 	// go!
 	var smd_applet = new smdApplet();
