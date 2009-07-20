@@ -2,9 +2,15 @@
 if [ `echo $PREFIX | cut -c -1` = "@" ]; then
 	SMDSERVER=~/Projects/syncmaildir/smd-server 
 	SMDCLIENT=~/Projects/syncmaildir/smd-client 
+	# in development mode we assume that on the remote host
+	# the software is installed such that binaries are in $PATH
+	REMOTESMDSERVER=smd-server
+	REMOTESMDCLIENT=smd-client
 else
 	SMDSERVER=$PREFIX/bin/smd-server 
 	SMDCLIENT=$PREFIX/bin/smd-client 
+	REMOTESMDSERVER="$SMDSERVER"
+	REMOTESMDCLIENT="$SMDCLIENT"
 fi
 
 H=$HOME
