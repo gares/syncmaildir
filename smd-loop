@@ -23,6 +23,19 @@ OUTPUT=`mktemp`
 STOP_TAG="__STOP__"
 declare -a FAILURES=("$STOP_TAG")
 
+# Prefix
+PREFIX="@PREFIX@"
+
+if [ `echo $PREFIX | cut -c -1` = "@" ]; then
+	echo "smd-loop not installed, assuming smd-pull is ./smd-pull"
+	echo "smd-loop not installed, assuming smd-push is ./smd-push"
+	PULL="./smd-pull"
+	PUSH="./smd-push"
+else
+	PULL="$PREFIX/bin/smd-pull"
+	PUSH="$PREFIX/bin/smd-push"
+fi
+
 remove_from_failures() {
 	local item="$1"
 	for ((i=0; ; i++)); do
