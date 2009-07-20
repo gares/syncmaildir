@@ -259,6 +259,8 @@ end
 function tmp_for(path,use_tmp)
 	if use_tmp == nil then use_tmp = true end
 	local t = {} 
+	local absolute = ""
+	if string.byte(path,1) == string.byte('/',1) then absolute = '/' end
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	local fname = t[#t]
 	local time, pid, host, tags = fname:match('^(%d+)%.(%d+)%.([^:]+)(.*)$')
@@ -281,10 +283,10 @@ function tmp_for(path,use_tmp)
 	if not found then
 		time = os.date("%s")
 		t[#t+1] = time..'.'..pid..'.'..host..tags
-		newpath = table.concat(t,'/') 
+		newpath = absolute .. table.concat(t,'/') 
 	else
 		t[#t+1] = fname
-		newpath = table.concat(t,'/') 
+		newpath = absolute .. table.concat(t,'/') 
 	end
 	mkdir_p(newpath)
 	local attempts = 0
@@ -295,7 +297,7 @@ function tmp_for(path,use_tmp)
 			time = os.date("%s")
 			host = host .. 'x'
 			t[#t] = time..'.'..pid..'.'..host..tags
-			newpath = table.concat(t,'/') 
+			newpath = absolute .. table.concat(t,'/') 
 			attempts = attempts + 1
 		end
 	end
