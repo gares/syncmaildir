@@ -350,6 +350,14 @@ function quote(s)
 	return '"' .. s:gsub('"','\\"'):gsub("%)","\\)").. '"'
 end
 
+function homefy(s)
+	if string.byte(s,1) == string.byte('/',1) then
+		return s
+	else
+		return os.getenv('HOME')..'/'..s
+	end
+end	
+
 function set_strict()
 -- strict access to the global environment
 	setmetatable(__G,{
