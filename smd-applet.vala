@@ -75,6 +75,7 @@ class smdApplet {
 
 	// the thread to manage the child smd-loop instance
 	weak GLib.Thread thread = null;
+	bool thread_die = false;
 	
 	// communication structure between the child process (managed by a thread
 	// and the notifier timeout handler).
@@ -142,7 +143,10 @@ class smdApplet {
 		// menu popped up when the user clicks on the notification area
         menu = builder.get_object ("mMain") as Gtk.Menu;
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
-		quit.activate += (b) => { Gtk.main_quit(); };
+		quit.activate += (b) => { 
+			thread_die = true;
+			Gtk.main_quit(); 
+		};
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
 		about_win.response += (id) => { about_win.hide(); };
 		about.activate += (b) => { about_win.run(); };
@@ -169,7 +173,7 @@ class smdApplet {
 	// stdout of a child process 
 	public void *smdThread() {
 		bool rc = true;
-		while(rc){
+		while(rc && !thread_die){
 			debug("(re)starting smd-loop");
 			rc = run_smd_loop();
 		}
@@ -410,7 +414,7 @@ class smdApplet {
 			var input = GLib.FileStream.fdopen(child_out,"r");
 			string s = null;
 			bool goon = true;
-			while ( goon && (s = input.gets(buff)) != null ) {
+			while ( goon && (s = input.gets(buff)) != null && !thread_die) {
 				debug("smd-loop outputs: %s".printf(s));
 				goon = eval_smd_loop_message(s);
 				debug("eval_smd_loop_message returned %d".printf((int)goon));
