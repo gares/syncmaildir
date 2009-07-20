@@ -42,7 +42,7 @@ class Event {
 }
 
 static const string SMD_LOOP = "/bin/smd-loop";
-static const string SMD_APPLET_UI = "/share/smd-applet/smd-applet.ui";
+static const string SMD_APPLET_UI = "/share/syncmaildir-applet/smd-applet.ui";
 
 // the main class containing all the data smd-applet will use
 class smdApplet {
