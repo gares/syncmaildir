@@ -66,7 +66,7 @@ function log_tags(context, cause, human, ...)
 	local suggestions = {}
 	local suggestions_string = ""
 	if select('#',...) > 0 then 
-			suggestions[#suggestions+1] = 
+			suggestions_string = 
 				"suggested-actions("..table.concat({...}," ")..")"
 	else 
 			suggestions_string = "" 
