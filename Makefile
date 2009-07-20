@@ -64,6 +64,7 @@ endef
 install: $(BINARIES) $(MANPAGES)
 	$(call mkdir-p,bin)
 	$(call mkdir-p,share/$(PROJECTNAME))
+	$(call mkdir-p,share/$(PROJECTNAME)-applet)
 	$(call mkdir-p,share/lua/5.1)
 	$(call mkdir-p,share/man/man1)
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
@@ -76,6 +77,7 @@ install: $(BINARIES) $(MANPAGES)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
 	cp smd-applet.desktop $(DESTDIR)/etc/xdg/autostart
+	cp smd-applet.ui $(DESTDIR)/$(PREFIX)/share/$(PROJECTNAME)-applet
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
 
 clean: 
