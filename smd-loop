@@ -143,8 +143,8 @@ while true; do
 		if [ $pull -gt 0 ]; then do_pull=$((TIME % pull)); fi
 		if [ $push -gt 0 ]; then do_push=$((TIME % push)); fi
 	
-		if [ $do_pull -eq 0 ]; then perform smd-pull $endpoint; fi
-		if [ $do_push -eq 0 ]; then perform smd-push $endpoint; fi
+		if [ $do_pull -eq 0 ]; then perform $PULL $endpoint; fi
+		if [ $do_push -eq 0 ]; then perform $PUSH $endpoint; fi
 	done < <(grep -v '^#' $CONFFILE)
 	TIME=$((TIME+1))
 	sleep $MINUTE 
