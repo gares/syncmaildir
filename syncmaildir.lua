@@ -38,6 +38,11 @@ if string.sub(XDELTA,1,1) == '@' then
 		XDELTA = 'xdelta'
 end
 
+CPN = '@CPN@'
+if string.sub(XDELTA,1,1) == '@' then
+		CPN = 'cp -n'
+end
+
 function set_verbose(v)
 	verbose = v
 end

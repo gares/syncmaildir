@@ -199,7 +199,7 @@ function execute_copy(cmd)
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				mkdir_p(name_tgt)
-				local ok = os.execute('cp -n '..quote(name_src)..' '..
+				local ok = os.execute(CPN..' '..quote(name_src)..' '..
 					quote(name_tgt))
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
@@ -299,7 +299,7 @@ function execute_copybody(cmd)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
-			local ok = os.execute('cp -n '..quote(name)..' '..quote(newname))
+			local ok = os.execute(CPN..' '..quote(name)..' '..quote(newname))
 			if ok == 0 then 
 				ok = get_header_and_merge(newname,hsha)
 				if ok then
