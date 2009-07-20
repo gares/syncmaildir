@@ -39,7 +39,7 @@ if string.sub(XDELTA,1,1) == '@' then
 end
 
 CPN = '@CPN@'
-if string.sub(XDELTA,1,1) == '@' then
+if string.sub(CPN,1,1) == '@' then
 		CPN = 'cp -n'
 end
 
