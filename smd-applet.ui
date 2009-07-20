@@ -118,7 +118,7 @@
                     <property name="visible">True</property>
                     <property name="layout_style">end</property>
                     <child>
-                      <object class="GtkButton" id="bClose">
+                      <object class="GtkButton" id="bClosePrefs">
                         <property name="label" translatable="yes">gtk-close</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>

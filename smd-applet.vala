@@ -100,7 +100,7 @@ class smdApplet {
 		// load widgets and attach callbacks
 		win = builder.get_object("wPrefs") as Gtk.Window;
 		err_win = builder.get_object("wError") as Gtk.Window;
-		var close = builder.get_object("bClose") as Gtk.Button;
+		var close = builder.get_object("bClosePrefs") as Gtk.Button;
 		close.clicked += (b) =>  { win.hide(); };
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
 		bicon.set_active( gconf.get_bool(key_icon));
@@ -122,8 +122,6 @@ class smdApplet {
 			si.set_blinking(false);
 			// XXX do something else?
 		};
-		win.delete_event += win.hide_on_delete;
-		err_win.delete_event += err_win.hide_on_delete;
 
 		// menu popped up when the user clicks on the notification area
         menu = builder.get_object ("mMain") as Gtk.Menu;
@@ -156,6 +154,7 @@ class smdApplet {
 		bool rc = true;
 		while(rc){
 			rc = run_smd_loop();
+			stderr.printf("restarting smd-loop\n");
 		}
 	
 		return null;
@@ -239,7 +238,7 @@ class smdApplet {
 				l_cause.set_text(i_cause.fetch(1));
 				if ( i_human.fetch(1) != "required" ){
 					stderr.printf("smd-loop giving an avoidable error: %s\n",
-						i_human.fetch(1));
+						args);
 					return true;
 				}
 				bool display_permissions = false;
@@ -348,9 +347,10 @@ class smdApplet {
 	}
 
 	public bool run_smd_loop() {
-		//string[] cmd = { smd_loop_cmd, "-v" };
+		string[] cmd = { smd_loop_cmd, "-v" };
+
 		//string[] cmd = {"/bin/echo","default: smd-client@localhost: TAGS: stats::new-mails(1), del-mails(3)"};
-		string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-actions(display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
+		//string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-actions(display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
 		int child_in;
 		int child_out;
 		int child_err;
@@ -368,7 +368,7 @@ class smdApplet {
 				while ( !stop && (s = input.gets(buff)) != null ) {
 					stop = eval_smd_loop_message(s);
 				}
-				return false;
+				return stop;
 			} else {
 				stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
 				throw new Exit.ABORT("Unable to run smd-loop");
@@ -378,8 +378,6 @@ class smdApplet {
 				smd_loop_cmd+": "+e.message+"\n");
 			return false;
 		}
-
-		return true;
 	}
 
 	// process an event in the events queue by notifying the user
@@ -430,8 +428,22 @@ class smdApplet {
 			throw new Exit.ABORT("Unable to spawn a thread");
 		}
 
+		// windows will last for the whole execution,
+		// so the (x) button should just hide them
+		win.delete_event += win.hide_on_delete;
+		err_win.delete_event += err_win.hide_on_delete;
+
 		Gtk.main(); 
 		thread.join();
+	}
+
+	// just displays the config win
+	public void configure() {
+		var close = builder.get_object("bClosePrefs") as Gtk.Button;
+		close.clicked += (b) =>  { Gtk.main_quit(); };
+		win.delete_event += (e) => { Gtk.main_quit(); };
+		win.show();	
+		Gtk.main(); 
 	}
 }
 
@@ -442,6 +454,8 @@ static int main(string[] args){
 
 	// handle prefix
 	if (! GLib.FileUtils.test(PREFIX + SMD_APPLET_UI,GLib.FileTest.EXISTS)) {
+		stderr.printf("error: file not found: %s + %s\n", 
+			PREFIX, SMD_APPLET_UI);
 		smdApplet.smd_loop_cmd = GLib.Environment.get_variable("HOME") + 
 			"/Projects/syncmaildir/smd-loop";
 		stderr.printf("smd-applet not installed, " +
@@ -459,24 +473,24 @@ static int main(string[] args){
 	Gtk.init (ref args);
 	Notify.init("smd-applet");
 
-	bool foo=false;
+	bool config_only=false;
 	GLib.OptionEntry[] oe = new GLib.OptionEntry[2];
-	oe[0].long_name = "foo";
-	oe[0].short_name = 'f';
+	oe[0].long_name = "configure";
+	oe[0].short_name = 'c';
 	oe[0].flags = GLib.OptionFlags.NO_ARG;
 	oe[0].arg = GLib.OptionArg.NONE;
-	oe[0].arg_data = &foo;
-	oe[0].description = "ffff";
+	oe[0].arg_data = &config_only;
+	oe[0].description = "show config window, don't really run the applet";
 	oe[0].arg_description = null;
 	oe[1].long_name = null;
 	var oc = new GLib.OptionContext(" - syncmaildir applet");
 	oc.add_main_entries(oe,null);
-	oc.parse(ref args);
-	// XXX if foo then just show the confi win
+	try { oc.parse(ref args); }
+	catch (GLib.OptionError e) { stderr.printf("%s\n",e.message); return 1; } 
 
 	// go!
 	var smd_applet = new smdApplet();
-	try { smd_applet.run(); }
+	try { if (config_only) smd_applet.configure(); else smd_applet.run(); }
 	catch (Exit e) { stderr.printf("abort: %s\n",e.message); }
 	
 	return 0;
