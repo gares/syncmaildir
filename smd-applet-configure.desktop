@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Sync Mail Dir - Configuration
+Name[it]=Sincronizzazione Maildir - Configurazione
+Comment=Configure Sync Mail Dir
+Comment[it]=Configura Sync Mail Dir
+Icon=
+Exec=smd-applet --configure
+Terminal=false
+Type=Application

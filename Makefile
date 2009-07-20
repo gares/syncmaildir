@@ -66,6 +66,7 @@ install: $(BINARIES) $(MANPAGES)
 	$(call mkdir-p,share/$(PROJECTNAME))
 	$(call mkdir-p,share/lua/5.1)
 	$(call mkdir-p,share/man/man1)
+	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	cp $(BINARIES) $(DESTDIR)/$(PREFIX)/bin
 	$(call install-replacing,smd-server,bin)
 	$(call install-replacing,smd-client,bin)
@@ -74,6 +75,7 @@ install: $(BINARIES) $(MANPAGES)
 	$(call install-replacing,smd-loop,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
+	cp smd-applet.desktop $(DESTDIR)/etc/xdg/autostart
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
 
 clean: 
