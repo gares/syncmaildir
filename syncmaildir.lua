@@ -347,7 +347,7 @@ function touch(f)
 end
 
 function quote(s)
-	return "'" .. s:gsub("'","\\'"):gsub("%)","\\)").. "'"
+	return '"' .. s:gsub('"','\\"'):gsub("%)","\\)").. '"'
 end
 
 function set_strict()
