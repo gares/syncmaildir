@@ -13,7 +13,7 @@ all: check-build $(BINARIES)
 		> config.vala
 	valac -o $@ $< config.vala --thread \
 		--pkg glib-2.0 --pkg gtk+-2.0 \
-		--pkg libnotify --pkg gconf-2.0
+		--pkg libnotify --pkg gconf-2.0 --pkg posix
 
 %: %.c
 	gcc -Wall -Wextra -g $< -o $@ \

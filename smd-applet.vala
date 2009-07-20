@@ -76,6 +76,7 @@ class smdApplet {
 	// the thread to manage the child smd-loop instance
 	weak GLib.Thread thread = null;
 	bool thread_die = false;
+	GLib.Pid pid = 0; // smd-loop pid
 	
 	// communication structure between the child process (managed by a thread
 	// and the notifier timeout handler).
@@ -145,6 +146,8 @@ class smdApplet {
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
 		quit.activate += (b) => { 
 			thread_die = true;
+			Posix.kill((Posix.pid_t)pid,Posix.SIGTERM);
+			Posix.kill(0,Posix.SIGTERM);
 			Gtk.main_quit(); 
 		};
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
@@ -397,7 +400,6 @@ class smdApplet {
 		int child_out;
 		int child_err;
 		char[] buff = new char[1024];
-		GLib.Pid pid;
 		GLib.SpawnFlags flags = 0;
 		bool rc;
 		try {
@@ -428,6 +430,8 @@ class smdApplet {
 				}
 			}
 			GLib.Process.close_pid(pid);
+			Posix.kill((Posix.pid_t) pid,Posix.SIGTERM);
+			Posix.kill(0,Posix.SIGTERM);
 			return goon; // may be true, if s == null
 		} else {
 			stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
