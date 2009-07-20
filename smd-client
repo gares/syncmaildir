@@ -125,8 +125,8 @@ function execute_add(cmd)
 				quote(tmp_for(name,false))..'` should work.')
 
 			log_tags("mail-addition","concurrent-mailbox-edit",true,
-				"run(cd; mv -n "..quote(name).." "..
-					quote(tmp_for(name,false)) ..")")
+				"run(mv -n "..quote(homefy(name)).." "..
+					quote(tmp_for(homefy(name),false)) ..")")
 			return (trace(false)) -- skipping add since already there but !=
 		end
 	end
@@ -161,8 +161,8 @@ function execute_delete(cmd)
 				'to the other mailbox')
 
 			log_tags("delete-message", "concurrent-mailbox-edit",true,
-				"display-mail("..quote(name)..")",
-				"run(cd; rm "..quote(name)..")",
+				"display-mail("..quote(homefy(name))..")",
+				"run(rm "..quote(homefy(name))..")",
 				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- remove fails since local file is !=
 		end
@@ -191,16 +191,16 @@ function execute_copy(cmd)
 			log_error('  are propagated to the other mailbox')
 
 			log_tags("copy-message","concurrent-mailbox-edit",true,
-				"run(cd; mv -n "..quote(name_tgt).." "..
-					quote(tmp_for(name_tgt,false))..")",
+				"run(mv -n "..quote(homefy(name_tgt)).." "..
+					quote(tmp_for(homefy(name_tgt),false))..")",
 				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- fail copy, already there but !=
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				mkdir_p(name_tgt)
-				local ok = os.execute(CPN..' '..quote(name_src)..' '..
-					quote(name_tgt))
+				local ok = os.execute(CPN..' '..quote(name_src)..
+					' '..  quote(name_tgt)
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
 				else 
@@ -235,8 +235,8 @@ function execute_copy(cmd)
 			log_error('  propagated to the other mailbox')
 
 			log_tags("copy-message","concurrent-mailbox-edit",true,
-				"run(cd; mv -n "..quote(name_tgt).." "..
-					quote(tmp_for(name_tgt,false))..")",
+				"run(mv -n "..quote(homefy(name_tgt)).." "..
+					quote(tmp_for(homefy(name_tgt),false))..")",
 				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
 			return (trace(false)) -- skip copy, already there and !=, no source
 		end
@@ -283,8 +283,8 @@ function execute_replaceheader(cmd)
 			log_error('Executing `cd; mv -n '..quote(name)..' '..
 				quote(tmp_for(name,false))..'` should work.')
 			log_tags("header-replacement","concurrent-mailbox-edit",true,
-				"run(cd; mv -n "..quote(name).." "..
-					quote(tmp_for(name,false))..")")
+				"run(mv -n "..quote(homefy(name)).." "..
+					quote(tmp_for(homefy(name),false))..")")
 			return (trace(false)) -- replace header fails, local header !=
 		end
 	else
@@ -299,7 +299,8 @@ function execute_copybody(cmd)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
-			local ok = os.execute(CPN..' '..quote(name)..' '..quote(newname))
+			local ok = os.execute(CPN..' '..quote(name)..
+				' '..quote(newname)
 			if ok == 0 then 
 				ok = get_header_and_merge(newname,hsha)
 				if ok then
@@ -330,8 +331,8 @@ function execute_copybody(cmd)
 				quote(tmp_for(newname,false))..'` should work.')
 
 			log_tags("copy-body","concurrent-mailbox-edit",true,
-				"run(cd; mv -n "..quote(newname).." "..
-					quote(tmp_for(newname,false))..")")
+				"run(mv -n "..quote(homefy(newname)).." "..
+					quote(tmp_for(homefy(newname),false))..")")
 			return (trace(false)) -- copybody failed (already there, != )
 		end
 	end
