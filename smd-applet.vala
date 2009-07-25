@@ -402,9 +402,13 @@ class smdApplet {
 		char[] buff = new char[1024];
 		GLib.SpawnFlags flags = 0;
 		bool rc;
+		debug("spawning %s\n".printf(smd_loop_cmd));
 		try {
 			rc = GLib.Process.spawn_async_with_pipes(
-				null,cmd,null,flags,null,
+				null,cmd,null,flags,() => {  
+					// create a new session
+					Posix.setpgid(0,0);
+				},
 				out pid, out child_in, out child_out, out child_err);
 		} catch (GLib.Error e) {
 			stderr.printf("Unable to execute "+
@@ -430,8 +434,7 @@ class smdApplet {
 				}
 			}
 			GLib.Process.close_pid(pid);
-			Posix.kill((Posix.pid_t) pid,Posix.SIGTERM);
-			Posix.kill(0,Posix.SIGTERM);
+			Posix.kill((Posix.pid_t) (-(int)pid),Posix.SIGTERM);
 			return goon; // may be true, if s == null
 		} else {
 			stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
@@ -504,6 +507,7 @@ class smdApplet {
 		win.show();	
 		Gtk.main(); 
 	}
+
 }
 
 // =================== main =====================================
@@ -531,22 +535,28 @@ static int main(string[] args){
 	Notify.init("smd-applet");
 
 	bool config_only=false;
-	GLib.OptionEntry[] oe = new GLib.OptionEntry[3];
-	oe[0].long_name = "configure";
-	oe[0].short_name = 'c';
-	oe[0].flags = GLib.OptionFlags.NO_ARG;
-	oe[0].arg = GLib.OptionArg.NONE;
-	oe[0].arg_data = &config_only;
-	oe[0].description = "show config window, don't really run the applet";
-	oe[0].arg_description = null;
-	oe[1].long_name = "verbose";
-	oe[1].short_name = 'v';
-	oe[1].flags = GLib.OptionFlags.NO_ARG;
-	oe[1].arg = GLib.OptionArg.NONE;
-	oe[1].arg_data = &verbose;
-	oe[1].description = "verbose output, for debugging only";
-	oe[1].arg_description = null;
-	oe[2].long_name = null;
+	GLib.OptionEntry[] oe = {
+      GLib.OptionEntry () { 
+		long_name = "configure", short_name = 'c', 
+		flags = GLib.OptionFlags.NO_ARG, arg = GLib.OptionArg.NONE,
+		arg_data = &config_only,
+		description = "show config window, don't really run the applet",
+		arg_description = null },
+      GLib.OptionEntry () { 
+		long_name = "verbose", short_name = 'v',
+		flags = GLib.OptionFlags.NO_ARG, arg = GLib.OptionArg.NONE,
+		arg_data = &verbose,
+		description = "verbose output, for debugging only",
+		arg_description = null },
+      GLib.OptionEntry () { 
+		long_name = "smd-loop", short_name = 'l',
+		flags = 0, arg = GLib.OptionArg.STRING,
+		arg_data = &smdApplet.smd_loop_cmd,
+		description = "override smd-loop command name, debugging only",
+		arg_description = "program" },
+      GLib.OptionEntry () { long_name = null }
+    };
+
 	var oc = new GLib.OptionContext(" - syncmaildir applet");
 	oc.add_main_entries(oe,null);
 	try { oc.parse(ref args); }
@@ -555,7 +565,7 @@ static int main(string[] args){
 	// go!
 	try { 
 		var smd_applet = new smdApplet();
-    	if (config_only) smd_applet.configure(); else smd_applet.run(); 
+    	if (config_only) smd_applet.configure(); else smd_applet.run();
 	} catch (Exit e) { 
 		stderr.printf("abort: %s\n",e.message); 
 	}
