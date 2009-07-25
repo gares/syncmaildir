@@ -129,7 +129,7 @@ class smdApplet {
 		bc.clicked += (b) => {
 			err_win.hide();	
 			error_mode = false;
-			si.set_from_icon_name("gtk-info");
+			si.set_from_icon_name("mail-send-receive");
 			si.set_blinking(false);
 			debug("joining smdThread");
 			thread.join();
@@ -156,8 +156,7 @@ class smdApplet {
 		var prefs = builder.get_object ("miPrefs") as Gtk.MenuItem;
 		prefs.activate += (b) => {  win.show(); };
 
-		// notification area icon (XXX draw a decent one)
-		si = new Gtk.StatusIcon.from_stock(Gtk.STOCK_INFO);
+		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
 		si.activate += (s) => { 
 			if ( error_mode ) 
 				err_win.reshow_with_initial_size();
