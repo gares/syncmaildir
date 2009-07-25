@@ -41,12 +41,16 @@
     </columns>
   </object>
   <object class="GtkWindow" id="wPrefs">
+    <property name="title" translatable="yes">smd-applet configuration</property>
+    <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="icon_name">mail-send-receive</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
+        <property name="border_width">4</property>
         <property name="orientation">vertical</property>
+        <property name="spacing">4</property>
         <child>
           <object class="GtkVBox" id="vbox2">
             <property name="visible">True</property>
@@ -144,8 +148,9 @@
             <child>
               <object class="GtkVBox" id="vbox6">
                 <property name="visible">True</property>
+                <property name="border_width">4</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">2</property>
+                <property name="spacing">10</property>
                 <child>
                   <object class="GtkHBox" id="hbox2">
                     <property name="visible">True</property>
@@ -203,6 +208,7 @@ pull-frequency,  push-frequency  and  endpoint-name.</property>
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -224,7 +230,9 @@ pull-frequency,  push-frequency  and  endpoint-name.</property>
             <child>
               <object class="GtkVBox" id="vbox4">
                 <property name="visible">True</property>
+                <property name="border_width">4</property>
                 <property name="orientation">vertical</property>
+                <property name="spacing">10</property>
                 <child>
                   <object class="GtkHBox" id="hbox1">
                     <property name="visible">True</property>
@@ -262,33 +270,26 @@ This interface allows you to edit only the default endpoint.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkVBox" id="vbox5">
+                  <object class="GtkHButtonBox" id="hbuttonbox3">
                     <property name="visible">True</property>
-                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkHButtonBox" id="hbuttonbox3">
+                      <object class="GtkButton" id="bEditPushPullCfg">
+                        <property name="label" translatable="yes">gtk-edit</property>
                         <property name="visible">True</property>
-                        <child>
-                          <object class="GtkButton" id="bEditPushPullCfg">
-                            <property name="label" translatable="yes">gtk-edit</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="use_stock">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="use_stock">True</property>
                       </object>
                       <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="padding">4</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
