@@ -42,7 +42,10 @@ class Event {
 }
 
 static const string SMD_LOOP = "/bin/smd-loop";
+static const string SMD_PUSH = "/bin/smd-push";
 static const string SMD_APPLET_UI = "/share/syncmaildir-applet/smd-applet.ui";
+static string SMD_LOOP_CFG;
+static string SMD_PP_DEF_CFG;
 
 // the main class containing all the data smd-applet will use
 class smdApplet {
@@ -57,6 +60,7 @@ class smdApplet {
 	// installation path
 	public static string smd_loop_cmd = null;
 	public static string smd_applet_ui = null;
+	public static string smd_push_cmd = null;
 
 	// =================== the data =====================================
 
@@ -138,6 +142,36 @@ class smdApplet {
 			catch (GLib.ThreadError e) { 
 				stderr.printf("Unable to re-start a thread\n"); 
 				Gtk.main_quit();
+			}
+		}; 
+		var bel = builder.get_object("bEditLoopCfg") as Gtk.Button;
+		bel.clicked += (b) => {
+			// if not existent, create the template first
+			try {
+				if (!is_smd_loop_configured()){
+			 		GLib.Process.spawn_command_line_sync(
+						"%s -t".printf(smd_loop_cmd));
+			 	}
+				string cmd = "gnome-open %s".printf(SMD_LOOP_CFG);
+				GLib.Process.spawn_command_line_async(cmd);
+				is_smd_loop_configured();
+			} catch (GLib.SpawnError e) {
+				stderr.printf("%s\n",e.message);
+			}
+		};
+		var bepp = builder.get_object("bEditPushPullCfg") as Gtk.Button;
+		bepp.clicked += (b) => {
+			// if not existent, create the template first
+			try {
+				if (!is_smd_pushpull_configured()){
+			 		GLib.Process.spawn_command_line_sync(
+						"%s -t".printf(smd_push_cmd));
+			 	}
+				string cmd = "gnome-open %s".printf(SMD_PP_DEF_CFG);
+				GLib.Process.spawn_command_line_async(cmd);
+				is_smd_pushpull_configured();
+			} catch (GLib.SpawnError e) {
+				stderr.printf("%s\n",e.message);
 			}
 		};
 
@@ -498,13 +532,46 @@ class smdApplet {
 		thread.join();
 	}
 
+	private void my_gtk_main_quit_button(Gtk.Button b) {
+		Gtk.main_quit();
+	}
+
+	private bool my_gtk_main_quit_event(Gdk.Event b) {
+		Gtk.main_quit();
+		return false;
+	}
+
 	// just displays the config win
 	public void configure() {
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked += (b) =>  { Gtk.main_quit(); };
-		win.delete_event += (e) => { Gtk.main_quit(); };
+		close.clicked += my_gtk_main_quit_button;
+		win.delete_event += my_gtk_main_quit_event;
 		win.show();	
 		Gtk.main(); 
+		close.clicked -= my_gtk_main_quit_button;
+		win.delete_event -= my_gtk_main_quit_event;
+	}
+
+    public bool is_smd_loop_configured() {
+		bool rc = GLib.FileUtils.test(SMD_LOOP_CFG,GLib.FileTest.EXISTS);
+		Gtk.Label l = builder.get_object("lErrLoop") as Gtk.Label;
+		if (!rc) { l.show(); } 
+		else { l.hide(); }
+		return rc;
+	}
+
+    public bool is_smd_pushpull_configured() {
+		bool rc = GLib.FileUtils.test(SMD_PP_DEF_CFG,GLib.FileTest.EXISTS);
+		Gtk.Label l = builder.get_object("lErrPushPull") as Gtk.Label;
+		if (!rc) { l.show(); } 
+		else { l.hide(); }
+		return rc;
+	}
+
+	public bool is_smd_stack_configured() {
+		var a = is_smd_loop_configured();
+		var b = is_smd_pushpull_configured();
+		return a && b;
 	}
 
 }
@@ -524,10 +591,17 @@ static int main(string[] args){
 		smdApplet.smd_applet_ui = "./smd-applet.ui";
 		stderr.printf("smd-applet not installed, " +
 			"assuming smd-applet.ui is: %s\n", smdApplet.smd_applet_ui);
+		smdApplet.smd_push_cmd = "./smd-push";
+		stderr.printf("smd-applet not installed, " +
+			"assuming smd-push is: %s\n", smdApplet.smd_push_cmd);
 	} else {
 		smdApplet.smd_loop_cmd = PREFIX + SMD_LOOP;
+		smdApplet.smd_push_cmd = PREFIX + SMD_PUSH;
 		smdApplet.smd_applet_ui = PREFIX + SMD_APPLET_UI; 
 	}
+
+	SMD_LOOP_CFG = GLib.Environment.get_home_dir()+"/.smd/loop";
+	SMD_PP_DEF_CFG = GLib.Environment.get_home_dir()+"/.smd/config.default";
 
 	// we init gtk+ and notify
 	Gtk.init (ref args);
@@ -564,7 +638,13 @@ static int main(string[] args){
 	// go!
 	try { 
 		var smd_applet = new smdApplet();
-    	if (config_only) smd_applet.configure(); else smd_applet.run();
+    	if (config_only) {
+			smd_applet.configure();
+		} else {
+			while(!smd_applet.is_smd_stack_configured())
+				smd_applet.configure();
+			smd_applet.run();
+		}
 	} catch (Exit e) { 
 		stderr.printf("abort: %s\n",e.message); 
 	}
