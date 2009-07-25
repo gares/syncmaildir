@@ -148,7 +148,7 @@ function execute_delete(cmd)
 					'please check.')
 
 				log_tags("delete-message","bad-directory-permission",true,
-					"display-permissions("..quote(name)..")")
+					"display-permissions("..quote(homefy(name))..")")
 				return (trace(false)) -- os.remove failed
 			end
 		else
@@ -209,7 +209,7 @@ function execute_copy(cmd)
 						..  'please check.')
 
 					log_tags("delete-message","bad-directory-permission",true,
-						"display-permissions("..quote(name_tgt)..")")
+						"display-permissions("..quote(homefy(name_tgt))..")")
 					return (trace(false)) -- copy failed (cp command failed)
 				end
 		else
@@ -315,7 +315,7 @@ function execute_copybody(cmd)
 					'please check.')
 					
 				log_tags("copy-message","bad-directory-permission",true,
-					"display-permissions("..quote(newname)..")")
+					"display-permissions("..quote(homefy(newname))..")")
 				return (trace(false)) -- copybody failed (cp command failed)
 			end
 		else
