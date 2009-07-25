@@ -26,7 +26,7 @@ prepare(){
 	rm -rf test.$N
 	mkdir test.$N
 	make --quiet
-	make --quiet install PREFIX=$ROOT/test.$N
+	make --quiet install-bin PREFIX=$ROOT/test.$N
 	
 	cd test.$N
 	export HOMEC=$PWD/target
