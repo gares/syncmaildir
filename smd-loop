@@ -16,6 +16,9 @@ TIME=1
 # Verbose
 VERBOSE=0
 
+# Just create a template
+TEMPLATE_ONLY=0
+
 # Temp file, used to store subprocesses' output
 OUTPUT=`mktemp`
 
@@ -118,9 +121,16 @@ trap cleanup "EXIT"
 
 if [ "$1" = "-v" ]; then
 	VERBOSE=1
+	shift
+fi
+
+if [ "$1" = "-t" ]; then
+	TEMPLATE_ONLY=1
+	shift
 fi
 
 if [ ! -f $CONFFILE ]; then
+	mkdir -p `dirname $CONFFILE`
 	cat > $CONFFILE <<-EOT
 	# smd-loop configuration file
 	#
@@ -134,6 +144,10 @@ if [ ! -f $CONFFILE ]; then
 	echo No config file found: created a default one
 	echo Please edit it: $CONFFILE
 	exit 1
+fi
+
+if [ "$TEMPLATE_ONLY" = 1 ]; then
+	exit 0
 fi
 
 while true; do

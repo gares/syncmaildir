@@ -2,7 +2,7 @@ NAME
   smd-loop - iterates smd-pull and smd-push
 
 SYNOPSIS
-  smd-loop [-v]
+  smd-loop [-vt]
 
 DESCRIPTION
   smd-loop runs smd-push and smd-pull at regular intervals as defined
@@ -22,6 +22,7 @@ DESCRIPTION
 
 OPTIONS
   -v  Increase program verbosity (printed on stderr)
+  -t  Just create a template configuration file if none
 
 FILES
   ~/.smd/loop
