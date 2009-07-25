@@ -160,7 +160,7 @@ class smdApplet {
 		si = new Gtk.StatusIcon.from_stock(Gtk.STOCK_INFO);
 		si.activate += (s) => { 
 			if ( error_mode ) 
-				err_win.show();
+				err_win.reshow_with_initial_size();
 			else
 				menu.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
@@ -239,11 +239,12 @@ class smdApplet {
 					i_cmd.fetch_pos(0,null,out from);
 					string file = i_cmd.fetch(1);
 					string output = null;
+					string err = null;
 					try {
 						GLib.Process.spawn_command_line_sync(
-							"ls -ld " + file, out output, null);
+							"ls -ld " + file, out output, out err);
 						var l = builder.get_object("lPermissions") as Gtk.Label;
-						l.set_text(output);
+						l.set_text(output + err);
 					} catch (GLib.SpawnError e) {
 						stderr.printf("Spawning ls: %s\n",e.message);
 					}
@@ -252,21 +253,23 @@ class smdApplet {
 					i_cmd.fetch_pos(0,null,out from);
 					string file = i_cmd.fetch(1);
 					string output = null;
+					string err = null;
 					try {
 						var fn = builder.get_object("eMailName") as Gtk.Entry;
 						fn.set_text(file);
 						GLib.Process.spawn_command_line_sync(
-							"cat " + file, out output, null);
+							"cat " + file, out output, out err);
 						var l = builder.get_object("tvMail") as Gtk.TextView;
 						Gtk.TextBuffer b = l.get_buffer();
-						b.set_text(output,(int)output.size());
+						b.set_text(output + err,-1);
 						Gtk.TextIter it,subj;
 						b.get_start_iter(out it);
-						it.forward_search("Subject:",
-							Gtk.TextSearchFlags.TEXT_ONLY, out subj,null,null);
-						var insert = b.get_insert();
-						b.select_range(subj,subj);
-						l.scroll_to_mark(insert,0.0,true,0.0,0.0);
+						if (it.forward_search("Subject:",
+							Gtk.TextSearchFlags.TEXT_ONLY, out subj,null,null)){
+							var insert = b.get_insert();
+							b.select_range(subj,subj);
+							l.scroll_to_mark(insert,0.0,true,0.0,0.0);
+						}
 					} catch (GLib.SpawnError e) {
 						stderr.printf("Spawning ls: %s\n",e.message);
 					}
@@ -393,9 +396,6 @@ class smdApplet {
 	// with a recoverable error and thus should be restarted
 	public bool run_smd_loop() throws Exit {
 		string[] cmd = { smd_loop_cmd, "-v" };
-
-		//string[] cmd = {"/bin/echo","default: smd-client@localhost: TAGS: stats::new-mails(1), del-mails(3)"};
-		//string[] cmd = {"/bin/echo","default: smd-client@foo: TAGS: error::context(testing smd-applet), probable-cause(generated on purpose), human-intervention(required), suggested-actions(display-permissions(/home/tassi) display-mail(/home/tassi/Mail/inbox/cur/1096282515.31281_2.garfield:2,S) run(echo a) run(echo b))"};
 		int child_in;
 		int child_out;
 		int child_err;
