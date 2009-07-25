@@ -18,10 +18,16 @@ CONFDIR=$H/.smd
 SSH=ssh
 LOCKFILE=$CONFDIR/lock
 SHOWTAGS=0
+TEMPLATE_ONLY=0
 
 if [ "$1" = "-v" ]; then
 	shift
 	SHOWTAGS=1
+fi
+
+if [ "$1" = "-t" ]; then
+	shift
+	TEMPLATE_ONLY=1
 fi
 
 REPNAME=
@@ -87,6 +93,10 @@ if [ ! -f $CONFFILE ]; then
 	echo No config file found: created a default one
 	echo Please edit it: $CONFFILE
 	exit 1
+fi
+
+if [ "$TEMPLATE_ONLY" = 1 ]; then
+	exit 0
 fi
 
 if [ -f $LOCKFILE ]; then
