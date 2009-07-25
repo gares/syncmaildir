@@ -78,10 +78,12 @@ install-bin: $(BINARIES)
 	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
 
 install-misc: $(MANPAGES)
-	$(call mkdir-p,share/man/man1)
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	cp smd-applet.desktop $(DESTDIR)/etc/xdg/autostart
-	cp smd-applet.ui $(DESTDIR)/$(PREFIX)/share/$(PROJECTNAME)-applet
+	$(call mkdir-p,share/applications)
+	$(call install,smd-applet-configure.desktop,share/applications)
+	$(call install,smd-applet.ui,share/$(PROJECTNAME)-applet)
+	$(call mkdir-p,share/man/man1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
 
 clean: 

@@ -7,3 +7,4 @@ Icon=mail-send-receive
 Exec=smd-applet
 Terminal=false
 Type=Application
+Categories=Network;GTK;GNOME;Email

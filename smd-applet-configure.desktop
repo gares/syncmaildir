@@ -1,9 +1,10 @@
 [Desktop Entry]
-Name=Sync Mail Dir - Configuration
-Name[it]=Sincronizzazione Maildir - Configurazione
+Name=Sync Mail Dir
+Name[it]=Sincronizzazione Maildir
 Comment=Configure Sync Mail Dir
 Comment[it]=Configura Sync Mail Dir
 Icon=mail-send-receive
 Exec=smd-applet --configure
 Terminal=false
 Type=Application
+Categories=Settings;GTK;GNOME;Email
