@@ -1,0 +1,43 @@
+#!/usr/bin/env lua5.1
+
+local f = io.open('smd-client')
+local data = f:read("*a")
+local errs = {}
+io.stderr = {}
+setmetatable(io.stderr,{
+	__index = {
+		write = function(_,...)
+			errs [#errs+1] = table.concat({...})
+		end
+	}
+})
+
+require "syncmaildir"
+for k,v in pairs(syncmaildir) do _G[k] = v end
+
+local so_far = {}
+local so_far_counter = 0
+setmetatable(_G,{
+	__index = function(_,name)
+		if so_far[name] == nil then
+			so_far[name] = "foo"..so_far_counter
+			so_far_counter = so_far_counter + 1
+		end
+		return so_far[name]
+	end
+})
+
+for tag in string.gmatch(data,"log_tags%b()") do
+	--print('exec',tag)
+	loadstring(tag)()
+end
+
+n = 1
+f = io.open('/tmp/spit-tags','r')
+if f then n = f:read("*n") end
+print("default: smd-client@foo: "..errs[n])
+io.open('/tmp/spit-tags','w'):write(n+1 % #errs)
+if n % #errs == 0 then
+	print "STOPSTOPSTOPSTOPSTOPSTOPSTOP"
+	os.remove('/tmp/spit-tags')
+end
