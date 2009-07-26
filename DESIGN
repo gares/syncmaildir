@@ -212,3 +212,32 @@ and bsha to the sha1 sum of its body.
 - `REPLACE ... ` the format of the massage will be stable in version 1.0
 
 ...to be finished for version 1.0
+
+
+Parsable output messages
+========================
+
+`smd-pull` and `smd-push` prefix all error messages with `ERROR:`, but
+what follows is meant to be read by a human being. To make other tools able to
+parse and react to error messages, a more formal output is given.
+A ingle line, prefixed with `TAGS:` is output. It can be followed by
+`error::` or `stats::`, that denote an error message or a statistical one 
+respectively. Then a list of improperly called tags is output. Their meaning 
+should be easy to guess.
+
+    <M>    ::= "error::" <ET> | "stats::" <ST>
+    <ET>   ::= "context(" <STR> ")" 
+               "probable-cause(" <STR> ")"
+               "human-intervention(" <HI> ")"
+               <SA>
+    <SA>   ::= | "suggested-actions(" <ACTS> ")"
+    <STR>  ::= `[^)]+`
+    <HI>   ::= "necessary" | "avoidable"
+    <ACT>  ::= <A> | <A> <ACTS>
+    <A>    ::= "run(" <STR> ")" 
+            |  "display-mail(" <STR> ")" 
+            |  "display-permissions(" <STR> ")"
+    <ET>   ::= "new-mails(" <NUM> ")" <SPC> "del-mails(" <NUM> ")"
+    <NUM>  ::= `[0-9]+`
+    <SPC>  ::= ` *,? *`
+
