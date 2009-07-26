@@ -671,6 +671,7 @@ This interface allows you to edit only the default endpoint.</property>
     <property name="title" translatable="yes">About: Sync Maild Dir applet</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
+    <property name="icon_name">mail-send-receive</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <property name="program_name">Sync Mail Dir</property>
@@ -1354,6 +1355,7 @@ Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
 </property>
     <property name="authors">Enrico Tassi &lt;gares@fettunta.org&gt;</property>
+    <property name="logo_icon_name">mail-send-receive</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
