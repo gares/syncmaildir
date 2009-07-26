@@ -65,11 +65,11 @@ flexibility).
 - `smd-loop` runs runs smd-push and smd-sull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
   catches recoverable errors (like a, non recurrent, network problem),
-  vailing out only in cases where human intervention is needed. This is 
+  bailing out only in cases where human intervention is needed. This is 
   the utility you may want to run if you are using a textual environment or
   a graphical one not base on GNOME.
-- `smd-applet` is an appled for the GNOME notification area, that runs 
-  `smd-loop`, eventually nofying the user for critical events and allowing
+- `smd-applet` is an applet for the GNOME notification area, that runs 
+  `smd-loop`, eventually notifying the user for critical events and allowing
   him to solve them clicking on buttons instead of running commands from
   the shell.
 
@@ -163,7 +163,7 @@ proved to be useful when migrating a mailbox:
 Note that you can run this for a while, not just one time. This can smooth
 the transition from a mail-address to another, since simply forwarding mail
 from the old to the new one makes you believe you changed the subscription
-to all your mailling lists, that is obviously not always the case since
+to all your mailing lists, that is obviously not always the case since
 nobody remembers all the mailing lists he is subscribed to.
 
 Design

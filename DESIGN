@@ -54,7 +54,7 @@ and gives a second chance to a commnd that fails with an error that does not
 require human intervention and for which the suggested action is retry.
 
 It is implemented in bash, since it is mostly a while true loop. Arrays
-(non posix shell compliant) are used to record failures, and give only a
+(non POSIX shell compliant) are used to record failures, and give only a
 second chance to every `smd-push` or `smd-pull` command.
 
 smd-applet
@@ -214,13 +214,13 @@ and bsha to the sha1 sum of its body.
 ...to be finished for version 1.0
 
 
-Parsable output messages
-========================
+Easy to parse output messages
+=============================
 
 `smd-pull` and `smd-push` prefix all error messages with `ERROR:`, but
 what follows is meant to be read by a human being. To make other tools able to
 parse and react to error messages, a more formal output is given.
-A ingle line, prefixed with `TAGS:` is output. It can be followed by
+A single line, prefixed with `TAGS:` is output. It can be followed by
 `error::` or `stats::`, that denote an error message or a statistical one 
 respectively. Then a list of improperly called tags is output. Their meaning 
 should be easy to guess.
