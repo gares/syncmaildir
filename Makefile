@@ -114,5 +114,5 @@ upload-website: $(HTML)
 		gareuselesinge,syncmaildir@web.sourceforge.net:htdocs
 
 upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
-	scp $< frs.sourceforge.net:uploads
+	scp $< gareuselesinge,syncmaildir@frs.sourceforge.net:/home/frs/project/s/sy/syncmaildir/syncmaildir/$<
 
