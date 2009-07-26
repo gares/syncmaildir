@@ -180,8 +180,7 @@ class smdApplet {
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
 		quit.activate += (b) => { 
 			thread_die = true;
-			Posix.kill((Posix.pid_t)pid,Posix.SIGTERM);
-			Posix.kill(0,Posix.SIGTERM);
+			Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 			Gtk.main_quit(); 
 		};
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
