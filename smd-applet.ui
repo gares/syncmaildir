@@ -172,7 +172,7 @@
                         <property name="xalign">0</property>
                         <property name="label" translatable="yes">smd-loop controls the frequency of synchronizations, and is run by smd-applet.
 
-The configuration file is like oriented. 
+The configuration file is line oriented. 
 Each line is composed of three space separated fields:
 pull-frequency,  push-frequency  and  endpoint-name.</property>
                         <property name="wrap">True</property>
