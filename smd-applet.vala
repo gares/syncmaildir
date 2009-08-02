@@ -89,9 +89,10 @@ class smdApplet {
 
 	// if the program is stuck
 	bool error_mode;
+	bool config_wait_mode;
 	GLib.HashTable<Gtk.Widget,string> command_hash = null;
 
-	// =================== the code =====================================
+	// ======================= constructor ================================
 
 	// initialize data structures and build gtk+ widgets
 	smdApplet() throws Exit {
@@ -116,12 +117,14 @@ class smdApplet {
 		about_win = builder.get_object("wAbout") as Gtk.Dialog;
 
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked += (b) =>  { win.hide(); };
+		close.clicked += close_prefs_action;
+
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
 		bicon.set_active( gconf.get_bool(key_icon));
 		bicon.toggled += (b) => {
 			try { gconf.set_bool(key_icon,b.active); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			si.set_visible(!gconf.get_bool(key_icon));
 		};
 		var bnotify = builder.get_object("cbNotify") as Gtk.CheckButton;
 		bnotify.set_active( gconf.get_bool(key_newmail));
@@ -130,20 +133,8 @@ class smdApplet {
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		};
 		var bc = builder.get_object("bClose") as Gtk.Button;
-		bc.clicked += (b) => {
-			err_win.hide();	
-			error_mode = false;
-			si.set_from_icon_name("mail-send-receive");
-			si.set_blinking(false);
-			debug("joining smdThread");
-			thread.join();
-			debug("starting smdThread");
-			try { thread = GLib.Thread.create(smdThread,true); }
-			catch (GLib.ThreadError e) { 
-				stderr.printf("Unable to re-start a thread\n"); 
-				Gtk.main_quit();
-			}
-		}; 
+		bc.clicked += close_err_action;
+
 		var bel = builder.get_object("bEditLoopCfg") as Gtk.Button;
 		bel.clicked += (b) => {
 			// if not existent, create the template first
@@ -180,7 +171,9 @@ class smdApplet {
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
 		quit.activate += (b) => { 
 			thread_die = true;
-			Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
+			if ((int)pid != 0) {
+				Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
+			}
 			Gtk.main_quit(); 
 		};
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
@@ -193,20 +186,23 @@ class smdApplet {
 		si.activate += (s) => { 
 			if ( error_mode ) 
 				err_win.reshow_with_initial_size();
+			else if( config_wait_mode )
+				win.show();
 			else
 				menu.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
 		};
-		si.set_visible(!gconf.get_bool(key_icon));
 
 		// error mode data
 		command_hash = new GLib.HashTable<Gtk.Widget,string>(
 			GLib.direct_hash,GLib.str_equal);
 	}
 
+	// ===================== smd-loop handling ============================
+
 	// This thread fills the event queue, parsing the
 	// stdout of a child process 
-	public void *smdThread() {
+	private void *smdThread() {
 		bool rc = true;
 		while(rc && !thread_die){
 			debug("(re)starting smd-loop");
@@ -216,7 +212,7 @@ class smdApplet {
 		return null;
 	}
 
-	public bool eval_smd_loop_error_message(
+	private bool eval_smd_loop_error_message(
 		string args, string account, string host) throws GLib.RegexError{
 		var context = new GLib.Regex("context\\(([^\\)]+)\\)");
 		var cause = new GLib.Regex("probable-cause\\(([^\\)]+)\\)");
@@ -366,7 +362,7 @@ class smdApplet {
 	}
 
 	// return true if successful, false to stop due to an error
-	public bool eval_smd_loop_message(string s){
+	private bool eval_smd_loop_message(string s){
 		try {
 			GLib.MatchInfo info = null;
 			var r_tags = new GLib.Regex(
@@ -426,7 +422,7 @@ class smdApplet {
 
 	// runs smd loop once, returns true if it stopped
 	// with a recoverable error and thus should be restarted
-	public bool run_smd_loop() throws Exit {
+	private bool run_smd_loop() throws Exit {
 		string[] cmd = { smd_loop_cmd, "-v" };
 		int child_in;
 		int child_out;
@@ -467,7 +463,7 @@ class smdApplet {
 			}
 			GLib.Process.close_pid(pid);
 			Posix.kill((Posix.pid_t) (-(int)pid),Posix.SIGTERM);
-			return goon; // may be true, if s == null
+			return goon; // maybe true, if s == null
 		} else {
 			stderr.printf("Unable to execute "+smd_loop_cmd+"\n");
 			throw new Exit.ABORT("Unable to run smd-loop");
@@ -509,35 +505,133 @@ class smdApplet {
 
 		return true; // re-schedule me please
 	}
+
+	// ===================== named signal handlers =======================
+
+	// these are just wrappers for close_err
+	private void close_err_action(Gtk.Button b){ close_err(); }
+	private bool close_err_event(Gdk.Event e){
+		close_err();
+		return true;
+	}
+
+	private void close_err() {
+		err_win.hide();	
+		error_mode = false;
+		si.set_from_icon_name("mail-send-receive");
+		si.set_blinking(false);
+		debug("joining smdThread");
+		thread.join();
+		debug("starting smdThread");
+		try { thread = GLib.Thread.create(smdThread,true); }
+		catch (GLib.ThreadError e) { 
+			stderr.printf("Unable to re-start a thread\n"); 
+			Gtk.main_quit();
+		}
+	}
 	
+	// these are just wrappers for close_prefs
+	private void close_prefs_action(Gtk.Button b){ close_prefs(); }
+	private bool close_prefs_event(Gdk.Event e){
+		close_prefs();
+		return true;
+	}
+
+	// close the prefs button, eventually start the theread if exiting
+	// config_wait_mode
+	private void close_prefs(){
+		win.hide(); 
+		if (is_smd_stack_configured() && config_wait_mode) {
+			config_wait_mode = false;
+			debug("starting smdThread since smd stack is configured");
+			try { thread = GLib.Thread.create(smdThread,true); }
+			catch (GLib.ThreadError e) { 
+				stderr.printf("Unable to re-start a thread\n"); 
+				Gtk.main_quit();
+			}
+			si.set_visible(!gconf.get_bool(key_icon));
+			si.set_from_icon_name("mail-send-receive");
+		}
+	}
+
+	// these are names for gtk_main_quit(), they are needed
+	// in order to remove signal handlers
+	private void my_gtk_main_quit_button(Gtk.Button b) { Gtk.main_quit(); }
+	private bool my_gtk_main_quit_event(Gdk.Event b) {
+		Gtk.main_quit();
+		return false;
+	}
+
+	// ======================== config check ===========================
+
+    private bool is_smd_loop_configured() {
+		bool rc = GLib.FileUtils.test(SMD_LOOP_CFG,GLib.FileTest.EXISTS);
+		Gtk.Label l = builder.get_object("lErrLoop") as Gtk.Label;
+		if (!rc) l.show();
+		else l.hide();
+		return rc;
+	}
+
+    private bool is_smd_pushpull_configured() {
+		bool rc = GLib.FileUtils.test(SMD_PP_DEF_CFG,GLib.FileTest.EXISTS);
+		Gtk.Label l = builder.get_object("lErrPushPull") as Gtk.Label;
+		if (!rc) l.show();
+		else l.hide();
+		return rc;
+	}
+
+	private bool is_smd_stack_configured() {
+		var a = is_smd_loop_configured();
+		var b = is_smd_pushpull_configured();
+		return a && b;
+	}
+
+	// ====================== public methods ==============================
+
 	// starts the thread and the timeout handler
 	public void run() throws Exit { 
+
 		// the timout function that will eventually notify the user
 		GLib.Timeout.add(1000, eat_event);
 		
-		// the thread fills the event queue
-		try { thread = GLib.Thread.create(smdThread,true); }
-		catch (GLib.ThreadError e) { 
-			stderr.printf("Unable to start a thread\n"); 
-			throw new Exit.ABORT("Unable to spawn a thread");
+		// before running, we need the whole smd stack
+		// to be configured
+    	if (is_smd_stack_configured()) {
+			// the thread fills the event queue
+			try { thread = GLib.Thread.create(smdThread,true); }
+			catch (GLib.ThreadError e) { 
+				stderr.printf("Unable to start a thread\n"); 
+				throw new Exit.ABORT("Unable to spawn a thread");
+			}
+		} else {
+			config_wait_mode = true;
 		}
 
 		// windows will last for the whole execution,
 		// so the (x) button should just hide them
-		win.delete_event += win.hide_on_delete;
-		err_win.delete_event += err_win.hide_on_delete;
+		win.delete_event += close_prefs_event;
+		err_win.delete_event += close_err_event;
+
+		// we show the icon if we have to.
+		// this is performed here and not in the constructor
+		// since if we passed --configure the icon has not
+		// to be shown
+		if ( config_wait_mode ) {
+			si.set_visible(true);
+			Posix.sleep(5);
+			si.set_from_icon_name("error"); 
+			var not = new Notify.Notification(
+				"Syncmaildir","Syncmaildir is not configured properly, "+
+				"click on the icon to configure it.","gtk-warning",null);
+			not.attach_to_status_icon(si);
+			try { not.show(); }
+			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		} else {
+			si.set_visible(!gconf.get_bool(key_icon));
+		}
 
 		Gtk.main(); 
-		thread.join();
-	}
-
-	private void my_gtk_main_quit_button(Gtk.Button b) {
-		Gtk.main_quit();
-	}
-
-	private bool my_gtk_main_quit_event(Gdk.Event b) {
-		Gtk.main_quit();
-		return false;
+		if (thread != null) thread.join();
 	}
 
 	// just displays the config win
@@ -551,29 +645,7 @@ class smdApplet {
 		win.delete_event -= my_gtk_main_quit_event;
 	}
 
-    public bool is_smd_loop_configured() {
-		bool rc = GLib.FileUtils.test(SMD_LOOP_CFG,GLib.FileTest.EXISTS);
-		Gtk.Label l = builder.get_object("lErrLoop") as Gtk.Label;
-		if (!rc) { l.show(); } 
-		else { l.hide(); }
-		return rc;
-	}
-
-    public bool is_smd_pushpull_configured() {
-		bool rc = GLib.FileUtils.test(SMD_PP_DEF_CFG,GLib.FileTest.EXISTS);
-		Gtk.Label l = builder.get_object("lErrPushPull") as Gtk.Label;
-		if (!rc) { l.show(); } 
-		else { l.hide(); }
-		return rc;
-	}
-
-	public bool is_smd_stack_configured() {
-		var a = is_smd_loop_configured();
-		var b = is_smd_pushpull_configured();
-		return a && b;
-	}
-
-}
+} // class end
 
 // =================== main =====================================
 
@@ -637,11 +709,9 @@ static int main(string[] args){
 	// go!
 	try { 
 		var smd_applet = new smdApplet();
-    	if (config_only) {
+    	if ( config_only ) {
 			smd_applet.configure();
 		} else {
-			while(!smd_applet.is_smd_stack_configured())
-				smd_applet.configure();
 			smd_applet.run();
 		}
 	} catch (Exit e) { 
