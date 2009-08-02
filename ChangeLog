@@ -3,6 +3,10 @@
 	  - when quit was clicked, it was killing every process in
 	    its process group, not in the one of its child smd-loop,
 	    thus it was killing all other applets started by gnome-applet
+	  - configuration window is not pupped up if no config files are
+	    found, an error icon and a notification are used instead, and
+	    the software wants the configuration files to be available before
+	    it actually does something.
 
 26/7/2009 - major feature release
 	* smd-applet, eye-candy applet for smd-loop:
