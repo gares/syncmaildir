@@ -67,6 +67,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="lErrPushPull">
+                <property name="xalign">0</property>
                 <property name="label" translatable="yes">&lt;b&gt;error:&lt;/b&gt; smd-applet needs smd-push/pull  to be properly configured</property>
                 <property name="use_markup">True</property>
               </object>
