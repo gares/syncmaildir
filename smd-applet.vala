@@ -617,13 +617,14 @@ class smdApplet {
 		// since if we passed --configure the icon has not
 		// to be shown
 		if ( config_wait_mode ) {
-			si.set_visible(true);
-			si.set_from_icon_name("error"); 
-			// we draw the icon
-			while ( Gtk.events_pending() ) Gtk.main_iteration();
 			// we wait a bit, hopefully the gnome bar will be drawn in the
 			// meanwhile
-			Posix.sleep(3);
+			Posix.sleep(5);
+			// we draw the icon
+			si.set_visible(true);
+			si.set_from_icon_name("error"); 
+			while ( Gtk.events_pending() ) Gtk.main_iteration();
+			// we do the notification
 			var not = new Notify.Notification(
 				"Syncmaildir","Syncmaildir is not configured properly, "+
 				"click on the icon to configure it.","gtk-warning",null);
