@@ -209,10 +209,10 @@ and bsha to the sha1 sum of its body.
 - `DELETE name hsha bsha` is emitted when a message is no longer present.
 - `REPLACEHEADER name hsha bsha WITH newhsha` is emitted whenever 
   a message that was already present has a different header but the same body.
-- `REPLACE ... ` the format of the massage will be stable in version 1.0
-
-...to be finished for version 1.0
-
+- `REPLACE name hsha bsha WITH newhsha newbsha ` is emitted whenever the body
+  (and eventually the header) of mailmassage change. This never happens
+  in practice, since MUAs should do a copy of the edited message, not replace 
+  it.
 
 Easy to parse output messages
 =============================

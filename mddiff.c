@@ -334,12 +334,10 @@ void load_db(const char* dbname){
 	fprintf(stdout,"DELETE %s %s %s\n",m->name, \
 		txtsha(m->hsha, tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
 	
-// TODO XXX change the implementation, names are useless since
-// they are the same!
 #define COMMAND_REPLACE(m,n) \
-	fprintf(stdout, "REPLACE %s %s %s WITH %s %s %s\n",\
+	fprintf(stdout, "REPLACE %s %s %s WITH %s %s\n",\
 		m->name,txtsha(m->hsha,tmpbuff_1),txtsha(m->bsha,tmpbuff_2),\
-		n->name,txtsha(n->hsha,tmpbuff_3),txtsha(n->bsha,tmpbuff_4))
+		txtsha(n->hsha,tmpbuff_3),txtsha(n->bsha,tmpbuff_4))
 
 #define COMMAND_REPLACE_HEADER(m,n) \
 	fprintf(stdout, "REPLACEHEADER %s %s %s WITH %s\n",\

@@ -338,6 +338,31 @@ function execute_copybody(cmd)
 	end
 end
 
+function execute_replace(cmd)
+	local name1, hsha1, bsha1, hsha2, bsha2 = 
+	   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
+	local exn, hsha_ln, bsha_ln = exists_and_sha(name1)
+	if not exn then
+		return(get_full_email(name1,hsha2,bsha2))
+	else
+		if bsha2 == bsha_ln and hsha2 == hsha_ln then
+			return (trace(true)) -- replace OK (already there)
+		elseif bsha1 == bsha_ln and hsha1 == hsha_ln then
+			return(get_full_email(name1,hsha2,bsha2))
+		else
+			log_error('Failed to replace '..name1)
+			log_error('To fix this problem you should rename '..name1)
+			log_error('Executing `cd; mv -n '..quote(name1)..' '..
+				quote(tmp_for(name1,false))..'` should work.')
+
+			log_tags("replace","concurrent-mailbox-edit",true,
+				"run(mv -n "..quote(homefy(name1)).." "..
+					quote(tmp_for(homefy(name1),false))..")")
+			return (trace(false)) -- replace failed (already there, != )
+		end
+	end
+end
+
 function execute(cmd)
 	local opcode = cmd:match('^(%S+)')
 
@@ -346,13 +371,7 @@ function execute(cmd)
 	elseif opcode == "COPY"          then return (execute_copy(cmd))
 	elseif opcode == "REPLACEHEADER" then return (execute_replaceheader(cmd))
 	elseif opcode == "COPYBODY"      then return (execute_copybody(cmd))
-
-	elseif opcode == "REPLACE" then
-		local name1, hsha1, bsha1, name2, hsha2, bsha2 = 
-		   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+) (%S+)$')
-		log_error('REPLACE command not implement, sorry')
-		return (trace(false))
-
+	elseif opcode == "REPLACE"       then return (execute_replace(cmd))
 	else
 		error('Unknown opcode '..opcode)
 	end
