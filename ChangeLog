@@ -1,3 +1,11 @@
+... - minor fix release
+	* mddiff, smd-client:
+	  - REPLACE command implemented
+	  - tests added
+	* smd-applet:
+	  - fixed a minor issue with vale 0.7.5, GLib.Pid is not an int
+	    anymore
+
 26/7/2009 - minor bugfix release
 	* smd-applet:
 	  - when quit was clicked, it was killing every process in
