@@ -80,7 +80,7 @@ class smdApplet {
 	// the thread to manage the child smd-loop instance
 	weak GLib.Thread thread = null;
 	bool thread_die = false;
-	GLib.Pid pid = 0; // smd-loop pid
+	GLib.Pid pid; // smd-loop pid, initially set to 0
 	
 	// communication structure between the child process (managed by a thread
 	// and the notifier timeout handler).
