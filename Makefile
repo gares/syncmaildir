@@ -9,14 +9,17 @@ VERSION=0.9.8
 all: check-build $(BINARIES) 
 
 %: %.vala Makefile 
-	echo "class SMDConf { public static const string PREFIX = \"/$(PREFIX)\"; }" \
+	echo "class SMDConf { \
+		public static const string PREFIX = \"/$(PREFIX)\"; \
+		public static const string VERSION = \"$(VERSION)\"; \
+		}" \
 		> config.vala
 	valac -o $@ $< config.vala --thread \
 		--pkg glib-2.0 --pkg gtk+-2.0 \
 		--pkg libnotify --pkg gconf-2.0 --pkg posix
 
 %: %.c
-	gcc -Wall -Wextra -g $< -o $@ \
+	gcc -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc

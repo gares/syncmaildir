@@ -661,7 +661,8 @@ be used with a different directory set. Adding items to the directory\n\
 set is safe, while removing them may not do what you want (delete actions\n\
 are generated).\n", bname, bname);
 	fprintf(stdout,
-		"\n© 2009 Enrico Tassi, released under GPLv3, no waranties\n\n");
+		"\nVersion %s, © 2009 Enrico Tassi, released under GPLv3, \
+no waranties\n\n",tostring(VERSION));
 	exit(rc);
 }
 
