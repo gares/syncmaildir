@@ -72,7 +72,7 @@ class smdApplet {
 	Gtk.StatusIcon si = null;
 	Gtk.Window win = null;
 	Gtk.Window err_win = null;
-	Gtk.Dialog about_win = null;
+	Gtk.AboutDialog about_win = null;
 
 	// the gconf client handler
 	GConf.Client gconf = null;
@@ -114,7 +114,7 @@ class smdApplet {
 		// load widgets and attach callbacks
 		win = builder.get_object("wPrefs") as Gtk.Window;
 		err_win = builder.get_object("wError") as Gtk.Window;
-		about_win = builder.get_object("wAbout") as Gtk.Dialog;
+		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
 
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
 		close.clicked += close_prefs_action;
@@ -179,6 +179,8 @@ class smdApplet {
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
 		about_win.response += (id) => { about_win.hide(); };
 		about.activate += (b) => { about_win.run(); };
+		about_win.set_comments("GNOME applet for syncmaildir version " + 
+			SMDConf.VERSION);
 		var prefs = builder.get_object ("miPrefs") as Gtk.MenuItem;
 		prefs.activate += (b) => {  win.show(); };
 
