@@ -1,10 +1,15 @@
-... - minor fix release
+16/8/2009 - minor fix release
 	* mddiff, smd-client:
 	  - REPLACE command implemented
 	  - tests added
 	* smd-applet:
 	  - fixed a minor issue with vale 0.7.5, GLib.Pid is not an int
 	    anymore
+	  - fixed a major issue with threading, all code regarding gtk is
+	    now run by the main thread
+	  - fixed a major issue with memory management, from List to
+	    Gee.ArrayList, that have non-week references and thus prevent
+	    their data from being collected
 
 26/7/2009 - minor bugfix release
 	* smd-applet:
