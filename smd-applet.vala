@@ -45,7 +45,8 @@ class Event {
 
 	public static Event network_error() {
 		var e = new Event();
-		e.message = null; // no error message, we just change the icon
+		e.message = "A persistent network failure occurred";
+		e.message_icon = "dialog-warning";
 		e.enter_network_error_mode = true;
 		return e;
 	}
@@ -555,7 +556,7 @@ class smdApplet {
 			// network error warning
 			si.set_from_icon_name("dialog-warning");
 			si.set_tooltip_text("Network error");
-		} else { 
+		} else if (e != null) { 
 			// no error
 			si.set_from_icon_name("mail-send-receive");
 			si.set_tooltip_text("smd-applet is running");
@@ -686,7 +687,7 @@ class smdApplet {
 			// we do the notification
 			var not = new Notify.Notification(
 				"Syncmaildir","Syncmaildir is not configured properly, "+
-				"click on the icon to configure it.","gtk-warning",null);
+				"click on the icon to configure it.","dialog-warning",null);
 			not.attach_to_status_icon(si);
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
