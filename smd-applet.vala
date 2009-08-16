@@ -11,15 +11,42 @@ void debug(string message) {
 }
 
 // a simple class to pass data from the child process to the
-// notofier
+// notifier
 class Event {
-	public string message;
-	public bool enter_error_mode;
+	public string message = null;
+	public string message_icon = "gtk-about";
+	public bool enter_network_error_mode = false;
+	public bool enter_error_mode = false;
 
-	public static Event error(string account, string host) {
+	// fields meaningful for the error mode only
+	public string context = null;
+	public string cause = null;	
+	public string permissions = null;
+	public string mail_name = null;
+	public string mail_body = null;
+	public Gee.ArrayList<string> commands = null;
+
+	// constructors
+	public static Event error(string account, string host, 
+		string context, string cause, string? permissions, string? mail_name, 
+		string? mail_body, Gee.ArrayList<string> commands) {
 		var e = new Event();
 		e.message = "An error occurred, click on the icon for more details";
+		e.message_icon = "error";
 		e.enter_error_mode = true;
+		e.cause = cause;
+		e.context = context;
+		e.permissions = permissions;
+		e.mail_name = mail_name;
+		e.mail_body = mail_body;
+		e.commands = commands;
+		return e;
+	}
+
+	public static Event network_error() {
+		var e = new Event();
+		e.message = null; // no error message, we just change the icon
+		e.enter_network_error_mode = true;
 		return e;
 	}
 
@@ -28,7 +55,6 @@ class Event {
 	{
 		string preamble = "Synchronize with %s:\n".printf(account);
 		var e = new Event();
-		e.enter_error_mode = false;
 		if (new_mails > 0 && del_mails > 0) {
 			e.message = "%s%d new messages\n%d deleted messages".
 				printf(preamble,new_mails,del_mails);
@@ -85,7 +111,7 @@ class smdApplet {
 	// communication structure between the child process (managed by a thread
 	// and the notifier timeout handler).
 	GLib.Mutex events_lock = null;
-	List<Event> events = null; 
+	Gee.ArrayList<Event> events = null; 
 
 	// if the program is stuck
 	bool error_mode;
@@ -105,7 +131,7 @@ class smdApplet {
 		}
 	
 		// events queue and mutex
-		events = new List<Event>();
+		events = new Gee.ArrayList<Event>();
 		events_lock = new GLib.Mutex();
 
 		// connect to gconf
@@ -185,6 +211,7 @@ class smdApplet {
 		prefs.activate += (b) => {  win.show(); };
 
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
+		si.set_tooltip_text("smd-applet is running");
 		si.activate += (s) => { 
 			if ( error_mode ) 
 				err_win.reshow_with_initial_size();
@@ -236,27 +263,25 @@ class smdApplet {
 			return true;
 		}
 		var has_actions = actions.match(args,0,out i_act);
-
-		// widget setup
-		var l_ctx = builder.get_object("lContext") as Gtk.Label;
-		l_ctx.set_text(i_ctx.fetch(1));
-		var l_cause = builder.get_object("lCause") as Gtk.Label;
-		l_cause.set_text(i_cause.fetch(1));
-		if ( i_human.fetch(1) != "necessary" ){
-			stderr.printf("smd-loop giving an avoidable error: %s\n", args);
+		if ( i_human.fetch(1) != "necessary" && i_cause.fetch(1) == "network"){
+			events_lock.lock();
+			events.insert(events.size, Event.network_error());
+			events_lock.unlock();
 			return true;
 		}
-		bool display_permissions = false;
-		bool display_mail = false;
-		bool display_commands = false;
-		
-		if (has_actions) {
-			command_hash.remove_all();
-			var vb = builder.get_object("vbRun") as Gtk.VBox;
-			foreach(Gtk.Widget w in vb.get_children()){ vb.remove(w); } 
+		if ( i_human.fetch(1) != "necessary" ){
+			stderr.printf("smd-loop giving an avoidable error: %s\n", args);
+			// no user-visible events
+			return true;
+		}
 
+		string permissions = null;
+		string mail_name = null;
+		string mail_body = null;
+		var commands = new Gee.ArrayList<string>();
+
+		if (has_actions) {
 			string acts = i_act.fetch(1);
-			
 			var r_perm = new GLib.Regex("display-permissions\\(([^\\)]+)\\)");
 			var r_mail = new GLib.Regex("display-mail\\(([^\\)]+)\\)");
 			var r_cmd = new GLib.Regex("run\\(([^\\)]+)\\)");
@@ -265,7 +290,6 @@ class smdApplet {
 			for (;acts != null && acts.len() > 0;){
 				MatchInfo i_cmd = null;
 				if ( r_perm.match(acts,0,out i_cmd) ){
-					display_permissions = true;
 					i_cmd.fetch_pos(0,null,out from);
 					string file = i_cmd.fetch(1);
 					string output = null;
@@ -273,75 +297,27 @@ class smdApplet {
 					try {
 						GLib.Process.spawn_command_line_sync(
 							"ls -ld " + file, out output, out err);
-						var l = builder.get_object("lPermissions") as Gtk.Label;
-						l.set_text(output + err);
+						permissions = output + err;
 					} catch (GLib.SpawnError e) {
 						stderr.printf("Spawning ls: %s\n",e.message);
 					}
 				} else if ( r_mail.match(acts,0,out i_cmd) ){
-					display_mail = true;
 					i_cmd.fetch_pos(0,null,out from);
 					string file = i_cmd.fetch(1);
-					string output = null;
+					string output = new string(); //null;
 					string err = null;
 					try {
-						var fn = builder.get_object("eMailName") as Gtk.Entry;
-						fn.set_text(file);
+						mail_name = file;
 						GLib.Process.spawn_command_line_sync(
 							"cat " + file, out output, out err);
-						var l = builder.get_object("tvMail") as Gtk.TextView;
-						Gtk.TextBuffer b = l.get_buffer();
-						b.set_text(output + err,-1);
-						Gtk.TextIter it,subj;
-						b.get_start_iter(out it);
-						if (it.forward_search("Subject:",
-							Gtk.TextSearchFlags.TEXT_ONLY, out subj,null,null)){
-							var insert = b.get_insert();
-							b.select_range(subj,subj);
-							l.scroll_to_mark(insert,0.0,true,0.0,0.0);
-						}
+						mail_body = output + err;
 					} catch (GLib.SpawnError e) {
 						stderr.printf("Spawning ls: %s\n",e.message);
 					}
 				} else if ( r_cmd.match(acts,0,out i_cmd) ){
-					display_commands = true;
 					string command = i_cmd.fetch(1);
 					i_cmd.fetch_pos(0,null,out from);
-					var hb = new Gtk.HBox(false,10);
-					var lbl = new Gtk.Label(command);
-					lbl.set_alignment(0.0f,0.5f);
-					var but = new Gtk.Button.from_stock("gtk-execute");
-					command_hash.insert(but,command);
-					but.clicked += (b) => {
-						int cmd_status;
-						string output;
-						string error;
-						debug("executing: %s\n".printf(command_hash.lookup(b)));
-						//XXX take host into account
-						try{
-						GLib.Process.spawn_command_line_sync(
-							command_hash.lookup(b),
-							out output,out error,out cmd_status);
-						if (GLib.Process.if_exited(cmd_status) &&
-							0==GLib.Process.exit_status(cmd_status)){
-							// OK!
-							b.set_sensitive(false);
-						} else {
-							var w = new Gtk.MessageDialog(err_win,
-								Gtk.DialogFlags.MODAL, Gtk.MessageType.ERROR,
-								Gtk.ButtonsType.CLOSE, 
-								"An error occurred:\n%s\n%s",output,error);
-							w.run();
-							w.destroy();
-						}
-						} catch (GLib.SpawnError e) {
-							stderr.printf("Spawning: %s\n",e.message);
-						}
-					};
-					hb.pack_end(lbl,true,true,0);
-					hb.pack_end(but,false,false,0);
-					vb.pack_end(hb,true,true,0);
-					hb.show_all();
+					commands.insert(commands.size,command);
 				} else {
 					stderr.printf("Unrecognized action: %s\n",acts);
 					break;
@@ -349,16 +325,11 @@ class smdApplet {
 				acts = acts.substring(from);
 			}
 		}
-
-		var x = builder.get_object("fDisplayPermissions") as Gtk.Widget;
-		x.visible=display_permissions;
-		x = builder.get_object("fDisplayMail") as Gtk.Widget; 
-		x.visible=display_mail;
-		x = builder.get_object("fRun") as Gtk.Widget; 
-		x.visible=display_commands;
 		
 		events_lock.lock();
-		events.append(Event.error(account,host));
+		events.insert(events.size, Event.error(
+			account,host,i_ctx.fetch(1), i_cause.fetch(1), 
+			permissions, mail_name, mail_body, commands));
 		events_lock.unlock();
 		return false;
 	}
@@ -403,7 +374,7 @@ class smdApplet {
 
 				if (host == "localhost" && (new_mails > 0 || del_mails > 0)) {
 					events_lock.lock();
-					events.append(
+					events.insert(events.size,
 						Event.stats(account,host,new_mails, del_mails));
 					events_lock.unlock();
 				} else {
@@ -482,27 +453,112 @@ class smdApplet {
 
 		// fetch the event
 		events_lock.lock();
-		if ( events.length() > 0) {
-			e = events.nth(0).data;
-			events.remove(e);
+		if ( events.size > 0) {
+			e = events.first();
+			events.remove_at(0);
 		}
 		events_lock.unlock();
 
 		// regular notification
-		if ( e != null && gconf.get_bool(key_newmail) ){
+		if ( e != null && gconf.get_bool(key_newmail) && e.message != null ){
 			var not = new Notify.Notification(
-				"Syncmaildir",e.message,"gtk-about",null);
+				"Syncmaildir",e.message,e.message_icon,null);
 			not.attach_to_status_icon(si);
 
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		}
 
-		// error notification
+		// behavioural changes, like entering error mode
 		if ( e != null && e.enter_error_mode ) {
+			// error notification and widget setup
 			si.set_from_icon_name("error");
 			si.set_blinking(true);
+			si.set_tooltip_text("smd-applet encountered an error");
 			error_mode = true;
+			var l_ctx = builder.get_object("lContext") as Gtk.Label;
+			var l_cause = builder.get_object("lCause") as Gtk.Label;
+			l_ctx.set_text(e.context);
+			l_cause.set_text(e.cause);
+			command_hash.remove_all();
+			var vb = builder.get_object("vbRun") as Gtk.VBox;
+			foreach(Gtk.Widget w in vb.get_children()){ vb.remove(w); } 
+			
+			if (e.permissions != null) {
+				var l = builder.get_object("lPermissions") as Gtk.Label;
+				l.set_text(e.permissions);
+			}
+
+			if (e.mail_name != null) {
+				var fn = builder.get_object("eMailName") as Gtk.Entry;
+				fn.set_text(e.mail_name);
+				var l = builder.get_object("tvMail") as Gtk.TextView;
+				Gtk.TextBuffer b = l.get_buffer();
+				b.set_text(e.mail_body,-1);
+				Gtk.TextIter it,subj;
+				b.get_start_iter(out it);
+				if (it.forward_search("Subject:",
+					Gtk.TextSearchFlags.TEXT_ONLY, out subj,null,null)){
+					var insert = b.get_insert();
+					b.select_range(subj,subj);
+					l.scroll_to_mark(insert,0.0,true,0.0,0.0);
+				}
+			}
+
+			if (e.commands != null) {
+				foreach (string command in e.commands) {
+					var hb = new Gtk.HBox(false,10);
+					var lbl = new Gtk.Label(command);
+					lbl.set_alignment(0.0f,0.5f);
+					var but = new Gtk.Button.from_stock("gtk-execute");
+					command_hash.insert(but,command);
+					but.clicked += (b) => {
+						int cmd_status;
+						string output;
+						string error;
+						debug("executing: %s\n".printf(command_hash.lookup(b)));
+						//XXX take host into account
+						try{
+						GLib.Process.spawn_command_line_sync(
+							command_hash.lookup(b),
+							out output,out error,out cmd_status);
+						if (GLib.Process.if_exited(cmd_status) &&
+							0==GLib.Process.exit_status(cmd_status)){
+							// OK!
+							b.set_sensitive(false);
+						} else {
+							var w = new Gtk.MessageDialog(err_win,
+								Gtk.DialogFlags.MODAL, Gtk.MessageType.ERROR,
+								Gtk.ButtonsType.CLOSE, 
+								"An error occurred:\n%s\n%s",output,error);
+							w.run();
+							w.destroy();
+						}
+						} catch (GLib.SpawnError e) {
+							stderr.printf("Spawning: %s\n",e.message);
+						}
+					};
+					hb.pack_end(lbl,true,true,0);
+					hb.pack_end(but,false,false,0);
+					vb.pack_end(hb,true,true,0);
+					hb.show_all();
+				}
+			}
+			
+			var x = builder.get_object("fDisplayPermissions") as Gtk.Widget;
+			x.visible = (e.permissions != null);
+			x = builder.get_object("fDisplayMail") as Gtk.Widget; 
+			x.visible = (e.mail_name != null);
+			x = builder.get_object("fRun") as Gtk.Widget; 
+			x.visible = (e.commands.size > 0);
+		} else if (e != null && e.enter_network_error_mode ) {
+			// network error warning
+			si.set_from_icon_name("dialog-warning");
+			si.set_tooltip_text("Network error");
+		} else { 
+			// no error
+			si.set_from_icon_name("mail-send-receive");
+			si.set_tooltip_text("smd-applet is running");
 		}
 
 		return true; // re-schedule me please
@@ -520,6 +576,7 @@ class smdApplet {
 	private void close_err() {
 		err_win.hide();	
 		error_mode = false;
+		si.set_tooltip_text("smd-applet is running");
 		si.set_from_icon_name("mail-send-receive");
 		si.set_blinking(false);
 		debug("joining smdThread");
