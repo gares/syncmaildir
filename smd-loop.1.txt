@@ -28,7 +28,7 @@ FILES
   ~/.smd/loop
 
 SEE ALSO
-  mddiff(1), smd-server(1), smd-pull(1), smd-push(1), smd-pull(1)
+  mddiff(1), smd-server(1), smd-client(1), smd-push(1), smd-pull(1)
 
 AUTHOR
   Enrico Tassi <gares@fettunta.org>
