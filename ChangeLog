@@ -1,3 +1,7 @@
+... - minor fix release
+	* mddiff:
+	  - --help and manpage improved
+
 16/8/2009 - minor fix release
 	* mddiff, smd-client:
 	  - REPLACE command implemented
