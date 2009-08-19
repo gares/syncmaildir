@@ -2,7 +2,7 @@
 Name=Sync Mail Dir
 Name[it]=Sincronizzazione Maildir
 Comment=Synchronizes mailboxes in Maildir format
-Comment[it]=Syncronizza due caselle di posta in formato Maildir
+Comment[it]=Sincronizza due caselle di posta in formato Maildir
 Icon=mail-send-receive
 Exec=smd-applet
 Terminal=false
