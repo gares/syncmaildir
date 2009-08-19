@@ -650,10 +650,11 @@ void help(char* argv0, int rc){
 If paths is a list of regular files, %s outputs the sha1 of its header\n\
 and body separated by space.\n\n\
 If paths is a list of directories, %s outputs a list of actions a client\n\
-has to perform to syncronize a copy of the same maildir. This set of actions\n\
+has to perform to syncronize a copy of the same maildirs. This set of actions\n\
 is relative to a previous status of the maildir stored in the db file.\n\
 The input directories are traversed recursively, and every file encountered\n\
-is a potential mail message (if it contains no \\n\\n it is skipped).\n\n\
+inside directories named cur/ and new/ is a potential mail message (if it\n\
+contains no \\n\\n it is skipped).\n\n\
 Regular files and directories cannot be mixed in paths.\n\n\
 Every client must use a different db-file, and the db-file is strictly\n\
 related with the set of directories given as arguments, and should not\n\
