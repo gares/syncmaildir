@@ -138,6 +138,11 @@ every 10.
 
 ### smd-applet
 
+smd-applet just runs `smd-loop`, notifying the user if errors occur. It
+can be run with `--configure` to pop-up its configuration window, that
+allows to tune its notification behaviour and to edit the configuration
+files for `smd-loop` and `smd-push/pull`.
+
 Notes on performances
 ---------------------
 
