@@ -66,6 +66,10 @@ class Event {
 		}
 		return e;
 	}
+	
+	public bool is_error_event() {
+		return (this.enter_error_mode || this.enter_network_error_mode);
+	}
 }
 
 static const string SMD_LOOP = "/bin/smd-loop";
@@ -115,7 +119,8 @@ class smdApplet {
 	Gee.ArrayList<Event> events = null; 
 
 	// if the program is stuck
-	bool error_mode;
+	bool error_mode = false;
+	bool network_error_mode = false;
 	bool config_wait_mode;
 	GLib.HashTable<Gtk.Widget,string> command_hash = null;
 
@@ -461,18 +466,22 @@ class smdApplet {
 		events_lock.unlock();
 
 		// regular notification
-		if ( e != null && gconf.get_bool(key_newmail) && e.message != null ){
-			var not = new Notify.Notification(
-				"Syncmaildir",e.message,e.message_icon,null);
-			not.attach_to_status_icon(si);
+		if ( e != null && e.message != null) {
+			if (e.enter_network_error_mode && network_error_mode) {
+				// we avoid notifying the network problem more than once
+			} else if (e.is_error_event() || gconf.get_bool(key_newmail)){
+				var not = new Notify.Notification(
+					"Syncmaildir",e.message,e.message_icon,null);
+				not.attach_to_status_icon(si);
 
-			try { not.show(); }
-			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+				try { not.show(); }
+				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			}
 		}
 
 		// behavioural changes, like entering error mode
 		if ( e != null && e.enter_error_mode ) {
-			// error notification and widget setup
+			// {{{ error notification and widget setup
 			si.set_from_icon_name("error");
 			si.set_blinking(true);
 			si.set_tooltip_text("smd-applet encountered an error");
@@ -552,12 +561,15 @@ class smdApplet {
 			x.visible = (e.mail_name != null);
 			x = builder.get_object("fRun") as Gtk.Widget; 
 			x.visible = (e.commands.size > 0);
+			// }}}
 		} else if (e != null && e.enter_network_error_mode ) {
 			// network error warning
+			network_error_mode = true;
 			si.set_from_icon_name("dialog-warning");
 			si.set_tooltip_text("Network error");
 		} else if (e != null) { 
 			// no error
+			network_error_mode = false; 
 			si.set_from_icon_name("mail-send-receive");
 			si.set_tooltip_text("smd-applet is running");
 		}
