@@ -48,27 +48,27 @@ smd-loop
 
 The idea is to mimic cron, but retry a failed sync attempt if the 
 given error is transient. `smd-client` and `smd-server` output TAGS
-that specify if the occurred error need human intervention or not, and
+that specify if the occurred error needs human intervention or not, and
 also suggest some actions, like retry. `smd-loop` understands these tags,
-and gives a second chance to a commnd that fails with an error that does not
+and gives a second chance to a command that fails with an error that does not
 require human intervention and for which the suggested action is retry.
 
-It is implemented in bash, since it is mostly a while true loop. Arrays
+It is implemented in `bash`, since it is mostly a while true loop. Arrays
 (non POSIX shell compliant) are used to record failures, and give only a
 second chance to every `smd-push` or `smd-pull` command.
 
 smd-applet
 ----------
 
-To write an hopefully eye-candy applet for GNOME, the language vala was an
+To write an hopefully eye-candy applet for GNOME, the language Vala was an
 intriguing choice, since it is based on smart and sound ideas (that is
 to avoid the C++ non-standardized calling conventions) to provide a modern
 object oriented programming language built around gobject and glib. Bindings
 for GTK+, GConf, libnotify, etc... are available, and require no compiled 
-glue code, just bare text .vapi files. 
+glue code, just bare text `.vapi` files. 
 
 If you are used to languages where writing bindings is not a trivial task,
-you'd better look at vala, where bindings are simple by design.
+you'd better look at Vala, where bindings are simple by design.
 
 SERVER/CLIENT interaction
 =========================

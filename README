@@ -15,7 +15,7 @@ unison may work too, but not benefit from the fact that they are
 synchronizing mail messages. Sync Mail Dir is similar to Maildirsync in its
 design and requirements, but is more efficient, having its mechanisms
 written in C (around 700 lines), while policies are written in scripting
-languages (other 900 lines).
+languages like Lua and shell script (other 900 lines).
 
 Overview
 --------
@@ -59,15 +59,15 @@ flexibility).
   apply them locally.  The remote mailbox is left untouched. This tool is
   meant to be called by the user.
 - `smd-push` thanks to ssh, it executes `smd-client` on the server host and
-  `smd-serer` on the client host. This allows to push local changes to
+  `smd-serer` on the client host. This allows to push local changes and to
   apply them on the remote host.  The local mailbox is left untouched. This
   tool is meant to be called by the user.
-- `smd-loop` runs runs smd-push and smd-sull at regular intervals as defined
+- `smd-loop` runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
   catches recoverable errors (like a, non recurrent, network problem),
   bailing out only in cases where human intervention is needed. This is 
   the utility you may want to run if you are using a textual environment or
-  a graphical one not base on GNOME.
+  a graphical one not based on GNOME.
 - `smd-applet` is an applet for the GNOME notification area, that runs 
   `smd-loop`, eventually notifying the user for critical events and allowing
   him to solve them clicking on buttons instead of running commands from
@@ -120,7 +120,7 @@ by the user in the `~/.smd/loop` configuration file. On errors that
 are reported to be transient, its retries a second time before failing.
 
 The first time you run `smd-loop` a sample config file is created for you. 
-The configuration file is like oriented. Each line is composed of three space
+The configuration file is line oriented. Each line is composed of three space
 separated fields: 
 
 - `pull-frequency`
@@ -191,6 +191,4 @@ is irremediably lost due to Sync Mail Dir, you will get nothing back, but
 you can complain with me, of course. If you find the software useful, 
 an happy-user report is also welcome. For patches, bug-reports, etc. refer to
 Enrico Tassi, gareuselesinge at users dot sourceforge dot net.
-
-...to be finished for version 1.0
 
