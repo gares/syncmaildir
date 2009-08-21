@@ -118,6 +118,7 @@ cleanup() {
 }
 
 trap cleanup "EXIT" 
+trap cleanup "SIGTERM" 
 
 if [ "$1" = "-v" ]; then
 	VERBOSE=1
