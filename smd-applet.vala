@@ -786,4 +786,4 @@ static int main(string[] args){
 	return 0;
 }
 
-// vim:set ts=4:foldmethod=marker:
+// vim:set ts=4 foldmethod=marker:
