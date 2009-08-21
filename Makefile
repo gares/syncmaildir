@@ -23,7 +23,7 @@ all: check-build $(BINARIES)
 	gcc -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config --cflags --libs glib-2.0` 
 
-check-build: check-w-gcc
+check-build: check-w-gcc check-w-valac
 check-run: check-w-lua5.1 check-w-bash 
 
 check-w-%:
