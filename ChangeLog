@@ -1,13 +1,16 @@
-... - minor fix release
+... - minor fix release - version 0.9.9 aka 1.0rc1
 	* mddiff:
 	  - --help and manpage improved
+	* smd-applet:
+	  - less noise when a network error occurrs, just notify the user
+	    once and change the icon
 
 16/8/2009 - minor fix release
 	* mddiff, smd-client:
 	  - REPLACE command implemented
 	  - tests added
 	* smd-applet:
-	  - fixed a minor issue with vale 0.7.5, GLib.Pid is not an int
+	  - fixed a minor issue with Vala 0.7.5, GLib.Pid is not an int
 	    anymore
 	  - fixed a major issue with threading, all code regarding gtk is
 	    now run by the main thread
