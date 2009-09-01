@@ -20,7 +20,7 @@ VERBOSE=0
 TEMPLATE_ONLY=0
 
 # Temp file, used to store subprocesses' output
-OUTPUT=`mktemp`
+OUTPUT=`mktemp -q /tmp/smd-loop.XXXXXXXXXX`
 
 # List of commands that failed
 STOP_TAG="__STOP__"
