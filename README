@@ -107,6 +107,8 @@ This file defines the following variables:
 
 - `MAILBOX` a list of roots to be synchronized. There is no support for
   name mapping, thus they should be named the same on the remote host.
+  Maildirs will be searched starting from these roots, traversing
+  subdirectories recursively.
 
 - `DEBUG` can be set to true to log the traffic between client and server
 
