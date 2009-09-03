@@ -15,10 +15,20 @@ fi
 
 H=$HOME
 CONFDIR=$H/.smd
-SSH=ssh
 LOCKFILE=$CONFDIR/lock
 SHOWTAGS=0
 TEMPLATE_ONLY=0
+
+SSH="@SSH@"
+if [ `echo "$SSH" | cut -c -1` = "@" ]; then
+	echo "`basename $0` not installed, assuming secure shell client is ssh"
+	SSH=ssh
+fi
+SED="@SED@"
+if [ `echo "$SED" | cut -c -1` = "@" ]; then
+	echo "`basename $0` not installed, assuming stream editor is sed"
+	SED=sed
+fi
 
 if [ "$1" = "-v" ]; then
 	shift
@@ -88,7 +98,7 @@ if [ ! -f $CONFFILE ]; then
 	# Log client to server and server to client communication.
 	# This is useful only for debugging, since all network traffic
 	# is dumped, including transmitted mails.
-	DEBUG=false
+	# DEBUG=true
 	EOT
 	echo No config file found: created a default one
 	echo Please edit it: $CONFFILE
@@ -106,6 +116,9 @@ if [ -f $LOCKFILE ]; then
 fi
 
 touch $LOCKFILE
+
+# defaults for the configuration file
+DEBUG=false
 
 . $CONFFILE
 

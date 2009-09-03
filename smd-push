@@ -9,7 +9,7 @@ set -e
 #set -x
 
 PREFIX="@PREFIX@"
-if [ `echo $PREFIX | cut -c -1` = "@" ]; then
+if [ `echo "$PREFIX" | cut -c -1` = "@" ]; then
 	SMDROOT=.
 	echo "smd-pull not installed, assuming smd-common is ./smd-common"
 else
@@ -40,25 +40,25 @@ wait $CLIENT || EXITCODE=1
 
 if [ $EXITCODE = 1 ]; then
 	grep ^ERROR $CL \
-		| sed 's/^/smd-server: /' \
-		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| sed "s/@@ENDPOINT@@/$REPNAME/"
+		| $SED 's/^/smd-server: /' \
+		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
+		| $SED "s/@@ENDPOINT@@/$REPNAME/"
 	grep ^ERROR $SL \
-		| sed 's/^/smd-client: /' \
-		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| sed "s/@@ENDPOINT@@/$REPNAME/"
+		| $SED 's/^/smd-client: /' \
+		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
+		| $SED "s/@@ENDPOINT@@/$REPNAME/"
 	grep ^ssh: $SL \
-		| sed 's/^/smd-client: ERROR: /'
+		| $SED 's/^/smd-client: ERROR: /'
 fi
 if [ $SHOWTAGS = 1 ]; then
 	grep ^TAGS $CL \
-		| sed "s/^/$REPNAME: smd-server@localhost: /" \
-		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| sed "s/@@ENDPOINT@@/$REPNAME/"
+		| $SED "s/^/$REPNAME: smd-server@localhost: /" \
+		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
+		| $SED "s/@@ENDPOINT@@/$REPNAME/"
 	grep ^TAGS $SL \
-		| sed "s/^/$REPNAME: smd-client@$SERVERNAME: /" \
-		| sed "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| sed "s/@@ENDPOINT@@/$REPNAME/"
+		| $SED "s/^/$REPNAME: smd-client@$SERVERNAME: /" \
+		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
+		| $SED "s/@@ENDPOINT@@/$REPNAME/"
 	if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
 	   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
 		# it may be that ssh failed to resolve the hostname
