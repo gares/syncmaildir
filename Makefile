@@ -30,7 +30,7 @@ all: check-build $(BINARIES)
 		--pkg posix --pkg gee-1.0
 
 %: %.c
-	gcc -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
+	gcc -O2 -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc check-w-valac
