@@ -1,0 +1,21 @@
+NAME
+  smd-applet - graphical interface for smd-pull
+
+SYNOPSIS
+  smd-applet [-cvl]
+
+DESCRIPTION
+  smd-applet is an applet for the GNOME notification area, that runs smd-loop,
+  eventually notifying the user for critical events and allowing him to solve
+  them clicking on buttons instead of running commands from the shell.
+
+OPTIONS
+  -c, --configure            Do not run smd-loop, just open the configuration window
+  -v, --verbose              Increase program verbosity, debugging only
+  -l, --smd-loop=command     override smd-loop command name, debugging only
+
+SEE ALSO
+  mddiff(1), smd-server(1), smd-client(1), smd-push(1), smd-pull(1), smd-loop(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>

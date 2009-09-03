@@ -1,7 +1,7 @@
 PROJECTNAME=syncmaildir
 VERSION=0.9.9
 BINARIES=mddiff smd-applet
-MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1
+MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
 HTML=index.html design.html
 DESTDIR=
 
