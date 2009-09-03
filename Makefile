@@ -5,7 +5,7 @@ MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1
 HTML=index.html design.html
 DESTDIR=
 
-# These variables affect the programs behaviour and their installation,
+# These variables affect the programs behaviour and their installation;
 # they are meant to be overridden if necessary
 PREFIX=usr/local
 SED=sed
@@ -13,6 +13,8 @@ SHA1SUM=sha1sum
 XDELTA=xdelta
 CPN=cp -n
 SSH=ssh
+LUAV=5.1
+LUA=lua$(LUAV)
 
 all: check-build $(BINARIES) 
 
@@ -32,7 +34,7 @@ all: check-build $(BINARIES)
 		`pkg-config --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc check-w-valac
-check-run: check-w-lua5.1 check-w-bash 
+check-run: check-w-$(LUA) check-w-bash 
 
 check-w-%:
 	@which $* > /dev/null || echo $* not found
@@ -67,6 +69,7 @@ define install-replacing
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
 		$(SED) 's?@CPN@?$(CPN)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
+		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
 		cat > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
 	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
 endef
@@ -86,7 +89,7 @@ install-bin: $(BINARIES)
 	$(call mkdir-p,bin)
 	$(call mkdir-p,share/$(PROJECTNAME))
 	$(call mkdir-p,share/$(PROJECTNAME)-applet)
-	$(call mkdir-p,share/lua/5.1)
+	$(call mkdir-p,share/lua/$(LUAV))
 	cp $(BINARIES) $(DESTDIR)/$(PREFIX)/bin
 	$(call install-replacing,smd-server,bin)
 	$(call install-replacing,smd-client,bin)
@@ -94,7 +97,7 @@ install-bin: $(BINARIES)
 	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-loop,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
-	$(call install-replacing,syncmaildir.lua,share/lua/5.1)
+	$(call install-replacing,syncmaildir.lua,share/lua/$(LUAV))
 
 install-misc: $(MANPAGES)
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
