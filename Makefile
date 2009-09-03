@@ -1,15 +1,23 @@
+# ----------------------------------------------------------------------------
+# These variables should not be changed by the regular user, only developers
+# should care about them
+
 PROJECTNAME=syncmaildir
 VERSION=0.9.9
 BINARIES=mddiff smd-applet
-MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
+MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
+	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
 HTML=index.html design.html
 DESTDIR=
 SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
 SF_LOGIN=gareuselesinge,syncmaildir
 SF_WEB=htdocs
 
+# ----------------------------------------------------------------------------
 # These variables affect the programs behaviour and their installation;
-# they are meant to be overridden if necessary
+# they are meant to be overridden if necessary. See the end of this
+# file for some templates setting them.
+
 PREFIX=usr/local
 SED=sed
 SHA1SUM=sha1sum
@@ -18,6 +26,9 @@ CPN=cp -n
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
+
+# ----------------------------------------------------------------------------
+# Rules follow...
 
 all: check-build $(BINARIES) 
 
@@ -140,5 +151,13 @@ upload-website: $(HTML)
 upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 
+
+# ----------------------------------------------------------------------------
+# These templates collect standard values for known platforms, like osx.
+# To use a template run make TEMPLATE/TARGET, for example:
+#   make osx/all && make osx/install
+
 osx/%:
 	$(MAKE) $* SED=sed CPN=cp 
+
+# eof
