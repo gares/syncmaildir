@@ -156,6 +156,14 @@ upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
 # These templates collect standard values for known platforms, like osx.
 # To use a template run make TEMPLATE/TARGET, for example:
 #   make osx/all && make osx/install
+# You may also combine templates. For example, to build only text mode
+# utilities on osx type:
+#   make osx/text/all && make osx/text/install
+
+text/%:
+	$(MAKE) $* \
+		BINARIES="$(subst smd-applet,,$(BINARIES))" \
+		MANPAGES="$(subst smd-applet.1,,$(MANPAGES))"
 
 osx/%:
 	$(MAKE) $* SED=sed CPN=cp 
