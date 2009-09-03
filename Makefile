@@ -140,3 +140,5 @@ upload-website: $(HTML)
 upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 
+osx/%:
+	$(MAKE) $* SED=sed CPN=cp 
