@@ -185,8 +185,9 @@ files for GLib, GNU make and sed. For `smd-applet` you also need the Vala
 compiler, libgee and GTK+ 2. You may also want to customize few variables in
 the `Makefile`.  Then typing `make && make install` should be enough to have
 syncmaildir installed.  Some known platforms are supported by templates defined
-at the end of `Makefile`, for example you may want to run `make osx/all && make
-osx/install` to properly build and install syncmaildir on an MacOSX platform.
+at the end of `Makefile`, for example you may want to run `make osx/text/all &&
+make osx/text/install` to properly build and install text mode only syncmaildir
+utilities on an MacOSX platform.
 
 Runtime dependencies are: `ssh`, `xdelta`, `sha1sum`, `lua5.1` and `bash`.
 
