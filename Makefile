@@ -4,6 +4,9 @@ BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
 HTML=index.html design.html
 DESTDIR=
+SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
+SF_LOGIN=gareuselesinge,syncmaildir
+SF_WEB=htdocs
 
 # These variables affect the programs behaviour and their installation;
 # they are meant to be overridden if necessary
@@ -132,9 +135,8 @@ $(HTML): check-w-markdown
 	cat misc/tail.html >> design.html
 
 upload-website: $(HTML)
-	scp $(HTML) misc/style.css \
-		gareuselesinge,syncmaildir@web.sourceforge.net:htdocs
+	scp $(HTML) misc/style.css $(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)
 
 upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
-	scp $< gareuselesinge,syncmaildir@frs.sourceforge.net:/home/frs/project/s/sy/syncmaildir/syncmaildir/$<
+	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 
