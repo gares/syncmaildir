@@ -1,9 +1,20 @@
 ... - minor fix release - version 0.9.9 aka 1.0rc1
 	* mddiff:
 	  - --help and manpage improved
+	  - compile with -O2, why not?
 	* smd-applet:
 	  - less noise when a network error occurrs, just notify the user
 	    once and change the icon
+	  - added manpage
+	* Makefile:
+	  - sourceforge paths made variable, easier to change and more
+	    readable Makefile
+	  - added support for @variable@ substitution in installation 
+	    phse for SED, SHA1SUM, XDELTA, CPN, SSH, LUA and PREFIX
+	  - added template for osx: make osx/FOO will make target FOO
+	    with some variables customized for osx
+	* README:
+	  - added some notes about installation from sources
 
 16/8/2009 - minor fix release
 	* mddiff, smd-client:
