@@ -1,10 +1,18 @@
 PROJECTNAME=syncmaildir
+VERSION=0.9.9
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 smd-pull.1 smd-push.1 smd-loop.1
 HTML=index.html design.html
-PREFIX=usr/local
 DESTDIR=
-VERSION=0.9.9
+
+# These variables affect the programs behaviour and their installation,
+# they are meant to be overridden if necessary
+PREFIX=usr/local
+SED=sed
+SHA1SUM=sha1sum
+XDELTA=xdelta
+CPN=cp -n
+SSH=ssh
 
 all: check-build $(BINARIES) 
 
@@ -52,7 +60,14 @@ misc/Mail.testcase.tgz:
 	txt2man -t $* -v "Sync Mail Dir (smd) documentation" -s 1 $< > $@
 
 define install-replacing
-	sed 's?@PREFIX@?/$(PREFIX)?' $(1) > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
+	cat $(1) |\
+		$(SED) 's?@PREFIX@?/$(PREFIX)?' |\
+		$(SED) 's?@SED@?$(SED)?'  |\
+		$(SED) 's?@SHA1SUM@?$(SHA1SUM)?' |\
+		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
+		$(SED) 's?@CPN@?$(CPN)?' |\
+		$(SED) 's?@SSH@?$(SSH)?' |\
+		cat > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
 	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
 endef
 
