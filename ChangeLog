@@ -2,6 +2,9 @@
 	* mddiff:
 	  - --help and manpage improved
 	  - compile with -O2, why not?
+	  - add strict compile time dependency over glib >= 2.19.1,
+	    that fixes a bug concerning the checksum of data with
+	    length < 2
 	* smd-applet:
 	  - less noise when a network error occurrs, just notify the user
 	    once and change the icon

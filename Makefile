@@ -44,6 +44,7 @@ all: check-build $(BINARIES)
 		--pkg posix --pkg gee-1.0
 
 %: %.c
+	pkg-config --atleast-version=2.19.1 glib-2.0
 	gcc -O2 -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config --cflags --libs glib-2.0` 
 
