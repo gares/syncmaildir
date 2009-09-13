@@ -6,8 +6,8 @@ SYNOPSIS
 
 DESCRIPTION
   smd-applet is an applet for the GNOME notification area, that runs smd-loop,
-  eventually notifying the user for critical events and allowing him to solve
-  them clicking on buttons instead of running commands from the shell.
+  eventually notifying the user for critical events and allowing him to run
+  suggested commands by clicking on buttons instead of using a terminal.
 
 OPTIONS
   -c, --configure            Do not run smd-loop, just open the configuration window
