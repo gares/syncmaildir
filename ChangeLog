@@ -5,10 +5,13 @@
 	  - add strict compile time dependency over glib >= 2.19.1,
 	    that fixes a bug concerning the checksum of data with
 	    length < 2
+	* smd-push/pull:
+	  - when -v is passed also print the date
 	* smd-applet:
 	  - less noise when a network error occurrs, just notify the user
 	    once and change the icon
 	  - added manpage
+	  - added view log menu item and relative window
 	* Makefile:
 	  - sourceforge paths made variable, easier to change and more
 	    readable Makefile
