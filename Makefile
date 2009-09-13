@@ -26,6 +26,8 @@ CPN=cp -n
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
+CFLAGS=-O2 -Wall -Wextra -g
+PKG_FLAGS=
 
 # ----------------------------------------------------------------------------
 # Rules follow...
@@ -45,8 +47,8 @@ all: check-build $(BINARIES)
 
 %: %.c
 	pkg-config --atleast-version=2.19.1 glib-2.0
-	gcc -O2 -Wall -Wextra -g $< -o $@ -DVERSION="$(VERSION)" \
-		`pkg-config --cflags --libs glib-2.0` 
+	gcc $(CFLAGS) $< -o $@ -DVERSION="$(VERSION)" \
+		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc check-w-valac
 check-run: check-w-$(LUA) check-w-bash 
@@ -165,6 +167,11 @@ text/%:
 	$(MAKE) $* \
 		BINARIES="$(subst smd-applet,,$(BINARIES))" \
 		MANPAGES="$(subst smd-applet.1,,$(MANPAGES))"
+
+static/%:
+	$(MAKE) $* \
+		CFLAGS="$(CFLAGS) -static " \
+		PKG_FLAGS="$(PKG_FLAGS) --static "
 
 osx/%:
 	$(MAKE) $* SED=sed CPN=cp 
