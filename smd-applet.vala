@@ -75,6 +75,7 @@ class Event {
 static const string SMD_LOOP = "/bin/smd-loop";
 static const string SMD_PUSH = "/bin/smd-push";
 static const string SMD_APPLET_UI = "/share/syncmaildir-applet/smd-applet.ui";
+static string SMD_LOGS_DIR;
 static string SMD_LOOP_CFG;
 static string SMD_PP_DEF_CFG;
 
@@ -103,7 +104,12 @@ class smdApplet {
 	Gtk.StatusIcon si = null;
 	Gtk.Window win = null;
 	Gtk.Window err_win = null;
+	Gtk.Window log_win = null;
 	Gtk.AboutDialog about_win = null;
+
+	// Stuff for logs display
+	Gtk.ComboBox cblogs = null;
+	Gee.ArrayList<string> lognames = null;
 
 	// the gconf client handler
 	GConf.Client gconf = null;
@@ -147,6 +153,31 @@ class smdApplet {
 		win = builder.get_object("wPrefs") as Gtk.Window;
 		err_win = builder.get_object("wError") as Gtk.Window;
 		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
+		log_win = builder.get_object("wLog") as Gtk.Window;
+		var logs_vb = builder.get_object("vbLog") as Gtk.VBox;
+		cblogs = new Gtk.ComboBox.text();
+		lognames = new Gee.ArrayList<string>();
+		logs_vb.pack_start(cblogs,false,true,0);
+		logs_vb.reorder_child(cblogs,0);
+		cblogs.show();
+		cblogs.changed += (cb) => {
+			int selected = cblogs.get_active();
+			if (selected >= 0) {
+				string file = lognames.get(selected);
+				string content;
+				if (GLib.FileUtils.get_contents(SMD_LOGS_DIR+file,out content)){
+					var tv = builder.get_object("tvLog") as Gtk.TextView;
+					var b = tv.get_buffer();
+					b.set_text(content,-1);
+				} else {
+					stderr.printf("Unable to read %s\n", SMD_LOGS_DIR + file);
+				}
+			}
+		};
+
+		var close_log = builder.get_object("bLogClose") as Gtk.Button;
+		close_log.clicked += close_logs_action;
+		log_win.delete_event += close_logs_event;
 
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
 		close.clicked += close_prefs_action;
@@ -215,6 +246,11 @@ class smdApplet {
 			SMDConf.VERSION);
 		var prefs = builder.get_object ("miPrefs") as Gtk.MenuItem;
 		prefs.activate += (b) => {  win.show(); };
+		var logs = builder.get_object ("miLog") as Gtk.MenuItem;
+		logs.activate += (b) => { 
+			update_loglist();
+			log_win.show(); 
+		};
 
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
 		si.set_tooltip_text("smd-applet is running");
@@ -626,6 +662,16 @@ class smdApplet {
 		}
 	}
 
+	// close logs win
+	private void close_logs(){ log_win.hide(); }
+
+	// these are just wrappers for close_logs
+	private void close_logs_action(Gtk.Button b){ close_logs(); }
+	private bool close_logs_event(Gdk.Event e){
+		close_logs();
+		return true;
+	}
+
 	// these are names for gtk_main_quit(), they are needed
 	// in order to remove signal handlers
 	private void my_gtk_main_quit_button(Gtk.Button b) { Gtk.main_quit(); }
@@ -656,6 +702,35 @@ class smdApplet {
 		var a = is_smd_loop_configured();
 		var b = is_smd_pushpull_configured();
 		return a && b;
+	}
+
+	// ======================== log window ================================
+	private void update_loglist(){
+			
+		var tv = builder.get_object("tvLog") as Gtk.TextView;
+		var b = tv.get_buffer();
+
+		try {
+			Dir d = GLib.Dir.open(SMD_LOGS_DIR);
+			string file;
+
+			((Gtk.ListStore)cblogs.get_model()).clear();
+			lognames.clear();
+
+			while ( (file = d.read_name()) != null ){
+				lognames.add(file);
+				cblogs.append_text(file);
+			}
+	
+			if (lognames.size == 0) {
+				b.set_text("No logs in %s".printf(SMD_LOGS_DIR),-1);
+			} else {
+				cblogs.set_title("Choose log file");
+				cblogs.set_active(0);
+			}
+		} catch (GLib.FileError e) {
+			b.set_text("Unable to list directory %s".printf(SMD_LOGS_DIR),-1);
+		}
 	}
 
 	// ====================== public methods ==============================
@@ -748,6 +823,7 @@ static int main(string[] args){
 		smdApplet.smd_applet_ui = PREFIX + SMD_APPLET_UI; 
 	}
 
+	SMD_LOGS_DIR = GLib.Environment.get_home_dir()+"/.smd/log/";
 	SMD_LOOP_CFG = GLib.Environment.get_home_dir()+"/.smd/loop";
 	SMD_PP_DEF_CFG = GLib.Environment.get_home_dir()+"/.smd/config.default";
 
