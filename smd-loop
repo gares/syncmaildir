@@ -7,6 +7,16 @@
 # The config file name
 CONFFILE=~/.smd/loop
 
+# The lock file name
+LOCKFILE=~/.smd/lock
+
+if [ -e $LOCKFILE ]; then
+	echo Another smd-loop instance is running. If it is not the case
+	echo remove $LOCKFILE and retry
+	exit 1
+fi
+touch $LOCKFILE
+
 # The length of a minute, decrease to debug
 MINUTE=60
 
@@ -115,6 +125,7 @@ perform() {
 
 cleanup() {
 	rm -f $OUTPUT
+	rm -f $LOCKFILE
 }
 
 trap cleanup "EXIT" 
