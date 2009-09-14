@@ -12,6 +12,8 @@
 	    once and change the icon
 	  - added manpage
 	  - added view log menu item and relative window
+	* smd-loop:
+	  - lockfile to not run two instances concurrently
 	* Makefile:
 	  - sourceforge paths made variable, easier to change and more
 	    readable Makefile
