@@ -5,3 +5,4 @@
   smd-applet
 - fix logging, probably the best solution is to make smd-loop
   print something in a log file in ~/.smd/log/loop
+- ask lucas wilcox if the osx/ Makefile template is OK
