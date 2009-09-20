@@ -133,7 +133,7 @@ class smdApplet {
 	// ======================= constructor ================================
 
 	// initialize data structures and build gtk+ widgets
-	smdApplet() throws Exit {
+	public smdApplet() throws Exit {
 		// load the ui file
 		builder = new Gtk.Builder ();
 		try { builder.add_from_file (smd_applet_ui); } 
@@ -346,7 +346,7 @@ class smdApplet {
 				} else if ( r_mail.match(acts,0,out i_cmd) ){
 					i_cmd.fetch_pos(0,null,out from);
 					string file = i_cmd.fetch(1);
-					string output = new string(); //null;
+					string output = "";
 					string err = null;
 					try {
 						mail_name = file;

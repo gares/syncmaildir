@@ -12,6 +12,7 @@
 	    once and change the icon
 	  - added manpage
 	  - added view log menu item and relative window
+	  - made vala 0.7.6 clean
 	* smd-loop:
 	  - lockfile to not run two instances concurrently
 	* Makefile:
