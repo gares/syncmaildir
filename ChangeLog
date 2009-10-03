@@ -1,3 +1,10 @@
+3/10/2009 - minor fix release - version 0.9.10 
+	* smd-loop:
+	  - fixed a bug regarding the lock file name, that was clashing
+	    with the one of smd-push/pull
+	* smd-push/pull:
+	  - print the date in the log, not on stdout
+
 27/9/2009 - minor fix release - version 0.9.9 aka 1.0rc1
 	* mddiff:
 	  - --help and manpage improved
