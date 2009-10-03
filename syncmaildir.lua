@@ -214,7 +214,7 @@ function handshake(dbfile)
 	if sha ~= db_sha then
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
-		log_tags("handshake", "db-mismatch",true,"run(cd; rm "..
+		log_tags("handshake", "db-mismatch",true,"run(rm "..
 			quote(dbfile)..")")
 		error('Database mismatch')
 	end
