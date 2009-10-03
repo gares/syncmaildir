@@ -51,7 +51,7 @@ if [ $EXITCODE = 1 ]; then
 		| $SED 's/^/smd-client: ERROR: /'
 fi
 if [ $SHOWTAGS = 1 ]; then
-	echo "`date`: smd-push $SERVERNAME"
+	echo "`date`: smd-push $SERVERNAME" >> $SL
 	grep ^TAGS $CL \
 		| $SED "s/^/$REPNAME: smd-server@localhost: /" \
 		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
