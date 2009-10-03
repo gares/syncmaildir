@@ -381,7 +381,7 @@ class smdApplet {
 		try {
 			GLib.MatchInfo info = null;
 			var r_tags = new GLib.Regex(
-				"^([^:]+): smd-(client|server)@([^:]+): TAGS:(.*)$");
+				"^([^:]+): smd-(client|server|loop)@([^:]+): TAGS:(.*)$");
 			var r_skip = new GLib.Regex(
 				"^([^:]+): smd-(client|server)@([^:]+): ERROR");
 
