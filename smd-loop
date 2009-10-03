@@ -8,11 +8,12 @@
 CONFFILE=~/.smd/loop
 
 # The lock file name
-LOCKFILE=~/.smd/lock
+LOCKFILE=~/.smd/loop.lock
 
 if [ -e $LOCKFILE ]; then
 	echo Another smd-loop instance is running. If it is not the case
 	echo remove $LOCKFILE and retry
+	echo "any: smd-loop@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(killall smd-loop) run(cd; rm $LOCKFILE))"
 	exit 1
 fi
 touch $LOCKFILE
