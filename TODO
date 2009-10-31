@@ -1,6 +1,4 @@
 - if an avoidable error, but not a network one, happend, show something
-- sometimes the quit menu item makes the whole toy freeze. I suspect is it
-  not a freeze, but it is waiting for smd-loop to terminate
 - add a menu item with the shape of a checkbox to make it possible to pause
   smd-applet
 - fix logging, probably the best solution is to make smd-loop
