@@ -133,8 +133,13 @@ cleanup() {
 	rm -f $LOCKFILE
 }
 
+cleanup_killed() {
+	clenup
+	exit 1
+}
+
 trap cleanup "EXIT" 
-trap cleanup "SIGTERM" 
+trap cleanup_killed "SIGTERM" 
 
 if [ "$1" = "-v" ]; then
 	VERBOSE=1
