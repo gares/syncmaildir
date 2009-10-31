@@ -1,3 +1,17 @@
+../../2009 - minor fix release - version 0.9.11 aka 1.0rc2 
+	* smd-loop:
+	  - save pid in lockfile so that lockfile referring
+	    to dead instances can be ignored
+	  - on receiving SIGTERM, do the cleanup and exit
+	* smd-push/pull:
+	  - save pid in lockfile so that lockfile referring
+	    to dead instances can be ignored
+	  - print a tagged error message in case an instance is 
+	    already running
+	* smd-appled:
+	  - accept error messages from smd-pushpull (that is used
+	    by both smd-push and smd-pull as the tool identifier)
+
 3/10/2009 - minor fix release - version 0.9.10 
 	* smd-loop:
 	  - fixed a bug regarding the lock file name, that was clashing
