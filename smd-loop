@@ -11,12 +11,16 @@ CONFFILE=~/.smd/loop
 LOCKFILE=~/.smd/loop.lock
 
 if [ -e $LOCKFILE ]; then
-	echo Another smd-loop instance is running. If it is not the case
-	echo remove $LOCKFILE and retry
-	echo "any: smd-loop@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(killall smd-loop) run(rm $LOCKFILE))"
-	exit 1
+	if ps -p `cat $LOCKFILE` > /dev/null; then
+		echo Another smd-loop instance is running. If it is not the case
+		echo remove $LOCKFILE and retry
+		echo "any: smd-loop@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(kill `cat $LOCKFILE`) run(rm $LOCKFILE))"
+		exit 1
+	else
+		echo "Found lock file of a dead instance. Ignored."
+	fi
 fi
-touch $LOCKFILE
+echo $$ > $LOCKFILE
 
 # The length of a minute, decrease to debug
 MINUTE=60

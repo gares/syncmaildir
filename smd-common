@@ -110,12 +110,17 @@ if [ "$TEMPLATE_ONLY" = 1 ]; then
 fi
 
 if [ -f $LOCKFILE ]; then
-	echo Already running.
-	echo If this is not the case, remove $LOCKFILE by hand.
-	exit 1
+	if ps -p `cat $LOCKFILE` > /dev/null; then
+		echo Already running.
+		echo If this is not the case, remove $LOCKFILE by hand.
+		echo "any: smd-pushpull@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(kill `cat $LOCKFILE`) run(rm $LOCKFILE))"
+		exit 1
+	else
+		echo Found lockfile of a dead instance. Ignored.
+	fi
 fi
 
-touch $LOCKFILE
+echo $$ > $LOCKFILE
 
 # defaults for the configuration file
 DEBUG=false
