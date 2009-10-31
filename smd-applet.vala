@@ -235,6 +235,7 @@ class smdApplet {
 		quit.activate += (b) => { 
 			thread_die = true;
 			if ((int)pid != 0) {
+				debug("sending SIGTERM to %d".printf(-(int)pid));
 				Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 			}
 			Gtk.main_quit(); 
@@ -381,7 +382,7 @@ class smdApplet {
 		try {
 			GLib.MatchInfo info = null;
 			var r_tags = new GLib.Regex(
-				"^([^:]+): smd-(client|server|loop)@([^:]+): TAGS:(.*)$");
+				"^([^:]+): smd-(client|server|loop|pushpull)@([^:]+): TAGS:(.*)$");
 			var r_skip = new GLib.Regex(
 				"^([^:]+): smd-(client|server)@([^:]+): ERROR");
 
