@@ -100,7 +100,8 @@ class smdApplet {
 	Gtk.Builder builder = null;
 
 	// main widgets
-	Gtk.Menu menu = null;
+	Gtk.Menu menuL = null;
+	Gtk.Menu menuR = null;
 	Gtk.StatusIcon si = null;
 	Gtk.Window win = null;
 	Gtk.Window err_win = null;
@@ -230,7 +231,8 @@ class smdApplet {
 		};
 
 		// menu popped up when the user clicks on the notification area
-        menu = builder.get_object ("mMain") as Gtk.Menu;
+        menuL = builder.get_object ("mLeft") as Gtk.Menu;
+        menuR = builder.get_object ("mRight") as Gtk.Menu;
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
 		quit.activate += (b) => { 
 			thread_die = true;
@@ -255,13 +257,17 @@ class smdApplet {
 
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
 		si.set_tooltip_text("smd-applet is running");
+		si.popup_menu += (button,time) => {
+				menuR.popup(null,null,si.position_menu,0,
+					Gtk.get_current_event_time());
+		};
 		si.activate += (s) => { 
 			if ( error_mode ) 
 				err_win.reshow_with_initial_size();
 			else if( config_wait_mode )
 				win.show();
 			else
-				menu.popup(null,null,si.position_menu,0,
+				menuL.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
 		};
 
