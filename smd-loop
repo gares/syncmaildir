@@ -27,10 +27,10 @@ LOGFILE=~/.smd/log/loop.log
 mkdir -p `basename $LOGFILE`
 > $LOGFILE
 log() {
-	echo smd-loop: $@ >> $LOGFILE 
+	echo `date '+%x %X'`: $@ >> $LOGFILE 
 }
 log_cat() {
-	cat $1 | sed 's/^/smd-loop: /' >> $LOGFILE 
+	cat $1 | sed 's/^/output: /' >> $LOGFILE 
 }
 
 # The length of a minute, decrease to debug
@@ -121,12 +121,12 @@ perform() {
 	if [ "$VERBOSE" = 1 ]; then
 		echo smd-loop: $cmd_line 1>&2
 	fi
-	log "`date`: $cmd_line"
+	log "$cmd_line"
 	$cmd_line > $OUTPUT 2>&1
 	if [ $? = 0 ]; then
 		cat $OUTPUT
 		remove_from_failures "$cmd_line"
-		log "`date`: completed successfully"
+		log "completed successfully"
 	else
 		if grep -q 'human-intervention(avoidable)' $OUTPUT &&
 		   grep -q 'suggested-actions(retry)' $OUTPUT &&
@@ -136,11 +136,11 @@ perform() {
 				echo smd-loop: warning: will retry later 1>&2
 			fi
 			add_to_failures "$cmd_line"
-			log "`date`: avoidable failure, retry later"
+			log "avoidable failure, retry later"
 			log_cat $OUTPUT
 		else
 			cat $OUTPUT
-			log "`date`: persistent or non avoidable failure"
+			log "persistent or non avoidable failure"
 			log_cat $OUTPUT
 			exit 1
 		fi
@@ -155,7 +155,7 @@ cleanup() {
 
 cleanup_killed() {
 	clenup
-	log "killed at `date`"
+	log "killed"
 	exit 1
 }
 
@@ -193,7 +193,7 @@ if [ "$TEMPLATE_ONLY" = 1 ]; then
 	exit 0
 fi
 
-log "starting at `date`"
+log "starting"
 while true; do
 	while read pull push endpoint; do
 		do_pull=1
