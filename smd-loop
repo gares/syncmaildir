@@ -22,6 +22,17 @@ if [ -e $LOCKFILE ]; then
 fi
 echo $$ > $LOCKFILE
 
+# The log file
+LOGFILE=~/.smd/log/loop.log
+mkdir -p `basename $LOGFILE`
+> $LOGFILE
+log() {
+	echo smd-loop: $@ >> $LOGFILE 
+}
+log_cat() {
+	cat $1 | sed 's/^/smd-loop: /' >> $LOGFILE 
+}
+
 # The length of a minute, decrease to debug
 MINUTE=60
 
@@ -47,6 +58,8 @@ PREFIX="@PREFIX@"
 if [ `echo $PREFIX | cut -c -1` = "@" ]; then
 	echo "smd-loop not installed, assuming smd-pull is ./smd-pull"
 	echo "smd-loop not installed, assuming smd-push is ./smd-push"
+	log "smd-loop not installed, assuming smd-pull is ./smd-pull"
+	log "smd-loop not installed, assuming smd-push is ./smd-push"
 	PULL="./smd-pull"
 	PUSH="./smd-push"
 else
@@ -108,10 +121,12 @@ perform() {
 	if [ "$VERBOSE" = 1 ]; then
 		echo smd-loop: $cmd_line 1>&2
 	fi
+	log "`date`: $cmd_line"
 	$cmd_line > $OUTPUT 2>&1
 	if [ $? = 0 ]; then
 		cat $OUTPUT
 		remove_from_failures "$cmd_line"
+		log "`date`: completed successfully"
 	else
 		if grep -q 'human-intervention(avoidable)' $OUTPUT &&
 		   grep -q 'suggested-actions(retry)' $OUTPUT &&
@@ -121,8 +136,12 @@ perform() {
 				echo smd-loop: warning: will retry later 1>&2
 			fi
 			add_to_failures "$cmd_line"
+			log "`date`: avoidable failure, retry later"
+			log_cat $OUTPUT
 		else
 			cat $OUTPUT
+			log "`date`: persistent or non avoidable failure"
+			log_cat $OUTPUT
 			exit 1
 		fi
 	fi
@@ -131,10 +150,12 @@ perform() {
 cleanup() {
 	rm -f $OUTPUT
 	rm -f $LOCKFILE
+	log "exiting"
 }
 
 cleanup_killed() {
 	clenup
+	log "killed at `date`"
 	exit 1
 }
 
@@ -172,6 +193,7 @@ if [ "$TEMPLATE_ONLY" = 1 ]; then
 	exit 0
 fi
 
+log "starting at `date`"
 while true; do
 	while read pull push endpoint; do
 		do_pull=1
