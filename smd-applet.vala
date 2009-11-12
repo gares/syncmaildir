@@ -260,6 +260,7 @@ class smdApplet {
 					debug("sending SIGTERM to %d".printf(-(int)pid));
 					Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 				}
+				thread_die = true;
 				si.set_from_stock("gtk-media-pause");
 			} else {
 				debug("exit pause mode");
@@ -665,6 +666,7 @@ class smdApplet {
 		si.set_blinking(false);
 		debug("joining smdThread");
 		thread.join();
+		thread_die = false;
 		debug("starting smdThread");
 		try { thread = GLib.Thread.create(smdThread,true); }
 		catch (GLib.ThreadError e) { 
