@@ -107,6 +107,7 @@ class smdApplet {
 	Gtk.Window err_win = null;
 	Gtk.Window log_win = null;
 	Gtk.AboutDialog about_win = null;
+	Gtk.CheckMenuItem miPause = null;
 
 	// Stuff for logs display
 	Gtk.ComboBox cblogs = null;
@@ -250,6 +251,20 @@ class smdApplet {
 				Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 			}
 			Gtk.main_quit(); 
+		};
+		miPause = builder.get_object("miPause") as Gtk.CheckMenuItem;
+		miPause.toggled += (b) => {
+			if (miPause.get_active()) {
+				debug("enter pause mode");
+				if ((int)pid != 0) {
+					debug("sending SIGTERM to %d".printf(-(int)pid));
+					Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
+				}
+				si.set_from_stock("gtk-media-pause");
+			} else {
+				debug("exit pause mode");
+				reset_to_regular_run();
+			}
 		};
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
 		about_win.response += (id) => { about_win.hide(); };
@@ -636,13 +651,13 @@ class smdApplet {
 	// ===================== named signal handlers =======================
 
 	// these are just wrappers for close_err
-	private void close_err_action(Gtk.Button b){ close_err(); }
+	private void close_err_action(Gtk.Button b){ reset_to_regular_run(); }
 	private bool close_err_event(Gdk.Event e){
-		close_err();
+		reset_to_regular_run();
 		return true;
 	}
 
-	private void close_err() {
+	private void reset_to_regular_run() {
 		err_win.hide();	
 		error_mode = false;
 		si.set_tooltip_text("smd-applet is running");
