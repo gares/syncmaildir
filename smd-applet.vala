@@ -166,12 +166,18 @@ class smdApplet {
 			if (selected >= 0) {
 				string file = lognames.get(selected);
 				string content;
-				if (GLib.FileUtils.get_contents(SMD_LOGS_DIR+file,out content)){
-					var tv = builder.get_object("tvLog") as Gtk.TextView;
-					var b = tv.get_buffer();
-					b.set_text(content,-1);
-				} else {
-					stderr.printf("Unable to read %s\n", SMD_LOGS_DIR + file);
+				try {
+					if (GLib.FileUtils.get_contents(
+							SMD_LOGS_DIR+file,out content)){
+						var tv = builder.get_object("tvLog") as Gtk.TextView;
+						var b = tv.get_buffer();
+						b.set_text(content,-1);
+					} else {
+						stderr.printf("Unable to read %s\n",SMD_LOGS_DIR+file);
+					}
+				} catch (GLib.FileError e) { 
+						stderr.printf("Unable to read %s: %s\n",
+							SMD_LOGS_DIR+file, e.message);
 				}
 			}
 		};
@@ -184,14 +190,17 @@ class smdApplet {
 		close.clicked += close_prefs_action;
 
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
-		bicon.set_active( gconf.get_bool(key_icon));
+		try { bicon.set_active( gconf.get_bool(key_icon)); }
+		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		bicon.toggled += (b) => {
-			try { gconf.set_bool(key_icon,b.active); }
-			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-			si.set_visible(!gconf.get_bool(key_icon));
+			try { 
+				gconf.set_bool(key_icon,b.active); 
+				si.set_visible(!gconf.get_bool(key_icon));
+			} catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		};
 		var bnotify = builder.get_object("cbNotify") as Gtk.CheckButton;
-		bnotify.set_active( gconf.get_bool(key_newmail));
+		try { bnotify.set_active(gconf.get_bool(key_newmail)); }
+		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		bnotify.toggled += (b) => {
 			try { gconf.set_bool(key_newmail,b.active); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
@@ -284,7 +293,8 @@ class smdApplet {
 		bool rc = true;
 		while(rc && !thread_die){
 			debug("(re)starting smd-loop");
-			rc = run_smd_loop();
+			try { rc = run_smd_loop(); } 
+			catch (Exit e) { rc = false; } // unrecoverable error
 		}
 	
 		return null;
@@ -510,9 +520,12 @@ class smdApplet {
 
 		// regular notification
 		if ( e != null && e.message != null) {
+			bool show_icon_on_newail_only = false;
+			try { show_icon_on_newail_only = gconf.get_bool(key_newmail); }
+			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			if (e.enter_network_error_mode && network_error_mode) {
 				// we avoid notifying the network problem more than once
-			} else if (e.is_error_event() || gconf.get_bool(key_newmail)){
+			} else if (e.is_error_event() || show_icon_on_newail_only){
 				var not = new Notify.Notification(
 					"Syncmaildir",e.message,e.message_icon,null);
 				not.attach_to_status_icon(si);
@@ -664,7 +677,11 @@ class smdApplet {
 				stderr.printf("Unable to re-start a thread\n"); 
 				Gtk.main_quit();
 			}
-			si.set_visible(!gconf.get_bool(key_icon));
+			try { si.set_visible(!gconf.get_bool(key_icon)); } 
+			catch (GLib.Error e) {
+				stderr.printf("Unable to read gconf key %s: %s\n",
+					key_icon,e.message); 
+			}
 			si.set_from_icon_name("mail-send-receive");
 		}
 	}
@@ -786,7 +803,8 @@ class smdApplet {
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		} else {
-			si.set_visible(!gconf.get_bool(key_icon));
+			try { si.set_visible(!gconf.get_bool(key_icon)); }
+			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		}
 
 		Gtk.main(); 
