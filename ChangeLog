@@ -3,6 +3,7 @@
 	  - save pid in lockfile so that lockfile referring
 	    to dead instances can be ignored
 	  - on receiving SIGTERM, do the cleanup and exit
+	  - write log file ~/.smd/log/loop.log
 	* smd-push/pull:
 	  - save pid in lockfile so that lockfile referring
 	    to dead instances can be ignored
@@ -11,6 +12,11 @@
 	* smd-appled:
 	  - accept error messages from smd-pushpull (that is used
 	    by both smd-push and smd-pull as the tool identifier)
+	  - added pause checkbox menu item to pause smd-loop (actually
+	    kill and restart)
+	  - menu for left and right mouse button differ:
+	    - right has preferences, about and quit
+	    - left has pause and logs
 
 3/10/2009 - minor fix release - version 0.9.10 
 	* smd-loop:

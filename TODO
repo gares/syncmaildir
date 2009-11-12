@@ -1,8 +1,4 @@
 - if an avoidable error, but not a network one, happend, show something
-- add a menu item with the shape of a checkbox to make it possible to pause
-  smd-applet
-- fix logging, probably the best solution is to make smd-loop
-  print something in a log file in ~/.smd/log/loop
 - ask lucas wilcox if the osx/ Makefile template is OK
 - it sould be nice to hide the Logs menu item if there are no problems,
   and maybe print in the menu item or as a tooltip the sate of the last 
