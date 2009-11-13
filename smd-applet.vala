@@ -17,6 +17,7 @@ class Event {
 	public string message_icon = "gtk-about";
 	public bool enter_network_error_mode = false;
 	public bool enter_error_mode = false;
+	public bool transient_error_message = false;
 
 	// fields meaningful for the error mode only
 	public string context = null;
@@ -40,6 +41,14 @@ class Event {
 		e.mail_name = mail_name;
 		e.mail_body = mail_body;
 		e.commands = commands;
+		return e;
+	}
+
+	public static Event generic_error(string cause) {
+		var e = new Event();
+		e.message = "A failure occurred: "+cause;
+		e.message_icon = "dialog-warning";
+		e.transient_error_message = true;
 		return e;
 	}
 
@@ -68,7 +77,9 @@ class Event {
 	}
 	
 	public bool is_error_event() {
-		return (this.enter_error_mode || this.enter_network_error_mode);
+		return (this.enter_error_mode || 
+				this.enter_network_error_mode || 
+				this.transient_error_message);
 	}
 }
 
@@ -350,7 +361,9 @@ class smdApplet {
 		}
 		if ( i_human.fetch(1) != "necessary" ){
 			stderr.printf("smd-loop giving an avoidable error: %s\n", args);
-			// no user-visible events
+			events_lock.lock();
+			events.insert(events.size, Event.generic_error(i_cause.fetch(1)));
+			events_lock.unlock();
 			return true;
 		}
 
@@ -540,12 +553,12 @@ class smdApplet {
 
 		// regular notification
 		if ( e != null && e.message != null) {
-			bool show_icon_on_newail_only = false;
-			try { show_icon_on_newail_only = gconf.get_bool(key_newmail); }
+			bool notify_on_newail = false;
+			try { notify_on_newail = gconf.get_bool(key_newmail); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			if (e.enter_network_error_mode && network_error_mode) {
 				// we avoid notifying the network problem more than once
-			} else if (e.is_error_event() || show_icon_on_newail_only){
+			} else if (e.is_error_event() || notify_on_newail){
 				var not = new Notify.Notification(
 					"Syncmaildir",e.message,e.message_icon,null);
 				not.attach_to_status_icon(si);

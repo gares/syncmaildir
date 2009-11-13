@@ -17,6 +17,9 @@
 	  - menu for left and right mouse button differ:
 	    - right has preferences, about and quit
 	    - left has pause and logs
+	  - unrecoverable but non-network related errors are not silently 
+	    hidden, a popup shows their possible cause but the application
+	    does not enter error handling mode
 
 3/10/2009 - minor fix release - version 0.9.10 
 	* smd-loop:
