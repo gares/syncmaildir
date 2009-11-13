@@ -1,4 +1,4 @@
-../11/2009 - minor fix release - version 0.9.11 aka 1.0rc2 
+13/11/2009 - minor fix release - version 0.9.11 aka 1.0rc2 
 	* smd-loop:
 	  - save pid in lockfile so that lockfile referring
 	    to dead instances can be ignored
