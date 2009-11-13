@@ -24,7 +24,7 @@ echo $$ > $LOCKFILE
 
 # The log file
 LOGFILE=~/.smd/log/loop.log
-mkdir -p `basename $LOGFILE`
+mkdir -p `dirname $LOGFILE`
 > $LOGFILE
 log() {
 	echo `date '+%x %X'`: $@ >> $LOGFILE 
