@@ -173,6 +173,10 @@ class smdApplet {
 						var tv = builder.get_object("tvLog") as Gtk.TextView;
 						var b = tv.get_buffer();
 						b.set_text(content,-1);
+						Gtk.TextIter end_iter;
+						b.get_end_iter(out end_iter);
+						var end_mark = b.create_mark("end",end_iter,false);
+						tv.scroll_to_mark(end_mark, 0.0, true, 0.0, 0.0);
 					} else {
 						stderr.printf("Unable to read %s\n",SMD_LOGS_DIR+file);
 					}
