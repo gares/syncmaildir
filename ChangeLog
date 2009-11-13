@@ -1,4 +1,4 @@
-../../2009 - minor fix release - version 0.9.11 aka 1.0rc2 
+../11/2009 - minor fix release - version 0.9.11 aka 1.0rc2 
 	* smd-loop:
 	  - save pid in lockfile so that lockfile referring
 	    to dead instances can be ignored
@@ -10,6 +10,7 @@
 	  - print a tagged error message in case an instance is 
 	    already running
 	* smd-appled:
+	  - ported to vala 0.7.8
 	  - accept error messages from smd-pushpull (that is used
 	    by both smd-push and smd-pull as the tool identifier)
 	  - added pause checkbox menu item to pause smd-loop (actually
