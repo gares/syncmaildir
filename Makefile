@@ -154,6 +154,9 @@ upload-website: $(HTML)
 upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 
+upload-changelog: ChangeLog
+	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
+
 
 # ----------------------------------------------------------------------------
 # These templates collect standard values for known platforms, like osx.
