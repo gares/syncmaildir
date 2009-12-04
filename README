@@ -32,7 +32,7 @@ client is our laptop.
 The directory `~/.smd/` contains the configuration file(s), some `fifo` needed
 to short-circuit the softwares running on the client and on the server, and
 a cache file (called db-file from now on) that represents the status of the
-mailbox las time we successfully pushed. The configuration file is needed
+mailbox last time we successfully pushed. The configuration file is needed
 only on the client host (the one that will run `smd-pull` and `smd-push`).
 
 Sync Mail Dir is a layered set of tools, where low level tools are
