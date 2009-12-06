@@ -74,20 +74,7 @@ function log_tags(context, cause, human, ...)
 		"human-intervention("..human..") ".. suggestions_string)
 end
 
-function trace(x)
-	if verbose then
-		local t = {}
-		local n = 2
-		while true do
-			local d = debug.getinfo(n,"nl")
-			if not d or not d.name then break end
-			t[#t+1] = d.name ..":".. (d.currentline or "?")
-			n=n+1
-		end
-		io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
-	end
-	return x
-end
+-- ======================== data transmission protocol ======================
 
 function transmit(out, path, what)
 	what = what or "all"
@@ -334,12 +321,15 @@ function tmp_for(path,use_tmp)
 	return newpath
 end
 
+-- =========================== misc helpers =================================
+
 function sha_file(name)
 	local inf = io.popen(MDDIFF .. ' ' .. name)
 	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
 	inf:close()
 	return hsha, bsha
 end
+
 function exists(name)
 	local f = io.open(name,'r')
 	if f ~= nil then
@@ -390,6 +380,23 @@ end
 
 function assert_exists(name)
 	assert(exists(name),'Not found: "'..name..'"')
+end
+
+-- prints the stack trace. idiom is 'rewturn(trance(x))' so that
+-- we have in the log the path for the leaf that computed x
+function trace(x)
+	if verbose then
+		local t = {}
+		local n = 2
+		while true do
+			local d = debug.getinfo(n,"nl")
+			if not d or not d.name then break end
+			t[#t+1] = d.name ..":".. (d.currentline or "?")
+			n=n+1
+		end
+		io.stderr:write('TRACE: ',table.concat(t," | "),'\n')
+	end
+	return x
 end
 
 function set_strict()
