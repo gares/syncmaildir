@@ -11,6 +11,12 @@ for k,v in pairs(syncmaildir) do _G[k] = v end
 -- ============================= MAIN =====================================
 
 function main()
+	-- sanity checks
+	assert_exists(MDDIFF)
+	assert_exists(XDELTA)
+	assert_exists(SHA1SUM)
+
+	-- argument parsing
 	if arg[1] == '-v' then
 		set_verbose(true)
 		table.remove(arg,1)

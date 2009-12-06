@@ -358,6 +358,10 @@ function homefy(s)
 	end
 end	
 
+function assert_exists(name)
+	assert(exists(name),'Not found: "'..name..'"')
+end
+
 function set_strict()
 -- strict access to the global environment
 	setmetatable(__G,{
