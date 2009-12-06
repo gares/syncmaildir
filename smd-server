@@ -6,6 +6,7 @@
 
 require 'syncmaildir'
 
+-- export to the global namespace all symbols
 for k,v in pairs(syncmaildir) do _G[k] = v end
 
 -- ============================= MAIN =====================================
@@ -55,8 +56,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	end
 	r:close()
 	
-	
-	-- end the first phase, now the client should
+	-- end of the first phase, now the client should
 	-- apply the diff eventually asking for the transmission
 	-- of some data
 	io.write('END\n')
@@ -106,8 +106,10 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	end
 end
 
+-- no more globals
 set_strict()
 
+-- parachute for error
 xpcall(main,function(msg)
 	log_error(tostring(msg))
 	os.exit(7)

@@ -6,33 +6,21 @@
 
 require 'syncmaildir'
 
+-- export syncmaildir to the global namespace
 for k,v in pairs(syncmaildir) do _G[k] = v end
 
-local queue_max_len = 50
+-- globals counter for statistics
 local statistics = {
 	added = 0,
 	removed = 0,
 }
 
-function receive_delta(inf)
-	local cmds = {}
-	local line = ""
-
-	repeat
-		line = inf:read("*l")
-		if line and line ~= "END" then cmds[#cmds+1] = line end
-	until not line or line == "END"
-	if line ~= "END" then
-		log_error('Unable to receive a complete diff')
-		log_tags("receive-delta","network",false,"retry")
-		error("network error while receiving delta")
-	end
-
-	return cmds
-end
-
+-- ========================= get mail queue =================================
+-- queue for fetching mails in blocks of queue_max_len messages
+-- to cope with latency
 
 local get_full_email_queue = {}
+local queue_max_len = 50
 
 function process_get_full_email_queue()
 	local command = {}
@@ -62,7 +50,8 @@ function process_get_full_email_queue()
 				statistics.added = statistics.added + 1
 			else
 				log_error('Failed to rename '..v.tmp..' to '..v.name)
-				log_error('It may be caused by bad directory permissions, please check.')
+				log_error('It may be caused by bad directory permissions, '..
+					'please check.')
 				os.remove(v.tmp)
 				return (trace(false)) -- fail rename tmpfile to actual name
 			end
@@ -78,6 +67,16 @@ function process_get_full_email_queue()
 	return (trace(true)) -- get full email OK
 end
 
+function process_pending_queue()
+	local rc = process_get_full_email_queue()
+	if not rc then
+		io.write('ABORT\n')
+		io.flush()
+		os.exit(1)
+	end
+end
+
+-- the function to fetch a mail message
 function get_full_email(name,hsha,bsha)
 	get_full_email_queue[#get_full_email_queue+1] = {
 		name = name;
@@ -86,6 +85,8 @@ function get_full_email(name,hsha,bsha)
 	}
 	return true
 end
+
+-- ======================== header replacing =================================
 
 function merge_mail(header,body,target)
 	local h = io.open(header,"r")
@@ -109,6 +110,30 @@ function merge_mail(header,body,target)
 	b:close()
 	t:close()
 end
+
+function get_header_and_merge(name,hsha)
+	local tmpfile = tmp_for(name)
+	io.write('GETHEADER '..name..'\n')
+	io.flush()
+	receive(io.stdin, tmpfile)
+	local hsha_l, _ = sha_file(tmpfile)
+	if hsha_l == hsha then
+		local tmpfile1 = tmp_for(name)
+		merge_mail(tmpfile,name,tmpfile1)
+		os.remove(tmpfile)
+		os.rename(tmpfile1, name)
+		return (trace(true)) -- get header OK
+	else
+		os.remove(tmpfile)
+		log_error('The server sent a different email header for '..name)
+		log_error('This problem should be transient, please retry.')
+
+		log_tags("receive-header","modify-while-update",false,"retry")
+		return (trace(false)) -- get header fails, got a different header
+	end
+end
+
+-- ============================= actions =====================================
 
 function execute_add(cmd)
 	local name, hsha, bsha = cmd:match('^ADD (%S+) (%S+) (%S+)$')
@@ -245,28 +270,6 @@ function execute_copy(cmd)
 	end
 end
 
-function get_header_and_merge(name,hsha)
-	local tmpfile = tmp_for(name)
-	io.write('GETHEADER '..name..'\n')
-	io.flush()
-	receive(io.stdin, tmpfile)
-	local hsha_l, _ = sha_file(tmpfile)
-	if hsha_l == hsha then
-		local tmpfile1 = tmp_for(name)
-		merge_mail(tmpfile,name,tmpfile1)
-		os.remove(tmpfile)
-		os.rename(tmpfile1, name)
-		return (trace(true)) -- get header OK
-	else
-		os.remove(tmpfile)
-		log_error('The server sent a different email header for '..name)
-		log_error('This problem should be transient, please retry.')
-
-		log_tags("receive-header","modify-while-update",false,"retry")
-		return (trace(false)) -- get header fails, got a different header
-	end
-end
-
 function execute_replaceheader(cmd)
 	local name, hsha, bsha, hsha_new = 
 		cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
@@ -363,6 +366,9 @@ function execute_replace(cmd)
 	end
 end
 
+-- the main switch, dispatching actions.
+-- extra parentheses around execute_* calls make it a non tail call,
+-- thus we get the stack frame print in case of error.
 function execute(cmd)
 	local opcode = cmd:match('^(%S+)')
 
@@ -377,16 +383,25 @@ function execute(cmd)
 	end
 end
 
-function process_pending_queue()
-	local rc = process_get_full_email_queue()
-	if not rc then
-		io.write('ABORT\n')
-		io.flush()
-		os.exit(1)
-	end
-end
-
 -- ============================= MAIN =====================================
+
+-- receive a list of commands
+function receive_delta(inf)
+	local cmds = {}
+	local line = ""
+
+	repeat
+		line = inf:read("*l")
+		if line and line ~= "END" then cmds[#cmds+1] = line end
+	until not line or line == "END"
+	if line ~= "END" then
+		log_error('Unable to receive a complete diff')
+		log_tags("receive-delta","network",false,"retry")
+		error("network error while receiving delta")
+	end
+
+	return cmds
+end
 
 function main()
 	-- sanity checks for external softwares
@@ -406,6 +421,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 		os.exit(2)
 	end
 
+	-- here we go
 	local endpoint = arg[1]
 	table.remove(arg,1)
 	local dbfile = dbfile_name(endpoint, arg)
@@ -415,6 +431,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	-- we check the protocol version and dbfile fingerprint
 	handshake(dbfile)
 	
+	-- receive and process commands
 	local commands = receive_delta(io.stdin)
 	for i,cmd in ipairs(commands) do
 		local rc = execute(cmd)
@@ -423,12 +440,15 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			io.flush()
 			os.exit(3)
 		end
+		-- some commands are delayed, we fire them in block
 		if #get_full_email_queue > queue_max_len then
 				process_pending_queue()
 		end
 	end
+	-- some commands may still be in the queue, we fire them now
 	process_pending_queue()
 	
+	-- we commit and update the dbfile
 	io.write('COMMIT\n')
 	io.flush()
 	receive(io.stdin, xdelta)
@@ -449,13 +469,18 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	os.remove(xdelta)
 	io.write('DONE\n')
 	io.flush()
+
+	-- some machine understandable output before quitting
 	log_tag('stats::new-mails('..  statistics.added..
 		'), del-mails('..statistics.removed..')')
+
 	os.exit(0)
 end
 
+-- no more global variables
 set_strict()
 
+-- parachute for errors
 xpcall(main,function(msg)
 	log_error(tostring(msg))
 	os.exit(6)
