@@ -20,9 +20,9 @@ SF_WEB=htdocs
 
 PREFIX=usr/local
 SED=sed
-SHA1SUM=sha1sum
-XDELTA=xdelta
-CPN=cp -n
+SHA1SUM=/usr/bin/sha1sum
+XDELTA=/usr/bin/xdelta
+CPN=/bin/cp -n
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
