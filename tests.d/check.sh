@@ -1,5 +1,20 @@
 #!/bin/sh
 
+check_bin() {
+	if which $1 >/dev/null; then
+		return
+	else
+		echo $1 not installed
+		exit 1
+	fi
+}
+
+check_bin combine
+check_bin grep
+check_bin cut
+check_bin sed
+check_bin awk
+check_bin sort
 
 PATHS=`grep TRACE test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
 
