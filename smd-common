@@ -21,14 +21,27 @@ TEMPLATE_ONLY=0
 
 SSH="@SSH@"
 if [ `echo "$SSH" | cut -c -1` = "@" ]; then
-	echo "`basename $0` not installed, assuming secure shell client is ssh"
-	SSH=ssh
+	SSH=/usr/bin/ssh
+	echo "`basename $0` not installed, assuming secure shell client is $SSH"
 fi
 SED="@SED@"
 if [ `echo "$SED" | cut -c -1` = "@" ]; then
-	echo "`basename $0` not installed, assuming stream editor is sed"
-	SED=sed
+	SED=/bin/sed
+	echo "`basename $0` not installed, assuming stream editor is $SED"
 fi
+
+function assert_executable() {
+	if [ ! -e $1 ]; then
+		echo $1 not found, please install it or fix the paths
+		exit 1
+	fi
+}
+
+# sanity checks for required binaries
+assert_executable $SED
+assert_executable $SSH
+assert_executable $SMDSERVER
+assert_executable $SMDCLIENT
 
 if [ "$1" = "-v" ]; then
 	shift
