@@ -21,17 +21,19 @@ TEMPLATE_ONLY=0
 
 SSH="@SSH@"
 if [ `echo "$SSH" | cut -c -1` = "@" ]; then
-	SSH=/usr/bin/ssh
+	SSH=ssh
 	echo "`basename $0` not installed, assuming secure shell client is $SSH"
 fi
 SED="@SED@"
 if [ `echo "$SED" | cut -c -1` = "@" ]; then
-	SED=/bin/sed
+	SED=sed
 	echo "`basename $0` not installed, assuming stream editor is $SED"
 fi
 
 function assert_executable() {
-	if [ ! -e $1 ]; then
+	if type -P $1 >/dev/null; then
+		:
+	else
 		echo $1 not found, please install it or fix the paths
 		exit 1
 	fi

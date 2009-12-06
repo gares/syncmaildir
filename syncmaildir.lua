@@ -27,18 +27,18 @@ end
 -- set sha1sum executable name
 SHA1SUM = '@SHA1SUM@'
 if string.sub(SHA1SUM,1,1) == '@' then
-		SHA1SUM = '/usr/bin/sha1sum'
+		SHA1SUM = 'sha1sum'
 end
 
 -- set xdelta executable name
 XDELTA = '@XDELTA@'
 if string.sub(XDELTA,1,1) == '@' then
-		XDELTA = '/usr/bin/xdelta'
+		XDELTA = 'xdelta'
 end
 
 CPN = '@CPN@'
 if string.sub(CPN,1,1) == '@' then
-		CPN = '/bin/cp -n'
+		CPN = 'cp -n'
 end
 
 function set_verbose(v)
@@ -379,7 +379,9 @@ function homefy(s)
 end	
 
 function assert_exists(name)
-	assert(exists(name),'Not found: "'..name..'"')
+	local name = name:match('^([^ ]+)')
+	local rc = os.execute('type '..name..' >/dev/null 2>&1')
+	assert(rc == 0,'Not found: "'..name..'"')
 end
 
 -- prints the stack trace. idiom is 'rewturn(trance(x))' so that
