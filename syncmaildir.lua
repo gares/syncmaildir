@@ -8,8 +8,6 @@ local PROTOCOL_VERSION="1.0"
 
 local verbose = false
 
-local mkdir_p_cache = {}
-
 local PREFIX = '@PREFIX@'
 
 local __G = _G
@@ -222,40 +220,73 @@ end
 
 function dbfile_name(endpoint, mailboxes)
 	local HOME = os.getenv('HOME')
-	os.execute('mkdir -p '..HOME..'/.smd')
+	os.execute('mkdir -p '..HOME..'/.smd/')
 	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
 		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
 	return dbfile
 end
 
-function mkdir_p(path)
-	local t = {} 
-	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
-	table.remove(t,#t)
-	local make = function(t)
-		local dir = table.concat(t,'/')
-		if not mkdir_p_cache[dir] then
-			local rc = os.execute('mkdir -p '..dir)
-			if rc ~= 0 then
-				log_error("Unable to create directory "..dir)
-				log_error('It may be caused by bad directory permissions, '..
-					'please check.')
-				log_tags("mkdir", "wrong-permissions",true,
-					"display-permissions("..quote(dir)..")")
-				error("Directory creation failed")
-			end
-			mkdir_p_cache[dir] = true
+-- =================== fast/maildir aware mkdir -p ==========================
+
+local mkdir_p_cache = {}
+
+-- function to create the dir calling the real mkdir command
+-- pieces is a list components of the patch, they are concatenated
+-- separated by '/' and if absolute is true prefixed by '/'
+function make_dir_aux(absolute, pieces)
+	local root = ""
+	if absolute then root = '/' end
+	local dir = root .. table.concat(pieces,'/')
+	if not mkdir_p_cache[dir] then
+		local rc = os.execute('mkdir -p '..dir)
+		if rc ~= 0 then
+			log_error("Unable to create directory "..dir)
+			log_error('It may be caused by bad directory permissions, '..
+				'please check.')
+			log_tags("mkdir", "wrong-permissions",true,
+				"display-permissions("..quote(dir)..")")
+			error("Directory creation failed")
 		end
-	end
-	make(t)
-	if t[#t] == "tmp" then
-		t[#t] = "new"
-		make(t)
-		t[#t] = "cur"
-		make(t)
+		mkdir_p_cache[dir] = true
 	end
 end
 
+-- creates a directory that can contains a path, should be equivalent
+-- to mkdir -p `dirname path`. moreover, if the last component is 'tmp',
+-- siblings 'cur' and 'new' are created too. exampels:
+--  mkdir_p('/foo/bar')     creates /foo
+--  mkdir_p('/foo/bar/')    creates /foo/bar/
+--  mkdir_p('/foo/tmp/baz') creates /foo/tmp/, /foo/cur/ and /foo/new/
+function mkdir_p(path)
+	local t = {} 
+
+	local absolute = false
+	if string.byte(path,1) == string.byte('/',1) then absolute = true end
+
+	-- tokenization
+	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
+
+	-- strip last component is not ending with '/'
+	if string.byte(path,string.len(path)) ~= string.byte('/',1) then 
+		table.remove(t,#t) 
+	end
+
+	make_dir_aux(absolute, t)
+
+	-- if we are building a new maildir folder, also add new and cur
+	if t[#t] == "tmp" then
+		t[#t] = "new"
+		make_dir_aux(absolute, t)
+		t[#t] = "cur"
+		make_dir_aux(absolute, t)
+	end
+end
+
+-- ============== maildir aware tempfile name generator =====================
+
+-- complex function to generate a valid tempfile name for path, possibly using
+-- the tmp directory if a subdir of path is new or cur and use_tmp is true
+--
 function tmp_for(path,use_tmp)
 	if use_tmp == nil then use_tmp = true end
 	local t = {} 
@@ -279,16 +310,15 @@ function tmp_for(path,use_tmp)
 			end
 		end
 	end
+	make_dir_aux(absolute == '/', t)
 	local newpath
 	if not found then
 		time = os.date("%s")
 		t[#t+1] = time..'.'..pid..'.'..host..tags
-		newpath = absolute .. table.concat(t,'/') 
 	else
 		t[#t+1] = fname
-		newpath = absolute .. table.concat(t,'/') 
 	end
-	mkdir_p(newpath)
+	newpath = absolute .. table.concat(t,'/') 
 	local attempts = 0
 	while exists(newpath) do 
 		if attempts > 10 then
