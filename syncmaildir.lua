@@ -19,11 +19,11 @@ module('syncmaildir',package.seeall)
 -- set mddiff path
 MDDIFF = ""
 if string.sub(PREFIX,1,1) == '@' then
-		MDDIFF = os.getenv('HOME')..'/Projects/syncmaildir/mddiff '
+		MDDIFF = os.getenv('HOME')..'/Projects/syncmaildir/mddiff'
 		io.stderr:write('smd-client not installed, assuming mddiff is: ',
 			MDDIFF,'\n')
 else
-		MDDIFF = PREFIX .. '/bin/mddiff '
+		MDDIFF = PREFIX .. '/bin/mddiff'
 end
 
 -- set sha1sum executable name
@@ -305,7 +305,7 @@ function tmp_for(path,use_tmp)
 end
 
 function sha_file(name)
-	local inf = io.popen(MDDIFF .. name)
+	local inf = io.popen(MDDIFF .. ' ' .. name)
 	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
 	inf:close()
 	return hsha, bsha

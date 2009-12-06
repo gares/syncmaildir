@@ -49,7 +49,7 @@ function process_get_full_email_queue()
 		v.tmp = tmp[#tmp]
 		receive(io.stdin, tmp[#tmp])
 	end
-	local inf = io.popen(MDDIFF .. table.concat(tmp,' '))
+	local inf = io.popen(MDDIFF .. ' ' .. table.concat(tmp,' '))
 	tmp = nil
 	for _,v in ipairs(get_full_email_queue) do
 		local hsha_l, bsha_l = inf:read('*l'):match('^(%S+) (%S+)$') 
