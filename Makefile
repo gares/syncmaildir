@@ -179,4 +179,8 @@ static/%:
 osx/%:
 	$(MAKE) $* SED=sed CPN=cp 
 
+abspath/%:
+	$(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
+		XDELTA=/usr/bin/xdelta CPN="/bin/cp -n" SSH=/usr/bin/ssh
+
 # eof
