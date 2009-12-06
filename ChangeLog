@@ -1,3 +1,16 @@
+... - minor fix release - version 0.9.12 aka 1.0rc3
+	* smd-client, smd-server, smd-common:
+	  - check for the existence of external helper programs
+	    to fail early if it is not the case
+	* smd-client, smd-server, syncmaildir.lua:
+	  - more comments in the code and better organization
+	  - littler refactoring for mkdir_p and tmp_for
+	  - added function to check for the existence of an
+	    external program using shell type command
+	* Makefile:
+	  - added abspath/* template to install the software hardcoding
+	    absolute paths for helper programs
+
 13/11/2009 - minor fix release - version 0.9.11 aka 1.0rc2 
 	* smd-loop:
 	  - save pid in lockfile so that lockfile referring
