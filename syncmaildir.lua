@@ -29,18 +29,18 @@ end
 -- set sha1sum executable name
 SHA1SUM = '@SHA1SUM@'
 if string.sub(SHA1SUM,1,1) == '@' then
-		SHA1SUM = 'sha1sum'
+		SHA1SUM = '/usr/bin/sha1sum'
 end
 
 -- set xdelta executable name
 XDELTA = '@XDELTA@'
 if string.sub(XDELTA,1,1) == '@' then
-		XDELTA = 'xdelta'
+		XDELTA = '/usr/bin/xdelta'
 end
 
 CPN = '@CPN@'
 if string.sub(CPN,1,1) == '@' then
-		CPN = 'cp -n'
+		CPN = '/bin/cp -n'
 end
 
 function set_verbose(v)
