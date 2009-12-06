@@ -73,7 +73,7 @@ function log_tags(context, cause, human, ...)
 	end
 	log_tag("error::context("..context..") "..
 		"probable-cause("..cause..") "..
-		"human-intervention("..human..")".. suggestions_string)
+		"human-intervention("..human..") ".. suggestions_string)
 end
 
 function trace(x)
