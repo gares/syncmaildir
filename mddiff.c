@@ -46,7 +46,8 @@
 #define DEFAULT_MAIL_NUMBER 500000
 
 // int -> hex
-static char hexalphabet[]={'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+static char hexalphabet[] = 
+	{'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
 int hex2int(char c){
 	switch(c){
@@ -59,10 +60,11 @@ int hex2int(char c){
 	exit(1);
 }
 
-char tmpbuff_1[41];
-char tmpbuff_2[41];
-char tmpbuff_3[41];
-char tmpbuff_4[41];
+// temporary buffers used to store sha1 sums in ASCII hex
+char tmpbuff_1[SHA_DIGEST_LENGTH * 2 + 1];
+char tmpbuff_2[SHA_DIGEST_LENGTH * 2 + 1];
+char tmpbuff_3[SHA_DIGEST_LENGTH * 2 + 1];
+char tmpbuff_4[SHA_DIGEST_LENGTH * 2 + 1];
 
 char* txtsha(unsigned char *sha1, char* outbuff){
 	int fd;
@@ -82,6 +84,8 @@ void shatxt(const char string[41], unsigned char outbuff[]) {
 	}
 }
 
+// flags used to mark struct mail so that at the end of the scanning 
+// we output commands lookig that flag
 enum sight {
 	SEEN=0, NOT_SEEN=1, MOVED=2, CHANGED=3
 };
@@ -97,7 +101,7 @@ struct mail {
 	unsigned char bsha[SHA_DIGEST_LENGTH]; 	// body hash value
 	unsigned char hsha[SHA_DIGEST_LENGTH]; 	// header hash value
 	char *name;    							// file name
-	enum sight seen;     				// already seen (means do not delete)
+	enum sight seen;     			        // already seen?
 };
 
 // memory pool for mail file names
@@ -380,12 +384,12 @@ void analize_file(const char* dir,const char* file) {
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED){
-		ERROR(mmap, "unable to load '%s'\n",m->name);
 		if (sb.st_size == 0) 
 			// empty file, we do not consider them emails
 			goto err_alloc_fd_cleanup;
 		else 
-			// mmap failed, XXX add more verbose output
+			// mmap failed
+			ERROR(mmap, "unable to load '%s'\n",m->name);
 			exit(EXIT_FAILURE);
 	}
 
