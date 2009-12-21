@@ -95,11 +95,11 @@ This file defines the following variables:
 - `SERVERNAME` is a valid alias for ssh. It should be defined in 
   your `~/.ssh/config`, with compression enabled. For example:
 
-    Host smd-server-foo
-      Compression yes
-      Hostname your.real.server.name
-      Username you
-
+        Host smd-server-foo
+          Compression yes
+          Hostname your.real.server.name
+          Username you
+  
 - `CLIENTNAME` a name for your client: the host name concatenated with
    the server name should be fine. Note that you can pull and push from
    different hosts, and each of them needs a unique CLIENTNAME in its
