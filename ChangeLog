@@ -1,4 +1,7 @@
 ... - minor fix release - version 0.9.12 aka 1.0rc3
+	* syncmaildir.lua:
+	  - handshake function emits 'network' as probable failure
+	    cause. Used to emit 'network-error', cheating smd-applet
 	* smd-client, smd-server, smd-common:
 	  - check for the existence of external helper programs
 	    to fail early if it is not the case
