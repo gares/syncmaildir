@@ -178,7 +178,7 @@ function handshake(dbfile)
 		log_error("Hint: did you correctly setup the SERVERNAME variable")
 		log_error("on your client? Did you add an entry for it in your ssh")
 		log_error("configuration file?")
-		log_tags("handshake", "network-error",false,"retry")
+		log_tags("handshake", "network",false,"retry")
 		error('Network error')
 	end
 	local protocol = line:match('^protocol (.+)$')
@@ -192,7 +192,7 @@ function handshake(dbfile)
 	line = io.read('*l')
 	if line == nil then
 		log_error "The client disconnected during handshake"
-		log_tags("handshake", "network-error",false,"retry")
+		log_tags("handshake", "network",false,"retry")
 		error('Network error')
 	end
 	local sha = line:match('^dbfile (%S+)$')
