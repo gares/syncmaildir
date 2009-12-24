@@ -1,4 +1,11 @@
 ... - minor fix release - version 0.9.12 aka 1.0rc3
+	* mddiff.c:
+	  - use only EXIT_SUCCESS and EXIT_FAILURE as exit codes
+	  - ERROR macro calls exit(EXIT_FAILURE)
+	  - new macro WARNING, used for what used to be non
+	    fatal errors
+	  - improved argument check: stat is done in advance, and
+	    we bail out if they are not omogeneous
 	* syncmaildir.lua:
 	  - handshake function emits 'network' as probable failure
 	    cause. Used to emit 'network-error', cheating smd-applet
@@ -16,6 +23,7 @@
 	* README, DESIGN:
 	  - fixed indentation so that markdown displays all
 	    blockquotes as such (kudos to Zack).
+	  - mention the ERROR action that mddiff can now emit
 
 13/11/2009 - minor fix release - version 0.9.11 aka 1.0rc2 
 	* smd-loop:
