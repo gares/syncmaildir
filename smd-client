@@ -366,6 +366,15 @@ function execute_replace(cmd)
 	end
 end
 
+function execute_error(cmd)
+	local msg = cmd:match('^ERROR (.*)$')
+	
+	log_error('mddiff failed: '..msg)
+	log_tags("mddiff","unknown",true)
+
+	return (trace(false)) -- mddiff error
+end
+
 -- the main switch, dispatching actions.
 -- extra parentheses around execute_* calls make it a non tail call,
 -- thus we get the stack frame print in case of error.
@@ -378,6 +387,7 @@ function execute(cmd)
 	elseif opcode == "REPLACEHEADER" then return (execute_replaceheader(cmd))
 	elseif opcode == "COPYBODY"      then return (execute_copybody(cmd))
 	elseif opcode == "REPLACE"       then return (execute_replace(cmd))
+	elseif opcode == "ERROR"         then return (execute_error(cmd))
 	else
 		error('Unknown opcode '..opcode)
 	end

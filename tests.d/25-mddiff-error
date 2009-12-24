@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cd $ROOT/test.$N
+
+msync 1
+
+mv Mail Mail.moved
+
+msync 2
+
+test_eq Mail.moved target/Mail
+
+X=`grep '^ERROR ' log.s2c | wc -l`
+assert $X 1 "missing ERROR in s2c"
+
+X=`grep '^ABORT$' log.c2s | wc -l`
+assert $X 1 "missing ABORT in c2s"
