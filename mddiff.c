@@ -34,8 +34,12 @@
 #define __tostring(x) #x 
 #define tostring(x) __tostring(x)
 
-#define ERROR(cause, msg...) \
-	fprintf(stderr, "error [" tostring(cause) "]: " msg)
+#define ERROR(cause, msg...) { \
+	fprintf(stderr, "error [" tostring(cause) "]: " msg);\
+	exit(EXIT_FAILURE);\
+	}
+#define WARNING(cause, msg...) \
+	fprintf(stderr, "warning [" tostring(cause) "]: " msg)
 #define VERBOSE(cause,msg...) \
 	if (verbose) fprintf(stderr,"debug [" tostring(cause) "]: " msg)
 #define VERBOSE_NOH(msg...) \
@@ -57,7 +61,6 @@ int hex2int(char c){
 		case 'd': case 'e': case 'f': return c - 'a' + 10;
 	}
 	ERROR(hex2int,"Invalid hex character: %c\n",c);
-	exit(EXIT_FAILURE);
 }
 
 // temporary buffers used to store sha1 sums in ASCII hex
@@ -136,11 +139,9 @@ static void assert_all_are(
 		rc = stat(argv[c], &sb);
 		if (rc != 0) {
 			ERROR(stat,"unable to stat %s\n",argv[c]);
-			exit(EXIT_FAILURE);
 		} else if ( ! predicate(sb) ) {
 			ERROR(stat,"%s in not a %s, arguments must be omogeneous\n",
-				argv[c],message);
-			exit(EXIT_FAILURE);
+				argv[c],description);
 		}
 		VERBOSE(input, "%s is a %s\n", argv[c], description);
 	}
@@ -156,7 +157,6 @@ struct mail* alloc_mail(){
 		mails = realloc(mails, sizeof(struct mail) * max_mailno * 2);
 		if (mails == NULL){
 			ERROR(realloc,"allocation failed for %lu mails\n", max_mailno * 2);
-			exit(EXIT_FAILURE);
 		}
 		max_mailno *= 2;
 	}
@@ -204,35 +204,27 @@ gboolean sha_equal(gconstpointer k1, gconstpointer k2){
 void setup_globals(unsigned long int mno, unsigned int fnlen){
 	// allocate space for mail metadata
 	mails = malloc(sizeof(struct mail) * mno);
-	if (mails == NULL){
-		ERROR(malloc,"allocation failed for %lu mails\n",mno);
-		exit(EXIT_FAILURE);
-	}
+	if (mails == NULL) ERROR(malloc,"allocation failed for %lu mails\n",mno);
+	
 	mailno=0;
 	max_mailno = mno;
 
 	// allocate space for mail filenames
 	names = malloc(mno * fnlen);
-	if (names == NULL){
+	if (names == NULL)
 		ERROR(malloc, "memory allocation failed for %lu mails with an "
 			"average filename length of %u\n",mailno,fnlen);
-		exit(EXIT_FAILURE);
-	}
+
 	curname=0;
 	max_curname=mno * fnlen;
 
 	// allocate hashtables for detection of already available mails
 	sha2mail = g_hash_table_new(sha_hash,sha_equal);
-	if (sha2mail == NULL) {
-		ERROR(sha2mail,"hashtable creation failure\n");
-		exit(EXIT_FAILURE);
-	}
+	if (sha2mail == NULL) ERROR(sha2mail,"hashtable creation failure\n");
 
 	filename2mail = g_hash_table_new(g_str_hash,g_str_equal);
-	if (filename2mail == NULL) {
+	if (filename2mail == NULL) 
 		ERROR(filename2mail,"hashtable creation failure\n");
-		exit(EXIT_FAILURE);
-	}
 }
 
 // =========================== cache (de)serialization ======================
@@ -246,10 +238,7 @@ void save_db(const char* dbname, time_t timestamp){
 	snprintf(new_dbname,PATH_MAX,"%s.new",dbname);
 
 	fd = fopen(new_dbname,"w");
-	if (fd == NULL){
-		ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
-		exit(EXIT_FAILURE);
-	}
+	if (fd == NULL) ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
 
 	for(i=0; i < mailno; i++){
 		struct mail* m = &mails[i];
@@ -265,10 +254,7 @@ void save_db(const char* dbname, time_t timestamp){
 	snprintf(new_dbname,PATH_MAX,"%s.mtime",dbname);
 
 	fd = fopen(new_dbname,"w");
-	if (fd == NULL){
-		ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
-		exit(EXIT_FAILURE);
-	}
+	if (fd == NULL) ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
 
 	fprintf(fd,"%lu",timestamp);
 
@@ -285,21 +271,20 @@ void load_db(const char* dbname){
 
 	fd = fopen(new_dbname,"r");
 	if (fd == NULL){
-		ERROR(fopen,"unable to load db file '%s'\n",new_dbname);
+		WARNING(fopen,"unable to load db file '%s'\n",new_dbname);
 		lastcheck = 0L;
 	} else {
 		fields = fscanf(fd,"%1$lu",&lastcheck);
-		if (fields != 1) {
+		if (fields != 1) 
 			ERROR(fscanf,"malformed db file '%s', please remove it\n",
-					new_dbname);
-			exit(EXIT_FAILURE);
-		}
+				new_dbname);
+
 		fclose(fd);
 	}
    
 	fd = fopen(dbname,"r");
 	if (fd == NULL) {
-		ERROR(fopen,"unable to open db file '%s'\n",dbname);
+		WARNING(fopen,"unable to open db file '%s'\n",dbname);
 		return;
 	}
 
@@ -319,10 +304,8 @@ void load_db(const char* dbname){
 		}
 		
 		// sanity checks
-		if (fields != 3) {
+		if (fields != 3)
 			ERROR(fscanf,"malformed db file '%s', please remove it\n",dbname);
-			exit(EXIT_FAILURE);
-		}
 
 		shatxt(tmpbuff_1, m->hsha);
 		shatxt(tmpbuff_2, m->bsha);
@@ -390,12 +373,12 @@ void analize_file(const char* dir,const char* file) {
 
 	fd = open(m->name, O_RDONLY | O_NOATIME);
 	if (fd == -1) {
-		ERROR(open,"unable to open file '%s'\n",m->name);
+		WARNING(open,"unable to open file '%s'\n",m->name);
 		goto err_alloc_cleanup;
 	}
 
 	if (fstat(fd, &sb) == -1) {
-		ERROR(fstat,"unable to stat file '%s'\n",m->name);
+		WARNING(fstat,"unable to stat file '%s'\n",m->name);
 		goto err_alloc_cleanup;
 	}
 
@@ -417,7 +400,6 @@ void analize_file(const char* dir,const char* file) {
 		else 
 			// mmap failed
 			ERROR(mmap, "unable to load '%s'\n",m->name);
-			exit(EXIT_FAILURE);
 	}
 
 	// skip header
@@ -430,7 +412,7 @@ void analize_file(const char* dir,const char* file) {
 	}
 
 	if (!header_found) {
-		ERROR(parse, "malformed file '%s', no header\n",m->name);
+		WARNING(parse, "malformed file '%s', no header\n",m->name);
 		munmap(addr, sb.st_size);
 		goto err_alloc_fd_cleanup;
 	}
@@ -503,10 +485,7 @@ void analize_dir(const char* path){
 	DIR* dir = opendir(path);
 	struct dirent *dir_entry;
 
-	if (dir == NULL) {
-		fprintf(stderr, "Unable to open directory '%s'\n", path);
-		exit(EXIT_FAILURE);
-	}
+	if (dir == NULL) ERROR(opendir, "Unable to open directory '%s'\n", path);
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
 		if (DT_REG == dir_entry->d_type){
@@ -569,21 +548,12 @@ void extra_sha_file(const char* file) {
 	gchar* sha1;
 
 	fd = open(file, O_RDONLY | O_NOATIME);
-	if (fd == -1) {
-		ERROR(open,"unable to open file '%s'\n",file);
-		exit(EXIT_FAILURE);
-	}
+	if (fd == -1) ERROR(open,"unable to open file '%s'\n",file);
 
-	if (fstat(fd, &sb) == -1) {
-		ERROR(fstat,"unable to stat file '%s'\n",file);
-		exit(EXIT_FAILURE);
-	}
+	if (fstat(fd, &sb) == -1) ERROR(fstat,"unable to stat file '%s'\n",file);
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (addr == MAP_FAILED){
-		ERROR(mmap, "unable to load '%s'\n",file);
-		exit(EXIT_FAILURE);
-	}
+	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
 
 	// skip header
 	for(next = addr, header_found=0; next + 1 < addr + sb.st_size; next++){
@@ -594,10 +564,7 @@ void extra_sha_file(const char* file) {
 		}
 	}
 
-	if (!header_found) {
-		ERROR(parse, "malformed file '%s', no header\n",file);
-		exit(EXIT_FAILURE);
-	}
+	if (!header_found) ERROR(parse, "malformed file '%s', no header\n",file);
 
 	// calculate sha1
 	fprintf(stdout, "%s ", 
@@ -722,10 +689,8 @@ int main(int argc, char *argv[]) {
 
 	// check if data is a directory or a regular file
 	c = stat(data, &sb);
-	if (c != 0) {
-		ERROR(stat,"unable to stat %s\n",data);
-		exit(EXIT_FAILURE);
-	}
+	if (c != 0) ERROR(stat,"unable to stat %s\n",data);
+	
 	if ( S_ISREG(sb.st_mode) ){
 		// simple mode, just hash the files
 		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
@@ -733,7 +698,6 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_SUCCESS);
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
 		ERROR(stat, "given path is not a regular file or directory: %s\n",data);
-		exit(EXIT_FAILURE);
 	}
 	
 	// regular case, hash the content of maildirs rooted in the 
