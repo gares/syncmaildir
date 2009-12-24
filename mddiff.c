@@ -120,6 +120,34 @@ time_t lastcheck;
 // program options
 int verbose;
 
+// ============================ helpers =====================================
+
+static int directory(struct stat sb){ return S_ISDIR(sb.st_mode); }
+static int regular_file(struct stat sb){ return S_ISREG(sb.st_mode); }
+
+// stats and asserts pred on argv[optind] ... argv[argc-optind]
+static void assert_all_are(
+	int(*predicate)(struct stat), char* description, char*argv[], int argc)
+{
+	struct stat sb;
+	int c, rc;
+	VERBOSE(input, "Asserting all input paths are: %s\n", description);
+	for(c = 0; c < argc; c++) { 
+		rc = stat(argv[c], &sb);
+		if (rc != 0) {
+			ERROR(stat,"unable to stat %s\n",argv[c]);
+			exit(EXIT_FAILURE);
+		} else if ( ! predicate(sb) ) {
+			ERROR(stat,"not a %s: %s\n", description, argv[c]);
+			ERROR(stat,"You can specify a list of files or directories"
+				" but not mix them\n");
+			exit(EXIT_FAILURE);
+		}
+		VERBOSE(input, "%s is a %s\n", argv[c], description);
+	}
+}
+#define ASSERT_ALL_ARE(what,v,c) assert_all_are(what,tostring(what),v,c)
+
 // =========================== memory allocator ============================
 
 struct mail* alloc_mail(){
@@ -717,17 +745,18 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	if ( S_ISREG(sb.st_mode) ){
-		// simple mode, just hash the file
-		return extra_sha_files(&argv[optind],argc - optind);
+		// simple mode, just hash the files
+		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
+		return extra_sha_files(&argv[optind], argc - optind);
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
 		ERROR(stat, "given path is not a regular file nor a directory: %s\n",
 			data);
 		exit(EXIT_FAILURE);
 	}
 	
-	VERBOSE(init,"data directories are ");
-	for(c=optind; c<argc - optind; c++) { VERBOSE_NOH(argv[c]);}	
-	VERBOSE_NOH("\n");
+	// regular case, hash the content of maildirs rooted in the 
+	// list of directories specified at command line
+	ASSERT_ALL_ARE(directory, &argv[optind], argc - optind);
 
 	// allocate memory
 	setup_globals(mailno,filenamelen);
