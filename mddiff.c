@@ -57,7 +57,7 @@ int hex2int(char c){
 		case 'd': case 'e': case 'f': return c - 'a' + 10;
 	}
 	ERROR(hex2int,"Invalid hex character: %c\n",c);
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 // temporary buffers used to store sha1 sums in ASCII hex
@@ -138,9 +138,8 @@ static void assert_all_are(
 			ERROR(stat,"unable to stat %s\n",argv[c]);
 			exit(EXIT_FAILURE);
 		} else if ( ! predicate(sb) ) {
-			ERROR(stat,"not a %s: %s\n", description, argv[c]);
-			ERROR(stat,"You can specify a list of files or directories"
-				" but not mix them\n");
+			ERROR(stat,"%s in not a %s, arguments must be omogeneous\n",
+				argv[c],message);
 			exit(EXIT_FAILURE);
 		}
 		VERBOSE(input, "%s is a %s\n", argv[c], description);
@@ -249,7 +248,7 @@ void save_db(const char* dbname, time_t timestamp){
 	fd = fopen(new_dbname,"w");
 	if (fd == NULL){
 		ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	for(i=0; i < mailno; i++){
@@ -268,7 +267,7 @@ void save_db(const char* dbname, time_t timestamp){
 	fd = fopen(new_dbname,"w");
 	if (fd == NULL){
 		ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	fprintf(fd,"%lu",timestamp);
@@ -563,7 +562,7 @@ void generate_deletions(){
 	}
 }
 
-int extra_sha_file(const char* file) {    
+void extra_sha_file(const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -572,20 +571,18 @@ int extra_sha_file(const char* file) {
 	fd = open(file, O_RDONLY | O_NOATIME);
 	if (fd == -1) {
 		ERROR(open,"unable to open file '%s'\n",file);
-		return 1;
+		exit(EXIT_FAILURE);
 	}
 
 	if (fstat(fd, &sb) == -1) {
 		ERROR(fstat,"unable to stat file '%s'\n",file);
-		close(fd);
-		return 2;
+		exit(EXIT_FAILURE);
 	}
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED){
 		ERROR(mmap, "unable to load '%s'\n",file);
-		close(fd);
-		return 3;
+		exit(EXIT_FAILURE);
 	}
 
 	// skip header
@@ -599,9 +596,7 @@ int extra_sha_file(const char* file) {
 
 	if (!header_found) {
 		ERROR(parse, "malformed file '%s', no header\n",file);
-		munmap(addr, sb.st_size);
-		close(fd);
-		return 4;
+		exit(EXIT_FAILURE);
 	}
 
 	// calculate sha1
@@ -615,29 +610,12 @@ int extra_sha_file(const char* file) {
 	
 	munmap(addr, sb.st_size);
 	close(fd);
-	return 0;
 }
 
 
-int extra_sha_files(char* file[],int no) {    
+static void extra_sha_files(char* file[], int no) {    
 	int i;
-	struct stat sb;
-	for (i=0; i < no; i++){
-		const char * data = file[i];
-		int rc = stat(data, &sb);
-		if (rc != 0) {
-			ERROR(stat,"unable to stat %s\n",data);
-			exit(EXIT_FAILURE);
-		}
-		if ( S_ISREG(sb.st_mode) ){
-			rc = extra_sha_file(data);
-			if (rc != 0) return rc;
-		} else {
-			ERROR(stat,"not a regular file '%s'\n",data);
-			exit(EXIT_FAILURE);
-		}
-	}
-	return 0;
+	for (i=0; i < no; i++) extra_sha_file(file[i]);
 }
 
 // ============================ main =====================================
@@ -669,7 +647,7 @@ const char* long_options_doc[] = {
 };
 
 // print help and bail out
-void help(char* argv0, int rc){
+void help(char* argv0){
 	int i;
 	char *bname = g_path_get_basename(argv0);
 
@@ -696,7 +674,6 @@ are generated).\n", bname, bname);
 	fprintf(stdout,
 		"\nVersion %s, © 2009 Enrico Tassi, released under GPLv3, \
 no waranties\n\n",tostring(VERSION));
-	exit(rc);
 }
 
 int main(int argc, char *argv[]) {
@@ -725,15 +702,20 @@ int main(int argc, char *argv[]) {
 				verbose = 1;
 			break;
 			case 'h':
-				help(argv[0],EXIT_SUCCESS);
+				help(argv[0]);
+				exit(EXIT_SUCCESS);
 			break;
 			default:
-				help(argv[0],EXIT_FAILURE);
+				help(argv[0]);
+				exit(EXIT_FAILURE);
 			break;
 		}
 	}
 
-	if (optind >= argc) help(argv[0],EXIT_FAILURE);
+	if (optind >= argc) { 
+		help(argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
 	// remaining args is the dirs containing the data or the files to hash
 	data = argv[optind];
@@ -747,10 +729,10 @@ int main(int argc, char *argv[]) {
 	if ( S_ISREG(sb.st_mode) ){
 		// simple mode, just hash the files
 		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
-		return extra_sha_files(&argv[optind], argc - optind);
+		extra_sha_files(&argv[optind], argc - optind);
+		exit(EXIT_SUCCESS);
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
-		ERROR(stat, "given path is not a regular file nor a directory: %s\n",
-			data);
+		ERROR(stat, "given path is not a regular file or directory: %s\n",data);
 		exit(EXIT_FAILURE);
 	}
 	
