@@ -53,7 +53,7 @@
 static char hexalphabet[] = 
 	{'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
-int hex2int(char c){
+static int hex2int(char c){
 	switch(c){
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9': return c - '0';
@@ -64,12 +64,12 @@ int hex2int(char c){
 }
 
 // temporary buffers used to store sha1 sums in ASCII hex
-char tmpbuff_1[SHA_DIGEST_LENGTH * 2 + 1];
-char tmpbuff_2[SHA_DIGEST_LENGTH * 2 + 1];
-char tmpbuff_3[SHA_DIGEST_LENGTH * 2 + 1];
-char tmpbuff_4[SHA_DIGEST_LENGTH * 2 + 1];
+static char tmpbuff_1[SHA_DIGEST_LENGTH * 2 + 1];
+static char tmpbuff_2[SHA_DIGEST_LENGTH * 2 + 1];
+static char tmpbuff_3[SHA_DIGEST_LENGTH * 2 + 1];
+static char tmpbuff_4[SHA_DIGEST_LENGTH * 2 + 1];
 
-char* txtsha(unsigned char *sha1, char* outbuff){
+static char* txtsha(unsigned char *sha1, char* outbuff){
 	int fd;
 
 	for (fd = 0; fd < 20; fd++){
@@ -80,7 +80,7 @@ char* txtsha(unsigned char *sha1, char* outbuff){
 	return outbuff;
 }
 
-void shatxt(const char string[41], unsigned char outbuff[]) {
+static void shatxt(const char string[41], unsigned char outbuff[]) {
 	int i;
 	for(i=0; i < SHA_DIGEST_LENGTH; i++){
 		outbuff[i] = hex2int(string[2*i]) * 16 + hex2int(string[2*i+1]);
@@ -95,7 +95,7 @@ enum sight {
 
 static char* sightalphabet[]={"SEEN","NOT_SEEN","MOVED","CHANGED"};
 
-const char* strsight(enum sight s){
+static const char* strsight(enum sight s){
 	return sightalphabet[s];
 }
 
@@ -108,20 +108,20 @@ struct mail {
 };
 
 // memory pool for mail file names
-char *names;
-long unsigned int curname, max_curname, old_curname;
+static char *names;
+static long unsigned int curname, max_curname, old_curname;
 
 // memory pool for mail metadata
-struct mail* mails;
-long unsigned int mailno, max_mailno;
+static struct mail* mails;
+static long unsigned int mailno, max_mailno;
 
 // hash tables for fast comparison of mails given their name/body-hash
-GHashTable *sha2mail;
-GHashTable *filename2mail;
-time_t lastcheck;
+static GHashTable *sha2mail;
+static GHashTable *filename2mail;
+static time_t lastcheck;
 
 // program options
-int verbose;
+static int verbose;
 
 // ============================ helpers =====================================
 
@@ -150,7 +150,7 @@ static void assert_all_are(
 
 // =========================== memory allocator ============================
 
-struct mail* alloc_mail(){
+static struct mail* alloc_mail(){
 	struct mail* m = &mails[mailno];
 	mailno++;
 	if (mailno >= max_mailno) {
@@ -163,17 +163,17 @@ struct mail* alloc_mail(){
 	return m;
 }
 
-void dealloc_mail(){
+static void dealloc_mail(){
 	mailno--;
 }
 
 #define MAX_EMAIL_NAME_LEN 1024
 
-char *next_name(){
+static char *next_name(){
 	return &names[curname];
 }
 
-char *alloc_name(){
+static char *alloc_name(){
 	char *name = &names[curname];
 	old_curname = curname;
 	curname += strlen(name) + 1;
@@ -184,24 +184,24 @@ char *alloc_name(){
 	return name;
 }
 
-void dealloc_name(){
+static void dealloc_name(){
 	curname = old_curname;
 }
 
 // =========================== global variables setup ======================
 
-guint sha_hash(gconstpointer key){
+static guint sha_hash(gconstpointer key){
 	unsigned char * k = (unsigned char *) key;
 	return k[0] + (k[1] << 8) + (k[2] << 16) + (k[3] << 24);
 }
 
-gboolean sha_equal(gconstpointer k1, gconstpointer k2){
+static gboolean sha_equal(gconstpointer k1, gconstpointer k2){
 	if(!memcmp(k1,k2,SHA_DIGEST_LENGTH)) return TRUE;
 	else return FALSE;
 }
 
 // setup memory pools and hash tables
-void setup_globals(unsigned long int mno, unsigned int fnlen){
+static void setup_globals(unsigned long int mno, unsigned int fnlen){
 	// allocate space for mail metadata
 	mails = malloc(sizeof(struct mail) * mno);
 	if (mails == NULL) ERROR(malloc,"allocation failed for %lu mails\n",mno);
@@ -230,7 +230,7 @@ void setup_globals(unsigned long int mno, unsigned int fnlen){
 // =========================== cache (de)serialization ======================
 
 // dump to file the mailbox status
-void save_db(const char* dbname, time_t timestamp){
+static void save_db(const char* dbname, time_t timestamp){
 	long unsigned int i;
 	FILE * fd;
 	char new_dbname[PATH_MAX];
@@ -262,7 +262,7 @@ void save_db(const char* dbname, time_t timestamp){
 }
 
 // load from disk a mailbox status and index mails with hashtables
-void load_db(const char* dbname){
+static void load_db(const char* dbname){
 	FILE* fd;
 	int fields;
 	char new_dbname[PATH_MAX];
@@ -359,7 +359,7 @@ void load_db(const char* dbname){
 					txtsha(n->hsha,tmpbuff_3))
 
 // the hearth 
-void analize_file(const char* dir,const char* file) {    
+static void analize_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -481,7 +481,7 @@ err_alloc_cleanup:
 }
 	
 // recursively analyze a directory and its sub-directories
-void analize_dir(const char* path){
+static void analize_dir(const char* path){
 	DIR* dir = opendir(path);
 	struct dirent *dir_entry;
 
@@ -515,7 +515,7 @@ void analize_dir(const char* path){
 	}
 }
 
-void analize_dirs(char* paths[], int no){
+static void analize_dirs(char* paths[], int no){
 	int i;
 	for(i=0; i<no; i++){
 		// we remove a trailing '/' if any 
@@ -527,7 +527,7 @@ void analize_dirs(char* paths[], int no){
 
 // at the end of the analysis phase, look at the mails data structure to
 // identify mails that are not available anymore and should be removed
-void generate_deletions(){
+static void generate_deletions(){
 	long unsigned int i;
 
 	for(i=0; i < mailno; i++){
@@ -541,7 +541,7 @@ void generate_deletions(){
 	}
 }
 
-void extra_sha_file(const char* file) {    
+static void extra_sha_file(const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -600,7 +600,7 @@ static struct option long_options[] = {
 };
 
 // command line options documentation
-const char* long_options_doc[] = {
+static const char* long_options_doc[] = {
 	"Estimation of max mail message number (default " 
 		tostring(DEFAULT_MAIL_NUMBER) ")"
 		"\n                        " 
@@ -614,7 +614,7 @@ const char* long_options_doc[] = {
 };
 
 // print help and bail out
-void help(char* argv0){
+static void help(char* argv0){
 	int i;
 	char *bname = g_path_get_basename(argv0);
 
