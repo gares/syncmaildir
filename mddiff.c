@@ -38,6 +38,7 @@
 
 #define ERROR(cause, msg...) { \
 	fprintf(stderr, "error [" tostring(cause) "]: " msg);\
+	fprintf(stdout, "ERROR " msg);\
 	exit(EXIT_FAILURE);\
 	}
 #define WARNING(cause, msg...) \
