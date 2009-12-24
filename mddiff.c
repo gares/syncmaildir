@@ -375,7 +375,7 @@ void analize_file(const char* dir,const char* file) {
 	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
 
 	// check if the cache lists a file with the same name and the same
-	// mtime. if so, this is an old, untouched, message we can skip
+	// mtime. If so, this is an old, untouched, message we can skip
 	if (alias != NULL && lastcheck > sb.st_mtime) {
 		alias->seen=SEEN;
 		COMMAND_SKIP(alias);
