@@ -17,7 +17,7 @@ DESCRIPTION
       ...
   
   If paths is a list of directories, mddiff outputs a list of actions a client
-  has to perform to syncronize a copy of the same maildirs. This set of actions
+  has to perform to synchronize a copy of the same maildirs. This set of actions
   is relative to a previous status of the maildir stored in the db file.
   The input directories are traversed recursively, and every file encountered
   inside directories named cur/ and new/ is a potential mail message (if it 

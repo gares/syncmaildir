@@ -1,3 +1,7 @@
+... - ... - ...
+	* mddiff.1.txt:
+	  - fixed typo
+
 27/12/2009 - minor fix release - version 0.9.12 aka 1.0rc3
 	* DESIGN:
 	  - mention the ERROR action that mddiff can now emit
