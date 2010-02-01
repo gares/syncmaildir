@@ -26,6 +26,8 @@ fi
 # to the home
 cd
 
+runhooks $CONFDIR pre pull 0
+
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
 
@@ -41,6 +43,8 @@ SERVER=$!
 EXITCODE=0
 wait $SERVER || EXITCODE=1
 wait $CLIENT || EXITCODE=1 
+
+runhooks $CONFDIR post pull $EXITCODE
 
 if [ $EXITCODE = 1 ]; then
 	grep ^ERROR $SL \
