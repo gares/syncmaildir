@@ -42,7 +42,7 @@ if [ `echo "$SED" | cut -c -1` = "@" ]; then
 	echo "`basename $0` not installed, assuming stream editor is $SED"
 fi
 
-function assert_executable() {
+assert_executable() {
 	if type -P $1 >/dev/null; then
 		:
 	else
