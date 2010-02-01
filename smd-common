@@ -3,7 +3,11 @@
 # Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
 # Common stuff for smd-pull and smd-push
-
+# Convention:
+# - uppercase variables are global
+# - lowercase variables are local
+# - function arguments are documented assigning to local variable with
+#   a decent name positional arguments
 
 ### Variables setup and sanity checks ###
 
