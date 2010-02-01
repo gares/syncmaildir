@@ -1,3 +1,11 @@
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright 2009 Enrico Tassi <gares@fettunta.org>
+
+# Common stuff for smd-pull and smd-push
+
+
+### Variables setup and sanity checks ###
 
 if [ `echo $PREFIX | cut -c -1` = "@" ]; then
 	SMDSERVER=~/Projects/syncmaildir/smd-server 

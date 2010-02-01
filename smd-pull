@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright 2009 Enrico Tassi <gares@fettunta.org>
 
 # the idea is (where == is a bi-directional pipe) :
 #
