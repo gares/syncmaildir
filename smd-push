@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Released under the terms of GPLv3 or at your option any later version.
 # No warranties.
@@ -22,11 +22,19 @@ fi
 
 . $SMDROOT/smd-common
 
+init
+parse_args "$@"
+read_conffile
+# this could be a system wide pre-hook
+check_lockfile
+setup_plumbing
+setup_logging
+
 # we move to the home, since Mail paths are relative
 # to the home
 cd
 
-runhooks $CONFDIR pre push 0
+run_hooks $CONFDIR pre push 0
 
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
@@ -44,7 +52,7 @@ EXITCODE=0
 wait $SERVER || EXITCODE=1
 wait $CLIENT || EXITCODE=1 
 
-runhooks $CONFDIR post push $EXITCODE
+run_hooks $CONFDIR post push $EXITCODE
 
 report $EXITCODE $SHOWTAGS smd-push smd-pull smd-server smd-client
 
