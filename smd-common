@@ -201,6 +201,46 @@ if [ "$DEBUG" = "true" ]; then
 	VERBOSE=-v
 fi
 
+# this could be a system wide post-* hook
+report(){
+	local exitcode="$1"
+	local showtags="$2"
+	local currcmd="$3"
+	local inversecmd="$3"
+	local localprog="$4"
+	local remoteprog="$5"
+	if [ $exitcode = 1 ]; then
+		grep ^ERROR $SL \
+			| $SED "s/^/$remoteprog: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^ERROR $CL \
+			| $SED "s/^/$localprog: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^ssh: $SL \
+			| $SED "s/^/$remoteprog: ERROR: /"
+	fi
+	if [ $showtags = 1 ]; then
+		#echo "`date`: $currcmd $SERVERNAME" >> $CL
+		grep ^TAGS $SL \
+			| $SED "s/^/$REPNAME: $remoteprog@$SERVERNAME: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^TAGS $CL \
+			| $SED "s/^/$REPNAME: $localprog@localhost: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
+		   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
+			# it may be that ssh failed to resolve the hostname
+			# so we generate a fake tag for it
+			cat $SL $CL
+			echo "$REPNAME: $remoteprog@$SERVERNAME: TAGS: error::context(ssh) probable-cause(network) human-intervention(avoidable) suggested-actions(retry)"
+		fi
+	fi
+}
+
 ### Housekeeping ###
 
 TMPFILE_LIST=""
