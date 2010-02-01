@@ -46,36 +46,6 @@ wait $CLIENT || EXITCODE=1
 
 runhooks $CONFDIR post push $EXITCODE
 
-if [ $EXITCODE = 1 ]; then
-	grep ^ERROR $CL \
-		| $SED 's/^/smd-server: /' \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^ERROR $SL \
-		| $SED 's/^/smd-client: /' \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^ssh: $SL \
-		| $SED 's/^/smd-client: ERROR: /'
-fi
-if [ $SHOWTAGS = 1 ]; then
-	echo "`date`: smd-push $SERVERNAME" >> $SL
-	grep ^TAGS $CL \
-		| $SED "s/^/$REPNAME: smd-server@localhost: /" \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^TAGS $SL \
-		| $SED "s/^/$REPNAME: smd-client@$SERVERNAME: /" \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
-	   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
-		# it may be that ssh failed to resolve the hostname
-		# so we generate a fake tag for it
-		cat $SL $CL
-		echo "$REPNAME: smd-client@$SERVERNAME: TAGS: error::context(ssh) probable-cause(network) human-intervention(avoidable) suggested-actions(retry)"
-	fi
-
-fi
+report $EXITCODE $SHOWTAGS smd-push smd-pull smd-server smd-client
 
 exit $EXITCODE
