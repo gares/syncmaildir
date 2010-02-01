@@ -53,6 +53,8 @@ assert_executable $SSH
 assert_executable $SMDSERVER
 assert_executable $SMDCLIENT
 
+### Command line argument parsing ###
+
 if [ "$1" = "-v" ]; then
 	shift
 	SHOWTAGS=1
@@ -71,6 +73,17 @@ else
 fi
 CONFFILE=$CONFDIR/config.$REPNAME
 
+### Confdir setup ###
+
+mkdir -p $CONFDIR/
+mkdir -p $CONFDIR/log
+mkdir -p $CONFDIR/fifo
+mkdir -p $CONFDIR/hooks
+mkdir -p $CONFDIR/hooks/pre-pull.d
+mkdir -p $CONFDIR/hooks/pre-push.d
+mkdir -p $CONFDIR/hooks/post-pull.d
+mkdir -p $CONFDIR/hooks/post-push.d
+
 # backward compatibility code
 if [ ! -f $CONFFILE ] && \
    [ "$REPNAME" = "default" ] && \
@@ -86,9 +99,6 @@ if [ ! -f $CONFFILE ] && \
 fi
 
 if [ ! -f $CONFFILE ]; then
-	mkdir -p $CONFDIR/
-	mkdir -p $CONFDIR/log
-	mkdir -p $CONFDIR/fifo
 	cat > $CONFFILE <<- EOT
 	# No config file found, this is a template. You want to edit it.
 
@@ -132,6 +142,11 @@ if [ "$TEMPLATE_ONLY" = 1 ]; then
 	exit 0
 fi
 
+### Only one instance at a time please ###
+
+# could be relaxed to non related mailboxes/enpoints, but the test is
+# not straightforward
+
 if [ -f $LOCKFILE ]; then
 	if ps -p `cat $LOCKFILE` > /dev/null | grep -E 'smd-(push|pull)'; then
 		echo Already running.
@@ -145,10 +160,14 @@ fi
 
 echo $$ > $LOCKFILE
 
-# defaults for the configuration file
+### Configuration file loading ###
+
+# default values for the configuration file
 DEBUG=false
 
 . $CONFFILE
+
+### Create all the needed pipes ###
 
 CtL=$CONFDIR/fifo/c2l.$REPNAME
 LtC=$CONFDIR/fifo/l2c.$REPNAME
@@ -164,6 +183,8 @@ SL=$CONFDIR/log/server.$REPNAME.log
 [ -p $LtS ] || mkfifo $LtS 
 [ -p $StL ] || mkfifo $StL
 
+### Logging ###
+
 mycat() { 
 	cat 
 }
@@ -176,8 +197,18 @@ if [ "$DEBUG" = "true" ]; then
 	VERBOSE=-v
 fi
 
+### Housekeeping ###
+
+TMPFILE_LIST=""
+
+gcmktemp() {
+	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`	
+	TMPFILE_LIST="$TMPFILE_LIST $tmp"
+	echo "$tmp"
+}
+
 cleanup() {
-	rm -f $CONFDIR/lock
+	rm -f $CONFDIR/lock $TMPFILE_LIST
 	kill $LOGGER1 2>/dev/null || true
 	kill $LOGGER2 2>/dev/null || true
 	kill $SERVER 2>/dev/null || true
@@ -185,4 +216,14 @@ cleanup() {
 }
 
 trap cleanup "EXIT" 
+
+### Hooks ###
+
+runhooks(){
+	for h in $1/hooks/$2-$3.d/*; do
+		if [ -x $h ]; then 
+			$h $2 $3 $REPNAME $4
+		fi
+	done
+}
 
