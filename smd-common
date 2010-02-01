@@ -264,10 +264,16 @@ trap cleanup "EXIT"
 ### Hooks ###
 
 runhooks(){
-	for h in $1/hooks/$2-$3.d/*; do
+	local dir="$1"
+	local when="$2"
+	local what="$3"
+	local status="$4"
+	for h in $dir/hooks/$when-$what.d/*; do
 		if [ -x $h ]; then 
-			$h $2 $3 $REPNAME $4
+			$h $when $what $REPNAME $status
 		fi
 	done
 }
 
+
+# vim:ts=4 filetype=sh:
