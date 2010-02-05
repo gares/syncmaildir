@@ -1,1 +1,2 @@
 - ask lucas wilcox if the osx/ Makefile template is OK
+- avoid creating the task bar icon when --config is passed
