@@ -58,8 +58,6 @@ check-w-%:
 
 test: all check-run misc/Mail.testcase.tgz
 	@tests.d/test.sh $T
-	@tests.d/check.sh
-	@rm -rf test.[0-9]*/
 
 misc/Mail.testcase.tgz: 
 	$(MAKE) check-w-polygen
@@ -127,7 +125,7 @@ install-misc: $(MANPAGES)
 
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
-	rm -rf test.[0-9]*/ 
+	rm -rf test.d/run
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 	rm -f config.vala
