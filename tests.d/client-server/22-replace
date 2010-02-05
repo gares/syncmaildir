@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd $ROOT/test.$N
 
 msync 1
 

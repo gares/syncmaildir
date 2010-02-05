@@ -1,5 +1,8 @@
 #!/bin/sh
 
+BASE=$PWD
+ROOT=$BASE/tests.d/run/client-server
+
 check_bin() {
 	if which $1 >/dev/null; then
 		return
@@ -16,13 +19,14 @@ check_bin sed
 check_bin awk
 check_bin sort
 
-PATHS=`grep TRACE test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
+PATHS=`grep TRACE $ROOT/test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
 
 echo
 echo "Tested $PATHS paths"
 echo
 
-grep TRACE test.[0-9]*/log.client* | sort -u
+grep TRACE $ROOT/test.[0-9]*/log.client* \
+	| sort -u | sed 's?^.*/\([^/]*\):?\1?'
 
 echo
 echo "Surely missing leaves (there may be more paths for the same leaf):"
@@ -32,7 +36,7 @@ tmpa=`mktemp`
 tmpb=`mktemp`
 
 grep -n 'return *( *trace' smd-client | cut -d : -f 1 | sed 's/ //g' > $tmpa
-grep TRACE test.[0-9]*/log.client* | sort -u | cut -d : -f 4 |\
+grep TRACE $ROOT/test.[0-9]*/log.client* | sort -u | cut -d : -f 4 |\
 	cut -d \| -f 1 | sed 's/ //g' > $tmpb
 for N in `combine $tmpa not $tmpb`; do
 	awk \
@@ -44,4 +48,5 @@ rm $tmpa $tmpb
 echo
 echo "Generated tags:"
 echo
-grep ^TAG test.[0-9]*/log.client* | cut -d : -f 2- | cut -d \( -f 1 | sort -u
+grep ^TAG $ROOT/test.[0-9]*/log.client* \
+	| cut -d : -f 2- | cut -d \( -f 1 | sort -u

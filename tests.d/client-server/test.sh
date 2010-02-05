@@ -1,8 +1,9 @@
 #!/bin/bash
 
 TOKILL=""
-ROOT=$PWD
 ORIGPATH=$PATH
+BASE=$PWD
+ROOT=$PWD/tests.d/run/client-server/
 
 out(){
 	(
@@ -22,23 +23,22 @@ test_eq(){
 }
 
 prepare(){
-	cd $ROOT
-	rm -rf test.$N
-	mkdir test.$N
+	local N=$1
+	cd $BASE
+	rm -rf $ROOT/test.$N
+	mkdir -p $ROOT/test.$N/target
 	make --quiet
 	make --quiet install-bin PREFIX=$ROOT/test.$N
 	
-	cd test.$N
+	cd $ROOT/test.$N
+	tar -xzf $BASE/misc/Mail.testcase.tgz
+	mkfifo s2c
+	mkfifo c2s
+
 	export HOMEC=$PWD/target
 	export HOMES=$PWD
 	export PATH=$PWD/bin:$ORIGPATH
 	export LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'"
-	tar -xzf ../misc/Mail.testcase.tgz
-	
-	mkfifo s2c
-	mkfifo c2s
-	mkdir -p target
-
 }
 
 if [ ! -z "$1" ] && [ "$1" = "-v" ]; then
@@ -49,20 +49,20 @@ else
 fi
 
 trap out EXIT
-. tests.d/common
+. $BASE/tests.d/client-server/common
 if [ ! -z "$1" ] && [ -f $1 ]; then
-	echo -n "running $1: "
+	echo -n "running `basename $1`: "
 	N=`echo $1 | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-	prepare 
-	cd $ROOT
+	prepare $N
+	cd $ROOT/test.$N
 	. $1
 	echo OK
 else
-	for T in tests.d/[0-9]*; do
-		echo -n "running $T: "
+	for T in $BASE/tests.d/client-server/[0-9]*; do
+		echo -n "running `basename $T`: "
 		N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-		prepare 
-		cd $ROOT
+		prepare $N
+		cd $ROOT/test.$N
 		. $T
 		echo OK
 	done

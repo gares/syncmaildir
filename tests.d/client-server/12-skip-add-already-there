@@ -1,20 +1,21 @@
 #!/bin/bash
 
-cd $ROOT/test.$N
 
 msync 1
 
-cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
+echo -en 'Subject: aa\n\nBody\n' >  Mail/cur/new_mail
+echo -en 'Subject: aa\n\nBody\n' >  target/Mail/cur/new_mail
 
 msync 2
 
 test_eq Mail target/Mail 
 
-X=`grep '^COPY ' log.s2c | wc -l`
-assert $X 1 "missing COPY in s2c"
+X=`grep '^ADD ' log.s2c | wc -l`
+assert $X 1 "missing ADD in s2c"
 
 X=`grep '^GET ' log.c2s | wc -l`
 assert $X 0 "GET in c2s, should not"
 
 X=`grep '^COMMIT$' log.c2s | wc -l`
 assert $X 1 "missing COMMIT in c2s"
+
