@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# BASE: where you can run make/make install
+# TESTSUITE: client-server, pull-push
+
+ROOT=$BASE/tests.d/run/$TESTSUITE/
+
+TOKILL=""
+
+out(){
+	(
+	for P in $TOKILL; do
+		kill $P
+	done
+	) 2>/dev/null
+}
+
+trap out EXIT
+
+test_eq(){
+	if diff -ruN $1 $2 >/dev/null; then
+		echo -n .
+	else
+		echo ERROR: diff
+		exit 1
+	fi
+}
+
+run_server(){
+	HOME=$ROOT/test.$N/ \
+	PATH=$ROOT/test.$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'" \
+		smd-server -v test Mail < c2s 2> log.server.$1 \
+		| tee log.s2c > s2c &
+	RC=$!
+	TOKILL="$TOKILL $RC"
+}
+
+run_client(){
+	cd target 
+	HOME=$ROOT/test.$N/target \
+	PATH=$ROOT/test.$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'" \
+		smd-client -v test Mail < ../s2c 2> ../log.client.$1 \
+		| tee ../log.c2s > ../c2s &
+	RC=$!
+	TOKILL="$TOKILL $RC"
+	cd ..
+}
+
+msync(){
+	run_server $N
+	local SERVER=$RC
+	run_client $N
+	local CLIENT=$RC
+	
+	wait $SERVER
+	wait $CLIENT
+}
+
+assert(){
+	if [ "$1" = "$2" ]; then
+		echo -n '.'
+	else
+		echo 'ERROR: ' $3
+		exit 1
+	fi
+}
+
+prepare_client-server(){
+	local N=$1
+
+	cd $BASE
+	rm -rf $ROOT/test.$N
+	mkdir -p $ROOT/test.$N/target
+	make --quiet
+	make --quiet install-bin PREFIX=$ROOT/test.$N
+	
+	cd $ROOT/test.$N
+	tar -xzf $BASE/misc/Mail.testcase.tgz
+	mkfifo s2c
+	mkfifo c2s
+}
+
+prepare_pull-push(){
+	local N=$1
+
+	cd $BASE
+	rm -rf $ROOT/test.$N
+	mkdir -p $ROOT/test.$N/target
+	make --quiet
+	make --quiet install-bin PREFIX=$ROOT/test.$N
+}
+
+run_test() {
+	local T="$1"
+	echo -n "running $TESTSUITE/`basename $T`: "
+	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
+	prepare_$TESTSUITE $N
+	cd $ROOT/test.$N
+	. $T
+	echo OK
+}
+
+run_tests() {
+	local testfile="$1"
+	if [ ! -z "$testfile" ] && [ -f $testfile ]; then
+		run_test $testfile
+	else
+		for T in $BASE/tests.d/$TESTSUITE/[0-9]*; do
+			run_test $T
+		done
+	fi
+}
