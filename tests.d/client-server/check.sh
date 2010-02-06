@@ -26,7 +26,7 @@ echo "Tested $PATHS paths"
 echo
 
 grep TRACE $ROOT/test.[0-9]*/log.client* \
-	| sort -u | sed 's?^.*/\([^/]*\):?\1?'
+	| sort -u | sed 's?^.*/\([^/]*\):?\1?' | sed 's/TRACE://'
 
 echo
 echo "Surely missing leaves (there may be more paths for the same leaf):"
