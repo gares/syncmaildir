@@ -43,7 +43,7 @@ trap __cleanup "EXIT"
 ### Variables setup and sanity checks ###
 
 assert_executable() {
-	if type -P $1 >/dev/null; then
+	if type $1 >/dev/null; then
 		:
 	else
 		echo $1 not found, please install it or fix the paths
