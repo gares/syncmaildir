@@ -47,6 +47,8 @@ assert_executable() {
 		:
 	else
 		echo $1 not found, please install it or fix the paths
+		echo PATH=$PATH
+		echo type $1: `type $1`
 		exit 1
 	fi
 }
