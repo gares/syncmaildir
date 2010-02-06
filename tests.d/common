@@ -67,7 +67,7 @@ assert(){
 	fi
 }
 
-prepare_client-server(){
+prepare(){
 	local N=$1
 
 	cd $BASE
@@ -82,21 +82,11 @@ prepare_client-server(){
 	mkfifo c2s
 }
 
-prepare_pull-push(){
-	local N=$1
-
-	cd $BASE
-	rm -rf $ROOT/$TESTSUITE/test.$N
-	mkdir -p $ROOT/$TESTSUITE/test.$N/target
-	make --quiet
-	make --quiet install-bin PREFIX=$ROOT/$TESTSUITE/test.$N
-}
-
 run_test() {
 	local T="$1"
 	echo -n "running $TESTSUITE/`basename $T`: "
 	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-	prepare_$TESTSUITE $N
+	prepare $N
 	cd $ROOT/$TESTSUITE/test.$N
 	. $T
 	echo OK
