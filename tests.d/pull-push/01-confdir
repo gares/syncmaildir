@@ -1,2 +1,9 @@
-echo -n ...fake...
+#!/bin/sh
+
+HOME=$PWD bin/smd-pull -t >/dev/null
+
+for d in "" "log" "fifo" "hooks/pre-pull.d" "hooks/post-pull.d" "hooks/pre-push.d" "hooks/post-push.d" ; do
+	test -d .smd/$d
+	assert $? 0 "missing dir .smd/$d"
+done
 

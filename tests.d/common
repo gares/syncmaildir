@@ -27,9 +27,9 @@ test_eq(){
 }
 
 run_server(){
-	HOME=$ROOT/test.$N/ \
-	PATH=$ROOT/test.$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/test.$N/ \
+	PATH=$ROOT/$TESTSUITE/test.$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/test.$N/share/lua/5.1/?.lua;'" \
 		smd-server -v test Mail < c2s 2> log.server.$1 \
 		| tee log.s2c > s2c &
 	RC=$!
@@ -38,9 +38,9 @@ run_server(){
 
 run_client(){
 	cd target 
-	HOME=$ROOT/test.$N/target \
-	PATH=$ROOT/test.$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/test.$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/test.$N/target \
+	PATH=$ROOT/$TESTSUITE/test.$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/test.$N/share/lua/5.1/?.lua;'" \
 		smd-client -v test Mail < ../s2c 2> ../log.client.$1 \
 		| tee ../log.c2s > ../c2s &
 	RC=$!
@@ -71,12 +71,12 @@ prepare_client-server(){
 	local N=$1
 
 	cd $BASE
-	rm -rf $ROOT/test.$N
-	mkdir -p $ROOT/test.$N/target
+	rm -rf $ROOT/$TESTSUITE/test.$N
+	mkdir -p $ROOT/$TESTSUITE/test.$N/target
 	make --quiet
-	make --quiet install-bin PREFIX=$ROOT/test.$N
+	make --quiet install-bin PREFIX=$ROOT/$TESTSUITE/test.$N
 	
-	cd $ROOT/test.$N
+	cd $ROOT/$TESTSUITE/test.$N
 	tar -xzf $BASE/misc/Mail.testcase.tgz
 	mkfifo s2c
 	mkfifo c2s
@@ -86,10 +86,10 @@ prepare_pull-push(){
 	local N=$1
 
 	cd $BASE
-	rm -rf $ROOT/test.$N
-	mkdir -p $ROOT/test.$N/target
+	rm -rf $ROOT/$TESTSUITE/test.$N
+	mkdir -p $ROOT/$TESTSUITE/test.$N/target
 	make --quiet
-	make --quiet install-bin PREFIX=$ROOT/test.$N
+	make --quiet install-bin PREFIX=$ROOT/$TESTSUITE/test.$N
 }
 
 run_test() {
@@ -97,15 +97,20 @@ run_test() {
 	echo -n "running $TESTSUITE/`basename $T`: "
 	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
 	prepare_$TESTSUITE $N
-	cd $ROOT/test.$N
+	cd $ROOT/$TESTSUITE/test.$N
 	. $T
 	echo OK
 }
 
 run_tests() {
 	local testfile="$1"
-	if [ ! -z "$testfile" ] && [ -f $testfile ]; then
-		run_test $testfile
+	if [ ! -z "$testfile" ]; then
+		if [ -f $testfile ] && 
+		   (echo $testfile | grep $TESTSUITE > /dev/null); then
+			run_test $testfile
+		else
+			echo skip $testfile
+		fi
 	else
 		for T in $BASE/tests.d/$TESTSUITE/[0-9]*; do
 			run_test $T
