@@ -98,8 +98,6 @@ run_tests() {
 		if [ -f $testfile ] && 
 		   (echo $testfile | grep $TESTSUITE > /dev/null); then
 			run_test $testfile
-		else
-			echo skip $testfile
 		fi
 	else
 		for T in $BASE/tests.d/$TESTSUITE/[0-9]*; do
