@@ -58,6 +58,11 @@ msync(){
 	wait $CLIENT
 }
 
+mpull(){
+	HOME=$ROOT/$TESTSUITE/test.$N/ \
+		bin/smd-pull $@ > log.pull 2>&1
+}
+
 assert(){
 	if [ "$1" = "$2" ]; then
 		echo -n '.'
