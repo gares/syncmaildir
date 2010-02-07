@@ -57,7 +57,7 @@ check-w-%:
 	@which $* > /dev/null || echo $* not found
 
 test: all check-run misc/Mail.testcase.tgz
-	@tests.d/test.sh $T
+	@tests.d/test.sh $(addprefix $(shell pwd)/,$T)
 
 misc/Mail.testcase.tgz: 
 	$(MAKE) check-w-polygen
