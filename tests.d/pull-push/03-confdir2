@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mpull
+assert $? 1 "if not -t, it should fail"
+mpull -t 
+assert $? 0 "if -t, it should not fail, even if .smd exists"
+

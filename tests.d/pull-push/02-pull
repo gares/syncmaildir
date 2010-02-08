@@ -1,0 +1,9 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail target/Mail 

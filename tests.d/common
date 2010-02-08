@@ -3,6 +3,8 @@
 # BASE: where you can run make/make install
 # TESTSUITE: client-server, pull-push
 
+#set -x
+
 ROOT=$BASE/tests.d/run/$TESTSUITE/
 
 TOKILL=""
@@ -59,8 +61,9 @@ msync(){
 }
 
 mpull(){
-	HOME=$ROOT/$TESTSUITE/test.$N/ \
-		bin/smd-pull $@ > log.pull 2>&1
+	HOME=$ROOT/$TESTSUITE/test.$N/target \
+	HOMES=$ROOT/$TESTSUITE/test.$N/ \
+		$ROOT/$TESTSUITE/test.$N/bin/smd-pull $@ > log.pull 2>&1
 }
 
 assert(){
@@ -79,7 +82,17 @@ prepare(){
 	rm -rf $ROOT/$TESTSUITE/test.$N
 	mkdir -p $ROOT/$TESTSUITE/test.$N/target
 	make --quiet
-	make --quiet install-bin PREFIX=$ROOT/$TESTSUITE/test.$N
+	make --quiet install-bin \
+		SSH=$ROOT/$TESTSUITE/test.$N/bin/fakessh \
+		PREFIX=$ROOT/$TESTSUITE/test.$N
+
+	cat > $ROOT/$TESTSUITE/test.$N/bin/fakessh <<-EOT
+	#!/bin/sh
+	shift
+	cd \$HOMES
+	HOME=\$HOMES \$@
+	EOT
+	chmod a+x $ROOT/$TESTSUITE/test.$N/bin/fakessh
 	
 	cd $ROOT/$TESTSUITE/test.$N
 	tar -xzf $BASE/misc/Mail.testcase.tgz
