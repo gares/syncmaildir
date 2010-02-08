@@ -1,0 +1,13 @@
+#!/bin/sh
+
+mpull -t 
+cat > target/.smd/hooks/post-pull.d/01-test <<EOT
+echo \$@
+EOT
+chmod a+x target/.smd/hooks/post-pull.d/01-test
+chmod a-w target/
+mpull 
+chmod u+w target/
+grep 'post pull default 1' log.pull > /dev/null
+assert $? 0 "hook not called correctly"
+
