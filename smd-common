@@ -181,7 +181,11 @@ read_conffile() {
 		EOT
 		echo No config file found: created a default one
 		echo Please edit it: $CONFFILE
-		exit 1
+		if [ "$TEMPLATE_ONLY" = 1 ]; then
+			exit 0
+		else
+			exit 1
+		fi
 	fi
 
 	if [ "$TEMPLATE_ONLY" = 1 ]; then
