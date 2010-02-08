@@ -4,3 +4,4 @@ config.vala
 *.1
 *.html
 syncmaildir-*.tar.gz
+tests.d/run

@@ -1,17 +1,11 @@
 #!/bin/bash
 
-cd $ROOT/test.$N
 
 msync 1
 
-C=`ls Mail/cur/ | head -n 1`
-cp Mail/cur/$C Mail/cur/copied_here
-cp Mail/cur/$C target/Mail/cur/copied_here
-rm target/Mail/cur/$C
+cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
 
 msync 2
-
-rm Mail/cur/$C
 
 test_eq Mail target/Mail 
 
@@ -23,4 +17,3 @@ assert $X 0 "GET in c2s, should not"
 
 X=`grep '^COMMIT$' log.c2s | wc -l`
 assert $X 1 "missing COMMIT in c2s"
-

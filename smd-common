@@ -1,188 +1,309 @@
 # Released under the terms of GPLv3 or at your option any later version.
 # No warranties.
-# Copyright 2009 Enrico Tassi <gares@fettunta.org>
+# Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
 
 # Common stuff for smd-pull and smd-push
+# Convention:
+# - uppercase variables are global
+# - lowercase variables are local
+# - function arguments are documented assigning to local variable with
+#   a decent name positional arguments
+
+### Housekeeping ###
+
+__TOREMOVE=""
+__TOKILL=""
+
+atexit_rm() {
+	local path="$1"
+	__TOREMOVE="$__TOREMOVE $path"
+}
+
+atexit_kill() {
+	local pid="$1"
+	__TOKILL="$__TOKILL $pid"
+}
+
+gc_mktemp() {
+	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`	
+	atexit_rm $tmp
+	echo "$tmp"
+}
+
+__cleanup() {
+	rm -f $__TOREMOVE
+	for p in $__TOKILL; do
+		kill $p 2>/dev/null || true
+	done
+}
+
+trap __cleanup "EXIT" 
 
 
 ### Variables setup and sanity checks ###
 
-if [ `echo $PREFIX | cut -c -1` = "@" ]; then
-	SMDSERVER=~/Projects/syncmaildir/smd-server 
-	SMDCLIENT=~/Projects/syncmaildir/smd-client 
-	# in development mode we assume that on the remote host
-	# the software is installed such that binaries are in $PATH
-	REMOTESMDSERVER=smd-server
-	REMOTESMDCLIENT=smd-client
-else
-	SMDSERVER=$PREFIX/bin/smd-server 
-	SMDCLIENT=$PREFIX/bin/smd-client 
-	REMOTESMDSERVER="$SMDSERVER"
-	REMOTESMDCLIENT="$SMDCLIENT"
-fi
-
-H=$HOME
-CONFDIR=$H/.smd
-LOCKFILE=$CONFDIR/lock
-SHOWTAGS=0
-TEMPLATE_ONLY=0
-
-SSH="@SSH@"
-if [ `echo "$SSH" | cut -c -1` = "@" ]; then
-	SSH=ssh
-	echo "`basename $0` not installed, assuming secure shell client is $SSH"
-fi
-SED="@SED@"
-if [ `echo "$SED" | cut -c -1` = "@" ]; then
-	SED=sed
-	echo "`basename $0` not installed, assuming stream editor is $SED"
-fi
-
-function assert_executable() {
-	if type -P $1 >/dev/null; then
+assert_executable() {
+	if type $1 >/dev/null; then
 		:
 	else
 		echo $1 not found, please install it or fix the paths
+		echo PATH=$PATH
+		echo type $1: `type $1`
 		exit 1
 	fi
 }
 
-# sanity checks for required binaries
-assert_executable $SED
-assert_executable $SSH
-assert_executable $SMDSERVER
-assert_executable $SMDCLIENT
+init() {
+	if [ `echo $PREFIX | cut -c -1` = "@" ]; then
+		SMDSERVER=~/Projects/syncmaildir/smd-server 
+		SMDCLIENT=~/Projects/syncmaildir/smd-client 
+		# in development mode we assume that on the remote host
+		# the software is installed such that binaries are in $PATH
+		REMOTESMDSERVER=smd-server
+		REMOTESMDCLIENT=smd-client
+	else
+		SMDSERVER=$PREFIX/bin/smd-server 
+		SMDCLIENT=$PREFIX/bin/smd-client 
+		REMOTESMDSERVER="$SMDSERVER"
+		REMOTESMDCLIENT="$SMDCLIENT"
+	fi
+	
+	H=$HOME
+	CONFDIR=$H/.smd
+	LOCKFILE=$CONFDIR/lock
+	SHOWTAGS=0
+	TEMPLATE_ONLY=0
+	CONFFILE=""
 
-if [ "$1" = "-v" ]; then
-	shift
-	SHOWTAGS=1
-fi
+	# default values for the configuration file
+	DEBUG=false
 
-if [ "$1" = "-t" ]; then
-	shift
-	TEMPLATE_ONLY=1
-fi
+	# external programs	
+	SSH="@SSH@"
+	if [ `echo "$SSH" | cut -c -1` = "@" ]; then
+		SSH=ssh
+		echo "`basename $0` not installed, assuming secure shell client is $SSH"
+	fi
+	SED="@SED@"
+	if [ `echo "$SED" | cut -c -1` = "@" ]; then
+		SED=sed
+		echo "`basename $0` not installed, assuming stream editor is $SED"
+	fi
 
-REPNAME=
-if [ ! -z "$1" ]; then
-	REPNAME=$1
-else
-	REPNAME=default
-fi
-CONFFILE=$CONFDIR/config.$REPNAME
+	# sanity checks for required binaries
+	assert_executable $SED
+	assert_executable $SSH
+	assert_executable $SMDSERVER
+	assert_executable $SMDCLIENT
 
-# backward compatibility code
-if [ ! -f $CONFFILE ] && \
-   [ "$REPNAME" = "default" ] && \
-   [ -f $CONFDIR/config ]; then
-	# we import the old conffile
-	mkdir -p $CONFDIR/log
-	mkdir -p $CONFDIR/fifo
-	echo "From version 0.9.4, configuration files are named"
-	echo "$CONFDIR/config.\$FOO, where FOO is an optional argument"
-	echo "to smd-pull/smd-push. The default value of FOO is 'default'."
-	echo "I'm renaming $CONFDIR/config to $CONFFILE."
-	mv $CONFDIR/config $CONFFILE
-fi
-
-if [ ! -f $CONFFILE ]; then
+	# setup of confdir
 	mkdir -p $CONFDIR/
 	mkdir -p $CONFDIR/log
 	mkdir -p $CONFDIR/fifo
-	cat > $CONFFILE <<- EOT
-	# No config file found, this is a template. You want to edit it.
+	mkdir -p $CONFDIR/hooks
+	mkdir -p $CONFDIR/hooks/pre-pull.d
+	mkdir -p $CONFDIR/hooks/pre-push.d
+	mkdir -p $CONFDIR/hooks/post-pull.d
+	mkdir -p $CONFDIR/hooks/post-push.d
+}
 
-	# Host name to be used with ssh as the server (use ~/.ssh/config 
-	# for extra options). smd-pull will pull from this host, smd-push
-	# will push to this host and use it as the id of the remote mailbox.
-	#
-	# We suggest creating an alias with your ~/.ssh/config like:
-	# 
-	#   Host smd-server-foo
-	#     Compression yes
-	#     Hostname your.real.server.name
-	#     Username you
-	#
-	SERVERNAME=smd-server-$REPNAME
+### Command line argument parsing ###
 
-
-	# Host name to be used as the client. 
-	# smd-pull will use this just as an id for the client. If you
-	# plan to sync with multiple endpoints, you must use a different
-	# client id for any of them, thus a pair localhostname-remotehostname
-	# should be used
-	#
-	CLIENTNAME=`hostname`-$REPNAME
-
-	# The mailbox to sync, the path is the same on both hosts, but
-	# can be relative to the current working directory.
-	MAILBOX="Mail/"
-
-	# Log client to server and server to client communication.
-	# This is useful only for debugging, since all network traffic
-	# is dumped, including transmitted mails.
-	# DEBUG=true
-	EOT
-	echo No config file found: created a default one
-	echo Please edit it: $CONFFILE
-	exit 1
-fi
-
-if [ "$TEMPLATE_ONLY" = 1 ]; then
-	exit 0
-fi
-
-if [ -f $LOCKFILE ]; then
-	if ps -p `cat $LOCKFILE` > /dev/null | grep -E 'smd-(push|pull)'; then
-		echo Already running.
-		echo If this is not the case, remove $LOCKFILE by hand.
-		echo "any: smd-pushpull@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(kill `cat $LOCKFILE`) run(rm $LOCKFILE))"
-		exit 1
-	else
-		echo Found lockfile of a dead instance. Ignored.
+parse_args() {
+	if [ "$1" = "-v" ]; then
+		shift
+		SHOWTAGS=1
 	fi
-fi
+	
+	if [ "$1" = "-t" ]; then
+		shift
+		TEMPLATE_ONLY=1
+	fi
+	
+	REPNAME=
+	if [ ! -z "$1" ]; then
+		REPNAME=$1
+	else
+		REPNAME=default
+	fi
+	CONFFILE=$CONFDIR/config.$REPNAME
+}
 
-echo $$ > $LOCKFILE
+### Confdir setup ###
 
-# defaults for the configuration file
-DEBUG=false
+read_conffile() {
+	# backward compatibility code
+	if [ ! -f $CONFFILE ] && \
+	   [ "$REPNAME" = "default" ] && \
+	   [ -f $CONFDIR/config ]; then
+		# we import the old conffile
+		echo "From version 0.9.4, configuration files are named"
+		echo "$CONFDIR/config.\$FOO, where FOO is an optional argument"
+		echo "to smd-pull/smd-push. The default value of FOO is 'default'."
+		echo "I'm renaming $CONFDIR/config to $CONFFILE."
+		mv $CONFDIR/config $CONFFILE
+	fi
+	
+	if [ ! -f $CONFFILE ]; then
+		cat > $CONFFILE <<- EOT
+		# No config file found, this is a template. You want to edit it.
+	
+		# Host name to be used with ssh as the server (use ~/.ssh/config 
+		# for extra options). smd-pull will pull from this host, smd-push
+		# will push to this host and use it as the id of the remote mailbox.
+		#
+		# We suggest creating an alias with your ~/.ssh/config like:
+		# 
+		#   Host smd-server-foo
+		#     Compression yes
+		#     Hostname your.real.server.name
+		#     Username you
+		#
+		SERVERNAME=smd-server-$REPNAME
+	
+	
+		# Host name to be used as the client. 
+		# smd-pull will use this just as an id for the client. If you
+		# plan to sync with multiple endpoints, you must use a different
+		# client id for any of them, thus a pair localhostname-remotehostname
+		# should be used
+		#
+		CLIENTNAME=`hostname`-$REPNAME
+	
+		# The mailbox to sync, the path is the same on both hosts, but
+		# can be relative to the current working directory.
+		MAILBOX="Mail/"
+	
+		# Log client to server and server to client communication.
+		# This is useful only for debugging, since all network traffic
+		# is dumped, including transmitted mails.
+		# DEBUG=true
+		EOT
+		echo No config file found: created a default one
+		echo Please edit it: $CONFFILE
+		if [ "$TEMPLATE_ONLY" = 1 ]; then
+			exit 0
+		else
+			exit 1
+		fi
+	fi
 
-. $CONFFILE
+	if [ "$TEMPLATE_ONLY" = 1 ]; then
+		exit 0
+	fi
 
-CtL=$CONFDIR/fifo/c2l.$REPNAME
-LtC=$CONFDIR/fifo/l2c.$REPNAME
-LtS=$CONFDIR/fifo/l2s.$REPNAME
-StL=$CONFDIR/fifo/s2l.$REPNAME
-CtS=$CONFDIR/log/c2s.$REPNAME.log
-StC=$CONFDIR/log/s2c.$REPNAME.log
-CL=$CONFDIR/log/client.$REPNAME.log
-SL=$CONFDIR/log/server.$REPNAME.log
+	. $CONFFILE
+}
 
-[ -p $CtL ] || mkfifo $CtL 
-[ -p $LtC ] || mkfifo $LtC
-[ -p $LtS ] || mkfifo $LtS 
-[ -p $StL ] || mkfifo $StL
+### Only one instance at a time please ###
 
-mycat() { 
+check_lockfile() {
+	# could be relaxed to non related mailboxes/enpoints, but the test is
+	# not straightforward
+	if [ -f $LOCKFILE ]; then
+		if ps -p `cat $LOCKFILE` > /dev/null | grep -E 'smd-(push|pull)'; then
+			echo Already running.
+			echo If this is not the case, remove $LOCKFILE by hand.
+			echo "any: smd-pushpull@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(kill `cat $LOCKFILE`) run(rm $LOCKFILE))"
+			exit 1
+		else
+			echo Found lockfile of a dead instance. Ignored.
+		fi
+	fi
+	
+	echo $$ > $LOCKFILE
+	atexit_rm $LOCKFILE
+}
+
+### Create all the needed pipes ###
+
+setup_plumbing() {
+	CtL=$CONFDIR/fifo/c2l.$REPNAME
+	LtC=$CONFDIR/fifo/l2c.$REPNAME
+	LtS=$CONFDIR/fifo/l2s.$REPNAME
+	StL=$CONFDIR/fifo/s2l.$REPNAME
+	
+	[ -p $CtL ] || mkfifo $CtL 
+	[ -p $LtC ] || mkfifo $LtC
+	[ -p $LtS ] || mkfifo $LtS 
+	[ -p $StL ] || mkfifo $StL
+}
+
+### Logging ###
+
+__mycat() { 
+	# like cat, but ignores arguments
 	cat 
 }
 
-MITM=mycat
-VERBOSE=
-
-if [ "$DEBUG" = "true" ]; then
-	MITM=tee
-	VERBOSE=-v
-fi
-
-cleanup() {
-	rm -f $CONFDIR/lock
-	kill $LOGGER1 2>/dev/null || true
-	kill $LOGGER2 2>/dev/null || true
-	kill $SERVER 2>/dev/null || true
-	kill $CLIENT 2>/dev/null || true
+setup_logging() {
+	CtS=$CONFDIR/log/c2s.$REPNAME.log
+	StC=$CONFDIR/log/s2c.$REPNAME.log
+	CL=$CONFDIR/log/client.$REPNAME.log
+	SL=$CONFDIR/log/server.$REPNAME.log
+	
+	MITM=__mycat
+	VERBOSE=
+	
+	if [ "$DEBUG" = "true" ]; then
+		MITM=tee
+		VERBOSE=-v
+	fi
 }
 
-trap cleanup "EXIT" 
+# this could be a system wide post-* hook
+report() {
+	local exitcode="$1"
+	local showtags="$2"
+	local currcmd="$3"
+	local inversecmd="$3"
+	local localprog="$4"
+	local remoteprog="$5"
+	if [ $exitcode = 1 ]; then
+		grep ^ERROR $SL \
+			| $SED "s/^/$remoteprog: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^ERROR $CL \
+			| $SED "s/^/$localprog: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^ssh: $SL \
+			| $SED "s/^/$remoteprog: ERROR: /"
+	fi
+	if [ $showtags = 1 ]; then
+		#echo "`date`: $currcmd $SERVERNAME" >> $CL
+		grep ^TAGS $SL \
+			| $SED "s/^/$REPNAME: $remoteprog@$SERVERNAME: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		grep ^TAGS $CL \
+			| $SED "s/^/$REPNAME: $localprog@localhost: /" \
+			| $SED "s/@@INVERSECOMMAND@@/$inversecmd/" \
+			| $SED "s/@@ENDPOINT@@/$REPNAME/"
+		if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
+		   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
+			# it may be that ssh failed to resolve the hostname
+			# so we generate a fake tag for it
+			cat $SL $CL
+			echo "$REPNAME: $remoteprog@$SERVERNAME: TAGS: error::context(ssh) probable-cause(network) human-intervention(avoidable) suggested-actions(retry)"
+		fi
+	fi
+}
 
+### Hooks ###
+
+run_hooks() {
+	local dir="$1"
+	local when="$2"
+	local what="$3"
+	local status="$4"
+	for h in $dir/hooks/$when-$what.d/*; do
+		if [ -x $h ]; then 
+			$h $when $what $REPNAME $status
+		fi
+	done
+}
+
+
+# vim:ts=4 filetype=sh:

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "mpull -t failed"
+
+for d in "" "log" "fifo" "hooks/pre-pull.d" "hooks/post-pull.d" "hooks/pre-push.d" "hooks/post-push.d" ; do
+	test -d target/.smd/$d
+	assert $? 0 "missing dir .smd/$d"
+done
+
+test -f target/.smd/config.default
+assert $? 0 "missing config.default"
+
+rm -rf target/.smd/
+rmdir target
+assert $? 0 "target dir not empty, -t should not sync"

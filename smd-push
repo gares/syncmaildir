@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Released under the terms of GPLv3 or at your option any later version.
 # No warranties.
-# Copyright 2009 Enrico Tassi <gares@fettunta.org>
+# Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
 
 # the idea is (where == is a bi-directional pipe) :
 #
@@ -22,9 +22,19 @@ fi
 
 . $SMDROOT/smd-common
 
+init
+parse_args "$@"
+read_conffile
+# this could be a system wide pre-hook
+check_lockfile
+setup_plumbing
+setup_logging
+
 # we move to the home, since Mail paths are relative
 # to the home
 cd
+
+run_hooks $CONFDIR pre push 0
 
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
@@ -42,36 +52,8 @@ EXITCODE=0
 wait $SERVER || EXITCODE=1
 wait $CLIENT || EXITCODE=1 
 
-if [ $EXITCODE = 1 ]; then
-	grep ^ERROR $CL \
-		| $SED 's/^/smd-server: /' \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^ERROR $SL \
-		| $SED 's/^/smd-client: /' \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^ssh: $SL \
-		| $SED 's/^/smd-client: ERROR: /'
-fi
-if [ $SHOWTAGS = 1 ]; then
-	echo "`date`: smd-push $SERVERNAME" >> $SL
-	grep ^TAGS $CL \
-		| $SED "s/^/$REPNAME: smd-server@localhost: /" \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	grep ^TAGS $SL \
-		| $SED "s/^/$REPNAME: smd-client@$SERVERNAME: /" \
-		| $SED "s/@@INVERSECOMMAND@@/smd-pull/" \
-		| $SED "s/@@ENDPOINT@@/$REPNAME/"
-	if [ `grep ^TAGS $SL|wc -l` = 0 ] && \
-	   [ `grep ^TAGS $CL|wc -l` = 0 ]; then
-		# it may be that ssh failed to resolve the hostname
-		# so we generate a fake tag for it
-		cat $SL $CL
-		echo "$REPNAME: smd-client@$SERVERNAME: TAGS: error::context(ssh) probable-cause(network) human-intervention(avoidable) suggested-actions(retry)"
-	fi
+run_hooks $CONFDIR post push $EXITCODE
 
-fi
+report $EXITCODE $SHOWTAGS smd-push smd-pull smd-server smd-client
 
 exit $EXITCODE

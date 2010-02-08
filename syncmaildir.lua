@@ -1,6 +1,6 @@
 -- Released under the terms of GPLv3 or at your option any later version.
 -- No warranties.
--- Copyright 2009 Enrico Tassi <gares@fettunta.org>
+-- Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
 --
 -- common code for smd-client/server
 

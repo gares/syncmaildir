@@ -1,21 +1,25 @@
 #!/bin/bash
 
-cd $ROOT/test.$N
 
 msync 1
 
-cp Mail/cur/`ls Mail/cur/ | tail -n 1` target/Mail/cur/copied_here
 cp Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/copied_here
+sed -i 's/^Subject:.*$/Subject: foo/' Mail/cur/copied_here
 cp -r target/Mail target/Mail.old
+chmod a-w target/Mail/cur
 
 msync 2
 
+chmod u+w target/Mail/cur
+
 test_eq target/Mail.old target/Mail 
-X=`grep '^COPY ' log.s2c | wc -l`
+
+X=`grep '^COPYBODY ' log.s2c | wc -l`
 assert $X 1 "missing COPY in s2c"
 
-X=`grep '^GET ' log.c2s | wc -l`
-assert $X 0 "GET in c2s, should not"
+X=`grep '^GETHEADER ' log.c2s | wc -l`
+assert $X 0 "GET present in c2s, should not"
 
 X=`grep '^ABORT$' log.c2s | wc -l`
 assert $X 1 "missing ABORT in c2s"
+

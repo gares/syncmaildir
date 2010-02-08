@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=0.9.12
+VERSION=0.9.13
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
@@ -57,9 +57,7 @@ check-w-%:
 	@which $* > /dev/null || echo $* not found
 
 test: all check-run misc/Mail.testcase.tgz
-	@tests.d/test.sh $T
-	@tests.d/check.sh
-	@rm -rf test.[0-9]*/
+	@tests.d/test.sh $(addprefix $(shell pwd)/,$T)
 
 misc/Mail.testcase.tgz: 
 	$(MAKE) check-w-polygen
@@ -127,7 +125,7 @@ install-misc: $(MANPAGES)
 
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
-	rm -rf test.[0-9]*/ 
+	rm -rf tests.d/run
 	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 	rm -f config.vala
