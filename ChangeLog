@@ -1,6 +1,31 @@
-... - ... - ...
+../02/2010 - major feature relase - version 0.9.13 aka too many changes to be rc
+	* smd-common:
+	  - major refactoring, almost all code is inside functions
+	  - new function run_hooks
+	* smd-pull, smd-push:
+	  - adapt to the new smd-common interface: call by hand init
+	    functions instead of having them executed by side effect of
+	    sourcing smd-common
+	* hooks support in smd-push and smd-pull:
+	  - executables contained in the .smd/hooks/{pre,post}-{pull,push}.d/
+	    directories are executed pre/post the pull/push process.
+	  - hooks receive as argument:
+	    - when: pre/post
+	    - what: push/pull
+	    - endpoint: the endpoint name (usually default)
+	    - status: the current status, 0 for OK, 1 for error. pre-hooks
+	      always receive 0, post hooks receive the value smd-push/pull
+	      will return after hooks terminate
+	  - thanks to Bart Trojanowsk for the hooks idea
+	* tests.d/:
+	  - major redesign of the test framework, allowing multiple
+	    test suites
+	  - new test suite for smd-pull/push
 	* mddiff.1.txt:
 	  - fixed typo
+	* copyright:
+	  - updated years in all files: 2008-2010
+	  - added copyright banner where missing
 
 27/12/2009 - minor fix release - version 0.9.12 aka 1.0rc3
 	* DESIGN:
