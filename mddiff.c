@@ -7,7 +7,7 @@
 // Absolutely no warranties, released under GNU GPL version 3 or at your 
 // option any later version.
 //
-// Copyright 2008 Enrico Tassi <tassi@cs.unibo.it>
+// Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
 
 #define _BSD_SOURCE
 #define _GNU_SOURCE
