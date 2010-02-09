@@ -146,7 +146,7 @@ class smdApplet {
 	// ======================= constructor ================================
 
 	// initialize data structures and build gtk+ widgets
-	public smdApplet() throws Exit {
+	public smdApplet(bool hide_status_icon) throws Exit {
 		// load the ui file
 		builder = new Gtk.Builder ();
 		try { builder.add_from_file (smd_applet_ui); } 
@@ -296,6 +296,7 @@ class smdApplet {
 		};
 
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
+		si.set_visible(!hide_status_icon);
 		si.set_tooltip_text("smd-applet is running");
 		si.popup_menu += (button,time) => {
 				menuR.popup(null,null,si.position_menu,0,
@@ -921,7 +922,7 @@ static int main(string[] args){
 
 	// go!
 	try { 
-		var smd_applet = new smdApplet();
+		var smd_applet = new smdApplet(config_only);
     	if ( config_only ) {
 			smd_applet.configure();
 		} else {
