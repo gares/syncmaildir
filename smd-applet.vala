@@ -882,9 +882,10 @@ static int main(string[] args){
 		smdApplet.smd_applet_ui = PREFIX + SMD_APPLET_UI; 
 	}
 
-	SMD_LOGS_DIR = GLib.Environment.get_home_dir()+"/.smd/log/";
-	SMD_LOOP_CFG = GLib.Environment.get_home_dir()+"/.smd/loop";
-	SMD_PP_DEF_CFG = GLib.Environment.get_home_dir()+"/.smd/config.default";
+	var homedir = GLib.Environment.get_home_dir();
+	SMD_LOGS_DIR = homedir+"/.smd/log/";
+	SMD_LOOP_CFG = homedir+"/.smd/loop";
+	SMD_PP_DEF_CFG = homedir+"/.smd/config.default";
 
 	// we init gtk+ and notify
 	Gtk.init (ref args);
