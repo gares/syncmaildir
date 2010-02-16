@@ -125,6 +125,7 @@ STATIC time_t lastcheck;
 
 // program options
 STATIC int verbose;
+STATIC int dry_run;
 
 // ============================ helpers =====================================
 
@@ -598,6 +599,7 @@ STATIC struct option long_options[] = {
 	{"max-mailno", 1, NULL, OPT_MAX_MAILNO},
 	{"db-file"   , 1, NULL, OPT_DB_FILE}, 
 	{"verbose"   , 0, NULL, 'v'},
+	{"dry-run"   , 0, NULL, 'd'},
 	{"help"      , 0, NULL, 'h'},
 	{NULL        , 0, NULL, 0}, 
 };
@@ -612,6 +614,7 @@ STATIC const char* long_options_doc[] = {
 		"automatically if needed", 
 	"Name of the cache for the endpoint (default db.txt)",
 	"Increase program verbosity (printed on stderr, short -v)", 
+	"Do not generate a new db file (short -d)",
 	"This help screen", 
 	NULL
 };
@@ -659,7 +662,7 @@ int main(int argc, char *argv[]) {
 	glib_check_version(2,16,0);
 
 	for(;;) {
-		c = getopt_long(argc, argv, "vh", long_options, &option_index);
+		c = getopt_long(argc, argv, "vhd", long_options, &option_index);
 		if (c == -1) break; // no more args
 		switch (c) {
 			case OPT_MAX_MAILNO:
@@ -670,6 +673,9 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'v':
 				verbose = 1;
+			break;
+			case 'd':
+				dry_run = 1;
 			break;
 			case 'h':
 				help(argv[0]);
@@ -717,7 +723,7 @@ int main(int argc, char *argv[]) {
 
 	generate_deletions();
 
-	save_db(dbfile, bigbang);
+	if (!dry_run) save_db(dbfile, bigbang);
 
 	exit(EXIT_SUCCESS);
 }
