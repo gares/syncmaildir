@@ -1,0 +1,12 @@
+#!/bin/sh
+
+mdiff Mail
+assert $? 0 "mdiff failed"
+
+test -f db.txt.new
+assert $? 0 "mdiff not generating .new file"
+
+grep -v ^warning log.mddiff > log.cleaned
+grep -v ^ADD log.cleaned > /dev/null
+assert $? 1 "mdiff generating non ADD commands"
+

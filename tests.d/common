@@ -66,6 +66,11 @@ mpull(){
 		$ROOT/$TESTSUITE/test.$N/bin/smd-pull $@ > log.pull 2>&1
 }
 
+mdiff(){
+	HOME=$ROOT/$TESTSUITE/test.$N/ \
+		$ROOT/$TESTSUITE/test.$N/bin/mddiff $@ > log.mddiff 2>&1
+}
+
 assert(){
 	if [ "$1" = "$2" ]; then
 		echo -n '.'

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+mdiff Mail
+assert $? 0 "mdiff failed"
+
+test -f db.txt.new
+assert $? 0 "mdiff not generating .new file"
+
+mv db.txt.new db.txt
+
+mdiff -d Mail
+assert $? 0 "mdiff -d failed"
+
+test -f db.txt.new
+assert $? 1 "mdiff generating .new file even if -d is passed"
+
+mdiff --dry-run Mail
+assert $? 0 "mdiff --dry-run failed"
+
+test -f db.txt.new
+assert $? 1 "mdiff generating .new file even if --dry-run is passed"
+

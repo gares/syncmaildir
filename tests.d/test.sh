@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SUITES="client-server pull-push"
+SUITES="mddiff client-server pull-push"
 BASE=$PWD
 
 . $BASE/tests.d/common
