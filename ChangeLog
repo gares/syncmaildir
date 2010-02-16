@@ -21,8 +21,12 @@
 	  - major redesign of the test framework, allowing multiple
 	    test suites
 	  - new test suite for smd-pull/push
+	  - new test suite for mddiff
 	* mddiff.1.txt:
 	  - fixed typo
+	  - added -d --dry-run doc
+	* mddiff:
+	  - support -d --dry-run (i.e. not generate a db-file)
 	* copyright:
 	  - updated years in all files: 2008-2010
 	  - added copyright banner where missing
