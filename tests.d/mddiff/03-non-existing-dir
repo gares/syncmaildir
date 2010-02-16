@@ -1,0 +1,5 @@
+#!/bin/sh
+
+mdiff MailXX
+assert $? 1 "mdiff was successful even if called on a non-existing dir"
+
