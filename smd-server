@@ -40,7 +40,9 @@ function main()
 	table.remove(arg,1)
 	local dbfile = dbfile_name(endpoint, arg)
 	local xdelta = dbfile .. '.xdelta'
+	local dbfilemt = dbfile .. '.mtime'
 	local newdb = dbfile .. '.new'
+	local newdbmt = dbfilemt .. '.new'
 
 	local database_opt = '--db-file '.. dbfile
 	local mailbox_opt = table.concat(arg,' ')
@@ -98,6 +100,7 @@ function main()
 			os.remove(xdelta)
 		elseif l:match('^DONE$') then
 			if not dry_run() then os.rename(newdb, dbfile) end 
+			if not dry_run() then os.rename(newdbmt, dbfilemt) end 
 			os.exit(0)
 		elseif l:match('^ABORT$') then
 			-- the client failed in applying the diff

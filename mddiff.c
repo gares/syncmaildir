@@ -255,7 +255,7 @@ STATIC void save_db(const char* dbname, time_t timestamp){
 
 	fclose(fd);
 
-	snprintf(new_dbname,PATH_MAX,"%s.mtime",dbname);
+	snprintf(new_dbname,PATH_MAX,"%s.mtime.new",dbname);
 
 	fd = fopen(new_dbname,"w");
 	if (fd == NULL) ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
