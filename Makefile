@@ -131,12 +131,8 @@ clean:
 	rm -f config.vala
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz:
-	$(MAKE) clean
-	mkdir $(PROJECTNAME)-$(VERSION)
-	for X in *; do if [ $$X != $(PROJECTNAME)-$(VERSION) ]; then \
-		cp -r $$X $(PROJECTNAME)-$(VERSION); fi; done;
-	tar -cvzf $(PROJECTNAME)-$(VERSION).tar.gz $(PROJECTNAME)-$(VERSION)
-	rm -rf $(PROJECTNAME)-$(VERSION)
+	git archive --format=tar --prefix=$(PROJECTNAME)-$(VERSION)/ HEAD |\
+		gzip -9 > $(PROJECTNAME)-$(VERSION).tar.gz
 
 $(HTML): check-w-markdown
 	cat misc/head.html > index.html
