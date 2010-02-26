@@ -111,6 +111,7 @@ init() {
 
 parse_args() {
 	REPNAME=default
+	CHILDSARGS=
 	for arg in "$@"; do
 		case $arg in
 			-v|--verbose)
@@ -118,6 +119,9 @@ parse_args() {
 			;;
 			-t|--template-only)
 				TEMPLATE_ONLY=1
+			;;
+			-d|--dry-run)
+				CHILDSARGS=-d
 			;;
 			*)
 				REPNAME="$arg"		
@@ -243,11 +247,10 @@ setup_logging() {
 	SL=$CONFDIR/log/server.$REPNAME.log
 	
 	MITM=__mycat
-	VERBOSE=
 	
 	if [ "$DEBUG" = "true" ]; then
 		MITM=tee
-		VERBOSE=-v
+		CHILDSARGS="$CHILDSARGS -v"
 	fi
 }
 
