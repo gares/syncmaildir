@@ -7,6 +7,7 @@
 local PROTOCOL_VERSION="1.0"
 
 local verbose = false
+local dryrun = false
 
 local PREFIX = '@PREFIX@'
 
@@ -44,6 +45,12 @@ end
 function set_verbose(v)
 	verbose = v
 end
+
+function set_dry_run(v)
+	dryrun = v
+end
+
+function dry_run() return dryrun end
 
 function log(msg)
 	if verbose then
@@ -163,11 +170,23 @@ end
 function handshake(dbfile)
 	-- send the protocol version and the dbfile sha1 sum
 	io.write('protocol ',PROTOCOL_VERSION,'\n')
+
+	-- if true the db file is deleted after SHA1 computation
+	local kill_db_file_ASAP = false
+
+	-- if the db file was not there and --dry-run, we schedule its deletion
+	if dry_run() and not exists(dbfile) then kill_db_file_ASAP = true end
+	
+	-- we must have at least an empty file to compute its SHA1 sum
 	touch(dbfile)
 	local inf = io.popen(SHA1SUM..' '.. dbfile,'r')
+	
 	local db_sha = inf:read('*a'):match('^(%S+)')
 	io.write('dbfile ',db_sha,'\n')
 	io.flush()
+
+	-- but if the file was not there and --dry-run, we should not create it
+	if kill_db_file_ASAP then os.remove(dbfile) end
 
 	-- check protocol version and dbfile sha
 	local line = io.read('*l')

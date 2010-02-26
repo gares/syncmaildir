@@ -18,17 +18,24 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
-	if arg[1] == '-v' then
-		set_verbose(true)
-		table.remove(arg,1)
+	local usage = "Usage: "..arg[0].." [-vd] endpointname mailboxes...\n"
+	while #arg > 2 do
+		if arg[1] == '-v' or arg[1] == '--verbose' then
+			set_verbose(true)
+			table.remove(arg,1)
+		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
+			set_dry_run(true)
+			table.remove(arg,1)
+		else
+			break
+		end
 	end
 	
 	if #arg < 2 then
-		io.stderr:write([[
-Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
-		os.exit(1)
+		io.stderr:write(usage)
+		os.exit(2)
 	end
-	
+
 	local endpoint = arg[1]
 	table.remove(arg,1)
 	local dbfile = dbfile_name(endpoint, arg)
@@ -37,12 +44,14 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 
 	local database_opt = '--db-file '.. dbfile
 	local mailbox_opt = table.concat(arg,' ')
+	local dry_opt = ''
+	if dry_run() then dry_opt = '-d' end
 
 	-- we check the protocol version and dbfile fingerprint
 	handshake(dbfile)
 	
 	-- run mddiff and send the output to the client
-	local mddiff = MDDIFF..' '..database_opt..' '..mailbox_opt
+	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..mailbox_opt
 	local r = io.popen(mddiff,"r")
 	local sent = 0
 	while true do
@@ -74,7 +83,13 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			-- the client applied the diff, the new mailbox
 			-- fingerprint should be used for the next sync
 			local rc
-			rc = os.execute(XDELTA..' delta '..dbfile..' '..newdb..' '..xdelta)
+			if not dry_run() then
+				rc = os.execute(
+					XDELTA..' delta '..dbfile..' '..newdb..' '..xdelta)
+			else
+				os.execute('touch '..xdelta)
+				rc = 0 -- there is no newdb if --dry-run is given
+			end
 			if rc ~= 0 and rc ~= 256 then
 				log_error('Failed running `xdelta delta` on db file: '..rc)
 				os.exit(4)
@@ -82,12 +97,12 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			transmit(io.stdout, xdelta, "all")
 			os.remove(xdelta)
 		elseif l:match('^DONE$') then
-			os.rename(newdb, dbfile) 
+			if not dry_run() then os.rename(newdb, dbfile) end 
 			os.exit(0)
 		elseif l:match('^ABORT$') then
 			-- the client failed in applying the diff
 			log_error('Client aborted, removing '..dbfile..'.new\n')
-			os.remove(dbfile..".new")
+			if not dry_run() then os.remove(dbfile..".new") end
 			os.exit(5)
 		elseif l:match('^GET ') then
 			local path = l:match('^GET ([^%s]+)$')

@@ -78,6 +78,10 @@ end
 
 -- the function to fetch a mail message
 function get_full_email(name,hsha,bsha)
+	if dry_run() then
+		statistics.added = statistics.added + 1
+		return true
+	end
 	get_full_email_queue[#get_full_email_queue+1] = {
 		name = name;
 		hsha = hsha;
@@ -118,10 +122,15 @@ function get_header_and_merge(name,hsha)
 	receive(io.stdin, tmpfile)
 	local hsha_l, _ = sha_file(tmpfile)
 	if hsha_l == hsha then
-		local tmpfile1 = tmp_for(name)
-		merge_mail(tmpfile,name,tmpfile1)
-		os.remove(tmpfile)
-		os.rename(tmpfile1, name)
+		if not dry_run() then
+			local tmpfile1 = tmp_for(name)
+			merge_mail(tmpfile,name,tmpfile1)
+			os.remove(tmpfile)
+			os.rename(tmpfile1, name)
+		else
+			-- we delete the new piece without merging (--dry-run)	
+			os.remove(tmpfile)
+		end
 		return (trace(true)) -- get header OK
 	else
 		os.remove(tmpfile)
@@ -163,7 +172,12 @@ function execute_delete(cmd)
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
-			local rc = os.remove(name) 
+			local rc
+			if not dry_run() then
+				rc = os.remove(name)
+			else
+				rc = true -- we do not delete the message for real (--dry-run)
+			end
 			if rc then
 				statistics.removed = statistics.removed + 1
 				return (trace(true)) -- removed successfully
@@ -224,8 +238,13 @@ function execute_copy(cmd)
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				mkdir_p(name_tgt)
-				local ok = os.execute(CPN..' '..quote(name_src)..
-					' '..  quote(name_tgt))
+				local ok
+				if not dry_run() then
+					ok = os.execute(CPN..' '..quote(name_src)..
+						' '..  quote(name_tgt))
+				else
+					ok = 0 -- we do not copy for real (--dry-run)
+				end
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
 				else 
@@ -302,8 +321,13 @@ function execute_copybody(cmd)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
-			local ok = os.execute(CPN..' '..quote(name)..
-				' '..quote(newname))
+			local ok
+			if not dry_run() then
+				ok = os.execute(CPN..' '..quote(name)..
+					' '..quote(newname))
+			else
+				ok = 0 -- we do not copy the body for merging (--dry-run)
+			end
 			if ok == 0 then 
 				ok = get_header_and_merge(newname,hsha)
 				if ok then
@@ -420,14 +444,21 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
-	if arg[1] == '-v' then
-		set_verbose(true)
-		table.remove(arg,1)
+	local usage = "Usage: "..arg[0].." [-vd] endpointname mailboxes...\n"
+	while #arg > 2 do
+		if arg[1] == '-v' or arg[1] == '--verbose' then
+			set_verbose(true)
+			table.remove(arg,1)
+		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
+			set_dry_run(true)
+			table.remove(arg,1)
+		else
+			break
+		end
 	end
 	
 	if #arg < 2 then
-		io.stderr:write([[
-Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
+		io.stderr:write(usage)
 		os.exit(2)
 	end
 
@@ -462,14 +493,24 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	io.write('COMMIT\n')
 	io.flush()
 	receive(io.stdin, xdelta)
-	local rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
+
+	local rc
+	if not dry_run() then 
+		rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
+	else
+		rc = 0 -- the xdelta transmitted with --dry-run is dummy
+	end
 	if rc ~= 0 and rc ~= 256 then
 		log_error('Unable to apply delta to dbfile.')
 		io.write('ABORT\n')
 		io.flush()
 		os.exit(4)
 	end
-	rc = os.rename(newdb,dbfile)
+	if not dry_run() then
+		rc = os.rename(newdb,dbfile)
+	else
+		rc = true -- with --dry-run there is no xdelta affair
+	end
 	if not rc then
 		log_error('Unable to rename '..newdb..' to '..dbfile)
 		io.write('ABORT\n')

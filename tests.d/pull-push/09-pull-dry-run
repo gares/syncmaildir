@@ -1,0 +1,12 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+
+mpull --dry-run
+assert $? 0 "failed mpull --dry-run"
+test -d target/Mail
+assert $? 1 "mpull --dry-run did something"
+N=`ls -l target/.smd/*.db.txt* 2>/dev/null | wc -l`
+assert $N 0 "mpull --dry-run created dbfile"
