@@ -178,6 +178,9 @@ is used to store the timestamp of the last run and files whose mtime
 does not exceed this timestamp will not be (re)processed next time
 mddiff is run.
 
+The .mtime companion file is updated only server side, since the mtime
+concept is local to the host running mddiff.
+
 The db file format
 ------------------
 
