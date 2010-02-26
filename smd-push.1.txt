@@ -2,7 +2,7 @@ NAME
   smd-push - syncs the remote mail dir letting the local one untouched
 
 SYNOPSIS
-  smd-push [-vt] [--verbose|--template-only] [endpoint]
+  smd-push [-v|--verbose] [-t|--template-only] [endpoint]
 
 DESCRIPTION
   smd-push performs in the remote maildir all the changes that

@@ -2,7 +2,7 @@ NAME
   smd-pull - syncs the local mail dir letting the remote one untouched
 
 SYNOPSIS
-  smd-pull [-vt] [--verbose|--template-only] [endpoint]
+  smd-pull [-v|--verbose] [-t|--template-only] [endpoint]
 
 DESCRIPTION
   smd-pull performs in the local maildir all the changes that
