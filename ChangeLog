@@ -1,4 +1,12 @@
 ../02/2010 - major feature relase - version 0.9.13 aka too many changes to be rc
+	* smd-server mddiff:
+	  - big fat bug solved: the .mtime file was always updated.
+	    the .mtime file used to be updated even if the synchronization
+	    failed. This could have caused some changes (like in place header 
+	    modifications, but not like new messages or renamings/flagging) to
+	    be ignored in the following synchronization. 
+	    Now .mtime works exactly as .db.txt, a .new one is created
+	    by mddiff, and is up to smd-server to rename both.
 	* smd-common:
 	  - major refactoring, almost all code is inside functions
 	  - new function run_hooks
