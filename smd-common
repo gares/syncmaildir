@@ -110,22 +110,22 @@ init() {
 ### Command line argument parsing ###
 
 parse_args() {
-	if [ "$1" = "-v" ]; then
-		shift
-		SHOWTAGS=1
-	fi
+	REPNAME=default
+	for arg in "$@"; do
+		case $arg in
+			-v|--verbose)
+				SHOWTAGS=1
+			;;
+			-t|--template-only)
+				TEMPLATE_ONLY=1
+			;;
+			*)
+				REPNAME="$arg"		
+			;;
+
+		esac
+	done
 	
-	if [ "$1" = "-t" ]; then
-		shift
-		TEMPLATE_ONLY=1
-	fi
-	
-	REPNAME=
-	if [ ! -z "$1" ]; then
-		REPNAME=$1
-	else
-		REPNAME=default
-	fi
 	CONFFILE=$CONFDIR/config.$REPNAME
 }
 

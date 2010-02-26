@@ -2,7 +2,7 @@ NAME
   smd-push - syncs the remote mail dir letting the local one untouched
 
 SYNOPSIS
-  smd-push [-vt] [endpoint]
+  smd-push [-vt] [--verbose|--template-only] [endpoint]
 
 DESCRIPTION
   smd-push performs in the remote maildir all the changes that
@@ -30,11 +30,11 @@ DESCRIPTION
   its syntax.
 
 OPTIONS
-  -v        Verbose, machine-readable, output        
-  -t        Just create a template configuration file if none
-  endpoint  Is the suffix for the name of the configuration file to use.
-            If it is omitted, the configuration file ~/.smd/config.default is
-            used.
+  -v --verbose        Verbose, machine-readable, output        
+  -t --template-only  Just create a template configuration file if none
+  endpoint            Is the suffix for the name of the configuration file to
+                      use. If it is omitted, the configuration file 
+                      ~/.smd/config.default is used.
 FILES
   ~/.smd/config.*
 

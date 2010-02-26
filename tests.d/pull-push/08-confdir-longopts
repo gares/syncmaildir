@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mpull
+assert $? 1 "if not --template-only, it should fail"
+mpull --template-only 
+assert $? 0 "if --template-only, it should not fail, even if .smd exists"
+
