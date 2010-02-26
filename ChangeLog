@@ -24,9 +24,10 @@
 	  - new test suite for mddiff
 	* mddiff.1.txt:
 	  - fixed typo
+	* smd-push/pull smd-client/server mddiff:
+	  - support -d --dry-run (i.e. perform no action)
+	* manpages for mddiff, smd-client, smd-server, smd-pull, smd-push:
 	  - added -d --dry-run doc
-	* mddiff:
-	  - support -d --dry-run (i.e. not generate a db-file)
 	* copyright:
 	  - updated years in all files: 2008-2010
 	  - added copyright banner where missing
