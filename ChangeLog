@@ -39,6 +39,8 @@
 	* copyright:
 	  - updated years in all files: 2008-2010
 	  - added copyright banner where missing
+	* git archive:
+	  - use git archive for the make dist target
 
 27/12/2009 - minor fix release - version 0.9.12 aka 1.0rc3
 	* DESIGN:
