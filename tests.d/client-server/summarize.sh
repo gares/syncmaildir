@@ -22,13 +22,13 @@ check_bin sed
 check_bin awk
 check_bin sort
 
-PATHS=`grep TRACE $ROOT/test.[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
+PATHS=`grep TRACE $ROOT/[0-9]*/log.client* | cut -d '|' -f 1 | cut -d : -f 2- | sort -u | wc -l`
 
 echo
 echo "Tested $PATHS paths"
 echo
 
-grep TRACE $ROOT/test.[0-9]*/log.client* \
+grep TRACE $ROOT/[0-9]*/log.client* \
 	| sort -u | sed 's?^.*/\([^/]*\):?\1?' | sed 's/TRACE://'
 
 echo
@@ -40,7 +40,7 @@ tmpb=`mktemp`
 
 grep -n 'return *( *trace' $BASE/smd-client \
 	| cut -d : -f 1 | sed 's/ //g' > $tmpa
-grep TRACE $ROOT/test.[0-9]*/log.client* \
+grep TRACE $ROOT/[0-9]*/log.client* \
 	| sort -u | cut -d : -f 4 \
 	| cut -d \| -f 1 | sed 's/ //g' > $tmpb
 for N in `combine $tmpa not $tmpb`; do
@@ -53,7 +53,7 @@ rm $tmpa $tmpb
 echo
 echo "Generated tags:"
 echo
-grep ^TAG $ROOT/test.[0-9]*/log.client* \
+grep ^TAG $ROOT/[0-9]*/log.client* \
 	| cut -d : -f 2- | cut -d \( -f 1 | sort -u
 echo
 echo -------------------------------------------------------------------------

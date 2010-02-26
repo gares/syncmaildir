@@ -29,9 +29,9 @@ test_eq(){
 }
 
 run_server(){
-	HOME=$ROOT/$TESTSUITE/test.$N/ \
-	PATH=$ROOT/$TESTSUITE/test.$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/test.$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$N/ \
+	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
 		smd-server -v test Mail < c2s 2> log.server.$1 \
 		| tee log.s2c > s2c &
 	RC=$!
@@ -40,9 +40,9 @@ run_server(){
 
 run_client(){
 	cd target 
-	HOME=$ROOT/$TESTSUITE/test.$N/target \
-	PATH=$ROOT/$TESTSUITE/test.$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/test.$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$N/target \
+	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
 		smd-client -v test Mail < ../s2c 2> ../log.client.$1 \
 		| tee ../log.c2s > ../c2s &
 	RC=$!
@@ -61,14 +61,16 @@ msync(){
 }
 
 mpull(){
-	HOME=$ROOT/$TESTSUITE/test.$N/target \
-	HOMES=$ROOT/$TESTSUITE/test.$N/ \
-		$ROOT/$TESTSUITE/test.$N/bin/smd-pull $@ > log.pull 2>&1
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$N/target \
+	HOMES=$ROOT/$TESTSUITE/$N/ \
+		$ROOT/$TESTSUITE/$N/bin/smd-pull $@ > log.pull 2>&1
 }
 
 mdiff(){
-	HOME=$ROOT/$TESTSUITE/test.$N/ \
-		$ROOT/$TESTSUITE/test.$N/bin/mddiff $@ > log.mddiff 2>&1
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$N/ \
+		$ROOT/$TESTSUITE/$N/bin/mddiff $@ > log.mddiff 2>&1
 }
 
 assert(){
@@ -84,22 +86,22 @@ prepare(){
 	local N=$1
 
 	cd $BASE
-	rm -rf $ROOT/$TESTSUITE/test.$N
-	mkdir -p $ROOT/$TESTSUITE/test.$N/target
+	rm -rf $ROOT/$TESTSUITE/$N
+	mkdir -p $ROOT/$TESTSUITE/$N/target
 	make --quiet
 	make --quiet install-bin \
-		SSH=$ROOT/$TESTSUITE/test.$N/bin/fakessh \
-		PREFIX=$ROOT/$TESTSUITE/test.$N
+		SSH=$ROOT/$TESTSUITE/$N/bin/fakessh \
+		PREFIX=$ROOT/$TESTSUITE/$N
 
-	cat > $ROOT/$TESTSUITE/test.$N/bin/fakessh <<-EOT
+	cat > $ROOT/$TESTSUITE/$N/bin/fakessh <<-EOT
 	#!/bin/sh
 	shift
 	cd \$HOMES
 	HOME=\$HOMES \$@
 	EOT
-	chmod a+x $ROOT/$TESTSUITE/test.$N/bin/fakessh
+	chmod a+x $ROOT/$TESTSUITE/$N/bin/fakessh
 	
-	cd $ROOT/$TESTSUITE/test.$N
+	cd $ROOT/$TESTSUITE/$N
 	tar -xzf $BASE/misc/Mail.testcase.tgz
 	mkfifo s2c
 	mkfifo c2s
@@ -110,7 +112,7 @@ run_test() {
 	echo -n "running $TESTSUITE/`basename $T`: "
 	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
 	prepare $N
-	cd $ROOT/$TESTSUITE/test.$N
+	cd $ROOT/$TESTSUITE/$N
 	. $T
 	echo OK
 }
