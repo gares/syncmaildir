@@ -1,4 +1,12 @@
-... - ... - ...
+02/03/2010 - major fix release - version 0.9.13
+	* smd-server mddiff:
+	  - big fat bug solved: the .mtime file was always updated.
+	    the .mtime file used to be updated even if the synchronization
+	    failed. This could have caused some changes (like in place eader
+	    modifications, but not like new messages or renamings/flagging) to
+	    be ignored in the following synchronization. Now .mtime works
+	    exactly as .db.txt, a .new one is created by mddiff, and is up to
+	    smd-server to rename both.
 	* mddiff.1.txt:
 	  - fixed typo
 
