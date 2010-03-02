@@ -1,2 +1,9 @@
-- ask lucas wilcox if the osx/ Makefile template is OK
-- avoid creating the task bar icon when --config is passed
+- bug in smd-applet not restoring regular icon when network is back
+- try system-wide hooks:
+  - /usr/share/syncmaildir/system-hooks/
+       pre-* lockfile-check
+       post-* report-tags
+  - /usr/share/syncmaildir/user-hooks/
+       post-* mail/xmessage/xosd-on-failure
+       post-* xosd-on-success
+- document system-wide hooks
