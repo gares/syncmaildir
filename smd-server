@@ -104,8 +104,10 @@ function main()
 			os.exit(0)
 		elseif l:match('^ABORT$') then
 			-- the client failed in applying the diff
-			log_error('Client aborted, removing '..dbfile..'.new\n')
-			if not dry_run() then os.remove(dbfile..".new") end
+			log_error('Client aborted, removing '..
+				newdb..' and '..newdbmt..'\n')
+			if not dry_run() then os.remove(newdb) end
+			if not dry_run() then os.remove(newdbmt) end
 			os.exit(5)
 		elseif l:match('^GET ') then
 			local path = l:match('^GET ([^%s]+)$')
