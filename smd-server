@@ -33,7 +33,9 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 	table.remove(arg,1)
 	local dbfile = dbfile_name(endpoint, arg)
 	local xdelta = dbfile .. '.xdelta'
+	local dbfilemt = dbfile .. '.mtime'
 	local newdb = dbfile .. '.new'
+	local newdbmt = dbfilemt .. '.new'
 
 	local database_opt = '--db-file '.. dbfile
 	local mailbox_opt = table.concat(arg,' ')
@@ -83,6 +85,7 @@ Usage: ]]..arg[0]..[[ [-v] endpointname mailboxes...]],'\n')
 			os.remove(xdelta)
 		elseif l:match('^DONE$') then
 			os.rename(newdb, dbfile) 
+			os.rename(newdbmt, dbfilemt)
 			os.exit(0)
 		elseif l:match('^ABORT$') then
 			-- the client failed in applying the diff
