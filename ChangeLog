@@ -1,4 +1,4 @@
-../02/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
+../03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* smd-common:
 	  - major refactoring, almost all code is inside functions
 	  - new function run_hooks
@@ -31,6 +31,8 @@
 	  - added copyright banner where missing
 	* git archive:
 	  - use git archive for the make dist target
+	* README:
+	  - mention --dry-run
 
 02/03/2010 - major fix release - version 0.9.13
 	* smd-server mddiff:
