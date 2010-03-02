@@ -115,6 +115,11 @@ This file defines the following variables:
 The first time you run `smd-pull` or `smd-push` a template file will be 
 generated for you. 
 
+From version 0.9.14, the tools `smd-push` and `smd-push` can be run with `-d`
+or `--dry-run` flags, that do not modify in any way your maildir, but,
+especially when used together with `-v` or `--verbose`, can be very handy to
+understand which changes smd would perform if not told otherwise.
+
 ### smd-loop
 
 `smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
