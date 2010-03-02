@@ -4,10 +4,20 @@
 # TESTSUITE: client-server, pull-push
 
 #set -x
+VALGRIND="valgrind --log-file=log.valgrind --leak-check=no --error-exitcode=1 --"
 
 ROOT=$BASE/tests.d/run/$TESTSUITE/
 
 TOKILL=""
+
+if [ ! -z "$VALGRIND" ]; then
+	if which valgrind >/dev/null 2>&1; then
+	       :
+      	else
+		echo 'VALGRIND set but not installed. Disabling it'
+		VALGRIND=
+	fi
+fi
 
 out(){
 	(
@@ -70,7 +80,7 @@ mpull(){
 mdiff(){
 	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
 	HOME=$ROOT/$TESTSUITE/$N/ \
-		$ROOT/$TESTSUITE/$N/bin/mddiff $@ > log.mddiff 2>&1
+		$VALGRIND $ROOT/$TESTSUITE/$N/bin/mddiff $@ > log.mddiff 2>&1
 }
 
 assert(){
