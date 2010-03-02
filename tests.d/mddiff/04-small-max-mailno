@@ -1,0 +1,5 @@
+#!/bin/sh
+
+mdiff --max-mailno 3 Mail
+assert $? 0 "mdiff failed"
+
