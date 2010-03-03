@@ -102,24 +102,30 @@ STATIC const char* strsight(enum sight s){
 	return sightalphabet[s];
 }
 
+// since the mails and names buffers may be reallocated,
+// hashtables cannot record pointers to a struct mail or char.
+// they record the offset w.r.t. the base pointer of the buffers
+typedef size_t name_t;
+typedef size_t mail_t;
+
 // mail metadata structure
 struct mail {
 	unsigned char bsha[SHA_DIGEST_LENGTH]; 	// body hash value
 	unsigned char hsha[SHA_DIGEST_LENGTH]; 	// header hash value
-	char *name;    							// file name
+	name_t __name;    						// file name (index in names)
 	enum sight seen;     			        // already seen?
 };
 
 // memory pool for mail file names
 STATIC char *names;
-STATIC long unsigned int curname, max_curname, old_curname;
+STATIC size_t curname, max_curname, old_curname;
 
 // memory pool for mail metadata
 STATIC struct mail* mails;
-STATIC long unsigned int mailno, max_mailno;
+STATIC size_t mailno, max_mailno;
 
 // hash tables for fast comparison of mails given their name/body-hash
-STATIC GHashTable *sha2mail;
+STATIC GHashTable *bsha2mail;
 STATIC GHashTable *filename2mail;
 STATIC time_t lastcheck;
 
@@ -128,6 +134,19 @@ STATIC int verbose;
 STATIC int dry_run;
 
 // ============================ helpers =====================================
+
+
+STATIC struct mail* mail(mail_t mail_idx) {
+	return &mails[mail_idx];
+}
+
+STATIC char* mail_name(mail_t mail_idx) {
+	return &names[mails[mail_idx].__name];
+}
+
+STATIC void set_mail_name(mail_t mail_idx, name_t name) {
+	mails[mail_idx].__name = name;
+}
 
 STATIC int directory(struct stat sb){ return S_ISDIR(sb.st_mode); }
 STATIC int regular_file(struct stat sb){ return S_ISREG(sb.st_mode); }
@@ -154,8 +173,8 @@ STATIC void assert_all_are(
 
 // =========================== memory allocator ============================
 
-STATIC struct mail* alloc_mail(){
-	struct mail* m = &mails[mailno];
+STATIC mail_t alloc_mail(){
+	mail_t m = mailno;
 	mailno++;
 	if (mailno >= max_mailno) {
 		mails = realloc(mails, sizeof(struct mail) * max_mailno * 2);
@@ -177,10 +196,11 @@ STATIC char *next_name(){
 	return &names[curname];
 }
 
-STATIC char *alloc_name(){
-	char *name = &names[curname];
+STATIC name_t alloc_name(){
+	name_t name = curname;
+	size_t len = strlen(&names[name]);
 	old_curname = curname;
-	curname += strlen(name) + 1;
+	curname += len + 1;
 	if (curname + MAX_EMAIL_NAME_LEN > max_curname) {
 		names = realloc(names, max_curname * 2);
 		max_curname *= 2;
@@ -194,14 +214,38 @@ STATIC void dealloc_name(){
 
 // =========================== global variables setup ======================
 
-STATIC guint sha_hash(gconstpointer key){
-	unsigned char * k = (unsigned char *) key;
+#define MAIL(t) ((mail_t)(t))
+#define GPTR(t) ((gpointer)(t))
+
+STATIC guint bsha_hash(gconstpointer key){
+	mail_t m = MAIL(key);
+	unsigned char * k = (unsigned char *) mail(m)->bsha;
 	return k[0] + (k[1] << 8) + (k[2] << 16) + (k[3] << 24);
 }
 
-STATIC gboolean sha_equal(gconstpointer k1, gconstpointer k2){
-	if(!memcmp(k1,k2,SHA_DIGEST_LENGTH)) return TRUE;
+STATIC gboolean bsha_equal(gconstpointer k1, gconstpointer k2){
+	mail_t m1 = MAIL(k1);
+	mail_t m2 = MAIL(k2);
+	if(!memcmp(mail(m1)->bsha,mail(m2)->bsha,SHA_DIGEST_LENGTH)) return TRUE;
 	else return FALSE;
+}
+
+STATIC gboolean hsha_equal(gconstpointer k1, gconstpointer k2){
+	mail_t m1 = MAIL(k1);
+	mail_t m2 = MAIL(k2);
+	if(!memcmp(mail(m1)->hsha,mail(m2)->hsha,SHA_DIGEST_LENGTH)) return TRUE;
+	else return FALSE;
+}
+
+STATIC guint name_hash(gconstpointer key){
+	mail_t m = MAIL(key);
+	return g_str_hash(mail_name(m));
+}
+
+STATIC gboolean name_equal(gconstpointer k1, gconstpointer k2){
+	mail_t m1 = MAIL(k1);
+	mail_t m2 = MAIL(k2);
+	return g_str_equal(mail_name(m1), mail_name(m2));
 }
 
 // setup memory pools and hash tables
@@ -210,7 +254,7 @@ STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
 	mails = malloc(sizeof(struct mail) * mno);
 	if (mails == NULL) ERROR(malloc,"allocation failed for %lu mails\n",mno);
 	
-	mailno=0;
+	mailno=1; // 0 is reserved for NULL
 	max_mailno = mno;
 
 	// allocate space for mail filenames
@@ -223,10 +267,10 @@ STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
 	max_curname=mno * fnlen;
 
 	// allocate hashtables for detection of already available mails
-	sha2mail = g_hash_table_new(sha_hash,sha_equal);
-	if (sha2mail == NULL) ERROR(sha2mail,"hashtable creation failure\n");
+	bsha2mail = g_hash_table_new(bsha_hash,bsha_equal);
+	if (bsha2mail == NULL) ERROR(bsha2mail,"hashtable creation failure\n");
 
-	filename2mail = g_hash_table_new(g_str_hash,g_str_equal);
+	filename2mail = g_hash_table_new(name_hash,name_equal);
 	if (filename2mail == NULL) 
 		ERROR(filename2mail,"hashtable creation failure\n");
 }
@@ -235,7 +279,7 @@ STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
 
 // dump to file the mailbox status
 STATIC void save_db(const char* dbname, time_t timestamp){
-	long unsigned int i;
+	size_t i;
 	FILE * fd;
 	char new_dbname[PATH_MAX];
 
@@ -244,12 +288,12 @@ STATIC void save_db(const char* dbname, time_t timestamp){
 	fd = fopen(new_dbname,"w");
 	if (fd == NULL) ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
 
-	for(i=0; i < mailno; i++){
-		struct mail* m = &mails[i];
+	for(i=1; i < mailno; i++){
+		struct mail* m = mail(i);
 		if (m->seen == SEEN) {
 			fprintf(fd,"%s %s %s\n", 
 				txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), 
-				m->name);
+				mail_name(i));
 		}
 	}
 
@@ -294,7 +338,7 @@ STATIC void load_db(const char* dbname){
 
 	for(;;) {
 		// allocate a mail entry
-		struct mail* m = alloc_mail();
+		mail_t m = alloc_mail();
 
 		// read one entry
 		fields = fscanf(fd,
@@ -311,18 +355,18 @@ STATIC void load_db(const char* dbname){
 		if (fields != 3)
 			ERROR(fscanf,"malformed db file '%s', please remove it\n",dbname);
 
-		shatxt(tmpbuff_1, m->hsha);
-		shatxt(tmpbuff_2, m->bsha);
+		shatxt(tmpbuff_1, mail(m)->hsha);
+		shatxt(tmpbuff_2, mail(m)->bsha);
 
 		// allocate a name string
-		m->name = alloc_name();
+		set_mail_name(m,alloc_name());
 		
 		// not seen file, may be deleted
-		m->seen=NOT_SEEN;
+		mail(m)->seen=NOT_SEEN;
 
 		// store it in the hash tables
-		g_hash_table_insert(sha2mail,m->bsha,m);
-		g_hash_table_insert(filename2mail,m->name,m);
+		g_hash_table_insert(bsha2mail,GPTR(m),GPTR(m));
+		g_hash_table_insert(filename2mail,GPTR(m),GPTR(m));
 		
 	} 
 
@@ -332,66 +376,68 @@ STATIC void load_db(const char* dbname){
 // =============================== commands ================================
 
 #define COMMAND_SKIP(m) \
-	VERBOSE(skip,"%s\n",m->name)
+	VERBOSE(skip,"%s\n",mail_name(m))
 
 #define COMMAND_ADD(m) \
-	fprintf(stdout,"ADD %s %s %s\n",m->name, \
-		txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
+	fprintf(stdout,"ADD %s %s %s\n",mail_name(m), \
+		txtsha(mail(m)->hsha,tmpbuff_1), txtsha(mail(m)->bsha, tmpbuff_2))
 
 #define COMMAND_COPY(m,n) \
 	fprintf(stdout, "COPY %s %s %s TO %s\n",\
-		m->name,txtsha(m->hsha, tmpbuff_1),\
-		txtsha(m->bsha, tmpbuff_2),n->name)
+		mail_name(m),txtsha(mail(m)->hsha, tmpbuff_1),\
+		txtsha(mail(m)->bsha, tmpbuff_2),mail_name(n))
 
 #define COMMAND_COPYBODY(m,n) \
 	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
-		m->name,txtsha(m->bsha, tmpbuff_1),\
-		n->name,txtsha(n->hsha, tmpbuff_2))
+		mail_name(m),txtsha(mail(m)->bsha, tmpbuff_1),\
+		mail_name(n),txtsha(mail(n)->hsha, tmpbuff_2))
 
 #define COMMAND_DELETE(m) \
-	fprintf(stdout,"DELETE %s %s %s\n",m->name, \
-		txtsha(m->hsha, tmpbuff_1), txtsha(m->bsha, tmpbuff_2))
+	fprintf(stdout,"DELETE %s %s %s\n",mail_name(m), \
+		txtsha(mail(m)->hsha, tmpbuff_1), txtsha(mail(m)->bsha, tmpbuff_2))
 	
 #define COMMAND_REPLACE(m,n) \
 	fprintf(stdout, "REPLACE %s %s %s WITH %s %s\n",\
-		m->name,txtsha(m->hsha,tmpbuff_1),txtsha(m->bsha,tmpbuff_2),\
-		txtsha(n->hsha,tmpbuff_3),txtsha(n->bsha,tmpbuff_4))
+		mail_name(m),txtsha(mail(m)->hsha,tmpbuff_1),\
+		txtsha(mail(m)->bsha,tmpbuff_2),\
+		txtsha(mail(n)->hsha,tmpbuff_3),txtsha(mail(n)->bsha,tmpbuff_4))
 
 #define COMMAND_REPLACE_HEADER(m,n) \
 	fprintf(stdout, "REPLACEHEADER %s %s %s WITH %s\n",\
-		m->name,txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), \
-					txtsha(n->hsha,tmpbuff_3))
+		mail_name(m),txtsha(mail(m)->hsha,tmpbuff_1),\
+		txtsha(mail(m)->bsha,tmpbuff_2), \
+		txtsha(mail(n)->hsha,tmpbuff_3))
 
 // the hearth 
 STATIC void analize_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
-	struct mail* alias, *bodyalias, *m;
+	mail_t alias, bodyalias, m;
 	GChecksum* ctx;
 	gsize ctx_len;
 
 	m = alloc_mail();
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
-	m->name = alloc_name();
+	set_mail_name(m,alloc_name());
 
-	fd = open(m->name, O_RDONLY | O_NOATIME);
+	fd = open(mail_name(m), O_RDONLY | O_NOATIME);
 	if (fd == -1) {
-		WARNING(open,"unable to open file '%s'\n",m->name);
+		WARNING(open,"unable to open file '%s'\n",mail_name(m));
 		goto err_alloc_cleanup;
 	}
 
 	if (fstat(fd, &sb) == -1) {
-		WARNING(fstat,"unable to stat file '%s'\n",m->name);
+		WARNING(fstat,"unable to stat file '%s'\n",mail_name(m));
 		goto err_alloc_cleanup;
 	}
 
-	alias = (struct mail*)g_hash_table_lookup(filename2mail,m->name);
+	alias = MAIL(g_hash_table_lookup(filename2mail,GPTR(m)));
 
 	// check if the cache lists a file with the same name and the same
 	// mtime. If so, this is an old, untouched, message we can skip
-	if (alias != NULL && lastcheck > sb.st_mtime) {
-		alias->seen=SEEN;
+	if (alias != 0 && lastcheck > sb.st_mtime) {
+		mail(alias)->seen=SEEN;
 		COMMAND_SKIP(alias);
 		goto err_alloc_fd_cleanup;
 	}
@@ -403,7 +449,7 @@ STATIC void analize_file(const char* dir,const char* file) {
 			goto err_alloc_fd_cleanup;
 		else 
 			// mmap failed
-			ERROR(mmap, "unable to load '%s'\n",m->name);
+			ERROR(mmap, "unable to load '%s'\n",mail_name(m));
 	}
 
 	// skip header
@@ -416,7 +462,7 @@ STATIC void analize_file(const char* dir,const char* file) {
 	}
 
 	if (!header_found) {
-		WARNING(parse, "malformed file '%s', no header\n",m->name);
+		WARNING(parse, "malformed file '%s', no header\n",mail_name(m));
 		munmap(addr, sb.st_size);
 		goto err_alloc_fd_cleanup;
 	}
@@ -425,54 +471,54 @@ STATIC void analize_file(const char* dir,const char* file) {
 	ctx = g_checksum_new(G_CHECKSUM_SHA1);
 	ctx_len = SHA_DIGEST_LENGTH;
 	g_checksum_update(ctx, addr, next - addr);
-	g_checksum_get_digest(ctx, m->hsha, &ctx_len);
+	g_checksum_get_digest(ctx, mail(m)->hsha, &ctx_len);
 	g_checksum_free(ctx);
 
 	ctx = g_checksum_new(G_CHECKSUM_SHA1);
 	ctx_len = SHA_DIGEST_LENGTH;
 	g_checksum_update(ctx, next, sb.st_size - (next - addr));
-	g_checksum_get_digest(ctx, m->bsha, &ctx_len);
+	g_checksum_get_digest(ctx, mail(m)->bsha, &ctx_len);
 	g_checksum_free(ctx);
 
 	munmap(addr, sb.st_size);
 	close(fd);
 
-	if (alias != NULL) {
-		if(sha_equal(alias->bsha,m->bsha)) {
-			if (sha_equal(alias->hsha, m->hsha)) {
-				alias->seen = SEEN;
+	if (alias != 0) {
+		if(bsha_equal(GPTR(alias),GPTR(m))) {
+			if (hsha_equal(GPTR(alias), GPTR(m))) {
+				mail(alias)->seen = SEEN;
 				goto err_alloc_fd_cleanup;
 			} else {
 				COMMAND_REPLACE_HEADER(alias,m);
-				m->seen=SEEN;
-				alias->seen=CHANGED;
+				mail(m)->seen=SEEN;
+				mail(alias)->seen=CHANGED;
 				return;
 			}
 		} else {
 			COMMAND_REPLACE(alias,m);
-			m->seen=SEEN;
-			alias->seen=CHANGED;
+			mail(m)->seen=SEEN;
+			mail(alias)->seen=CHANGED;
 			return;
 		}
 	}
 
-	bodyalias = g_hash_table_lookup(sha2mail,m->bsha);
+	bodyalias = MAIL(g_hash_table_lookup(bsha2mail,GPTR(m)));
 
-	if (bodyalias != NULL) {
-		if (sha_equal(bodyalias->hsha,m->hsha)) {
+	if (bodyalias != 0) {
+		if (hsha_equal(GPTR(bodyalias), GPTR(m))) {
 			COMMAND_COPY(bodyalias,m);
-			m->seen=SEEN;
+			mail(m)->seen=SEEN;
 			return;
 		} else {
 			COMMAND_COPYBODY(bodyalias,m);
-			m->seen=SEEN;
+			mail(m)->seen=SEEN;
 			return;
 		}
 	}
 
 	// we should add that file
 	COMMAND_ADD(m);
-	m->seen=SEEN;
+	mail(m)->seen=SEEN;
 	return;
 
 	// error handlers, status cleanup
@@ -532,16 +578,15 @@ STATIC void analize_dirs(char* paths[], int no){
 // at the end of the analysis phase, look at the mails data structure to
 // identify mails that are not available anymore and should be removed
 STATIC void generate_deletions(){
-	long unsigned int i;
+	size_t m;
 
-	for(i=0; i < mailno; i++){
-		struct mail* m = &mails[i];
-		if (m->seen == NOT_SEEN) 
+	for(m=1; m < mailno; m++){
+		if (mail(m)->seen == NOT_SEEN) 
 			COMMAND_DELETE(m);
 		else 
 			VERBOSE(seen,"STATUS OF %s %s %s IS %s\n",
-				m->name,txtsha(m->hsha,tmpbuff_1),
-				txtsha(m->bsha,tmpbuff_2),strsight(m->seen));
+				mail_name(m),txtsha(mail(m)->hsha,tmpbuff_1),
+				txtsha(mail(m)->bsha,tmpbuff_2),strsight(mail(m)->seen));
 	}
 }
 
@@ -660,6 +705,9 @@ int main(int argc, char *argv[]) {
 	time_t bigbang;
 
 	glib_check_version(2,16,0);
+	g_assert(MAIL(NULL) == 0);
+	g_assert(GPTR(0) == NULL);
+	g_assert(MAIL(GPTR(1)) == 1);
 
 	for(;;) {
 		c = getopt_long(argc, argv, "vhd", long_options, &option_index);
