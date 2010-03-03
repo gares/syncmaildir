@@ -2,4 +2,9 @@
 
 mdiff --max-mailno 3 Mail
 assert $? 0 "mdiff failed"
-
+mdiff --max-mailno 4 Mail
+assert $? 0 "mdiff failed"
+mdiff --max-mailno 5 Mail
+assert $? 0 "mdiff failed"
+mdiff --max-mailno 7 Mail
+assert $? 0 "mdiff failed"
