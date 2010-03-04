@@ -104,7 +104,8 @@ STATIC const char* strsight(enum sight s){
 
 // since the mails and names buffers may be reallocated,
 // hashtables cannot record pointers to a struct mail or char.
-// they record the offset w.r.t. the base pointer of the buffers
+// they record the offset w.r.t. the base pointer of the buffers.
+// we define a type for them, so that the compiler complains loudly
 typedef size_t name_t;
 typedef size_t mail_t;
 
@@ -112,17 +113,17 @@ typedef size_t mail_t;
 struct mail {
 	unsigned char bsha[SHA_DIGEST_LENGTH]; 	// body hash value
 	unsigned char hsha[SHA_DIGEST_LENGTH]; 	// header hash value
-	name_t __name;    						// file name (index in names)
+	name_t __name;    						// file name, do not use directly
 	enum sight seen;     			        // already seen?
 };
 
 // memory pool for mail file names
 STATIC char *names;
-STATIC size_t curname, max_curname, old_curname;
+STATIC name_t curname, max_curname, old_curname;
 
 // memory pool for mail metadata
 STATIC struct mail* mails;
-STATIC size_t mailno, max_mailno;
+STATIC mail_t mailno, max_mailno;
 
 // hash tables for fast comparison of mails given their name/body-hash
 STATIC GHashTable *bsha2mail;
@@ -135,7 +136,7 @@ STATIC int dry_run;
 
 // ============================ helpers =====================================
 
-
+// mail da structure accessors
 STATIC struct mail* mail(mail_t mail_idx) {
 	return &mails[mail_idx];
 }
@@ -148,6 +149,7 @@ STATIC void set_mail_name(mail_t mail_idx, name_t name) {
 	mails[mail_idx].__name = name;
 }
 
+// predicates for assert_all_are
 STATIC int directory(struct stat sb){ return S_ISDIR(sb.st_mode); }
 STATIC int regular_file(struct stat sb){ return S_ISREG(sb.st_mode); }
 
@@ -214,6 +216,7 @@ STATIC void dealloc_name(){
 
 // =========================== global variables setup ======================
 
+// convenience casts to be used with glib hashtables 
 #define MAIL(t) ((mail_t)(t))
 #define GPTR(t) ((gpointer)(t))
 
@@ -279,7 +282,7 @@ STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
 
 // dump to file the mailbox status
 STATIC void save_db(const char* dbname, time_t timestamp){
-	size_t i;
+	mail_t m;
 	FILE * fd;
 	char new_dbname[PATH_MAX];
 
@@ -288,12 +291,12 @@ STATIC void save_db(const char* dbname, time_t timestamp){
 	fd = fopen(new_dbname,"w");
 	if (fd == NULL) ERROR(fopen,"unable to save db file '%s'\n",new_dbname);
 
-	for(i=1; i < mailno; i++){
-		struct mail* m = mail(i);
-		if (m->seen == SEEN) {
+	for(m=1; m < mailno; m++){
+		if (mail(m)->seen == SEEN) {
 			fprintf(fd,"%s %s %s\n", 
-				txtsha(m->hsha,tmpbuff_1), txtsha(m->bsha,tmpbuff_2), 
-				mail_name(i));
+				txtsha(mail(m)->hsha,tmpbuff_1), 
+				txtsha(mail(m)->bsha,tmpbuff_2), 
+				mail_name(m));
 		}
 	}
 
