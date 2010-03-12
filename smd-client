@@ -534,6 +534,8 @@ set_strict()
 -- parachute for errors
 xpcall(main,function(msg)
 	log_error(tostring(msg))
+	log_error(debug.traceback())
+	log_tags("internal-error","unknown",true)
 	os.exit(6)
 end)
 
