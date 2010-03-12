@@ -122,6 +122,9 @@ install-misc: $(MANPAGES)
 	$(call install,smd-applet.ui,share/$(PROJECTNAME)-applet)
 	$(call mkdir-p,share/man/man1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
+	$(call mkdir-p,share/doc/syncmaildir)
+	cp -r sample-hooks/ README DESIGN ChangeLog \
+		$(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
 
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
