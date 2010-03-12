@@ -1,0 +1,33 @@
+#!/bin/sh
+
+when="$1"
+what="$2"
+endpoint="$3"
+status="$4"
+
+HOOK_NAMESPACE=mail-on-failure
+
+if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOME/.smd/$HOOK_NAMESPACE ]; then
+	# something failed, we mail the $USER
+	TMP=`mktemp`
+	cat > $TMP <<-EOT
+	There was an error while synchronizing you mailbox
+	with $endpoint. You find attached the logs.
+
+	EOT
+
+	echo "----------- client log --------------" >> $TMP
+	cat $HOME/.smd/log/client.$endpoint.log >> $TMP
+	echo "----------- server log --------------" >> $TMP
+	cat $HOME/.smd/log/server.$endpoint.log >> $TMP
+
+	mail -s "smd-$what failed for the $endpoint endpoint" $USER < $TMP
+
+	touch $HOME/.smd/$HOOK_NAMESPACE
+fi
+
+if [ "$status" = 0 ]; then 
+	rm $HOME/.smd/$HOOK_NAMESPACE
+fi
+
+# vim:set ft=sh:
