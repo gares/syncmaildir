@@ -259,7 +259,7 @@ end
 
 -- creates a directory that can contains a path, should be equivalent
 -- to mkdir -p `dirname path`. moreover, if the last component is 'tmp',
--- siblings 'cur' and 'new' are created too. exampels:
+-- 'cur' or 'new', they are all are created too. exampels:
 --  mkdir_p('/foo/bar')     creates /foo
 --  mkdir_p('/foo/bar/')    creates /foo/bar/
 --  mkdir_p('/foo/tmp/baz') creates /foo/tmp/, /foo/cur/ and /foo/new/
@@ -279,12 +279,14 @@ function mkdir_p(path)
 
 	make_dir_aux(absolute, t)
 
-	-- if we are building a new maildir folder, also add new and cur
-	if t[#t] == "tmp" then
-		t[#t] = "new"
-		make_dir_aux(absolute, t)
-		t[#t] = "cur"
-		make_dir_aux(absolute, t)
+	--  ensure new, tmp and cur are there
+	local todo = { ["new"] = true, ["cur"] = true, ["tmp"]=true }
+	if todo[t[#t]] == true then
+		todo[t[#t]] = nil
+		for x, _ in pairs(todo) do
+			t[#t] = x
+			make_dir_aux(absolute, t)
+		end
 	end
 end
 
