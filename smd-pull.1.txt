@@ -30,6 +30,13 @@ DESCRIPTION
   The config file is a regular shell script, refer to bash(1) for 
   its syntax.
 
+  The content of the directories ~/.smd/hooks/{pre,post}-pull.d/ is executed
+  respectively before and after smd-pull does it's job. They receive
+  four arguments: "pre" or "post", "pull", the endpoint name and the status.
+  The status is always 0 (meaning success) for pre hooks, while can be 1 (for
+  failure) for post hooks. Hooks should not fail, if they do so then
+  smd-pull will fail too. 
+
 OPTIONS
   -v --verbose        Verbose, machine readable, output
   -t --template-only  Just create a template configuration file if none
@@ -38,6 +45,8 @@ OPTIONS
                       ~/.smd/config.default is used.
 FILES
   ~/.smd/config.*
+  ~/.smd/hooks/pre-pull.d/
+  ~/.smd/hooks/post-pull.d/
 
 SEE ALSO
   mddiff(1), smd-server(1), smd-client(1), smd-push(1), smd-loop(1)
