@@ -1,4 +1,4 @@
-../03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
+12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:
 	  - mkdir_p creates always a maildir, if the last path component
 	    is in { "new", "tmp", "cur" } (used to do that only if it was
@@ -21,6 +21,9 @@
 	      always receive 0, post hooks receive the value smd-push/pull
 	      will return after hooks terminate
 	  - thanks to Bart Trojanowsk for the hooks idea
+	* sample-hooks/:
+	  - new directory with sample hooks, for now just a simple
+	    mail-on-failure hook
 	* tests.d/:
 	  - major redesign of the test framework, allowing multiple
 	    test suites
@@ -30,6 +33,7 @@
 	  - support -d --dry-run (i.e. perform no action)
 	* manpages for mddiff, smd-client, smd-server, smd-pull, smd-push:
 	  - added -d --dry-run doc
+	  - mention hooks
 	* copyright:
 	  - updated years in all files: 2008-2010
 	  - added copyright banner where missing
@@ -37,6 +41,7 @@
 	  - use git archive for the make dist target
 	* README:
 	  - mention --dry-run
+	  - document hooks
 
 02/03/2010 - major fix release - version 0.9.13
 	* smd-server mddiff:
