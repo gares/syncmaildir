@@ -422,8 +422,8 @@ function trace(x)
 	return x
 end
 
-function set_strict()
 -- strict access to the global environment
+function set_strict()
 	setmetatable(__G,{
 		__newindex = function (t,k,v)
 			local d = debug.getinfo(2,"nl")
