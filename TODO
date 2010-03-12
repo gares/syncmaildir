@@ -1,9 +1,7 @@
 - bug in smd-applet not restoring regular icon when network is back
-- try system-wide hooks:
-  - /usr/share/syncmaildir/system-hooks/
-       pre-* lockfile-check
-       post-* report-tags
-  - /usr/share/syncmaildir/user-hooks/
-       post-* mail/xmessage/xosd-on-failure
-       post-* xosd-on-success
-- document system-wide hooks
+- document hooks
+- sample hook for mail on failure
+- define and document env variables available to hook
+  - can they easily source smd-common?
+- it may happen that a mail message has \n in his name, and thus the 
+  mddif output is broken. Fail, but gracefully...
