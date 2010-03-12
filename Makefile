@@ -148,11 +148,10 @@ $(HTML): check-w-markdown
 upload-website: $(HTML)
 	scp $(HTML) misc/style.css $(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)
 
-upload-tarball: $(PROJECTNAME)-$(VERSION).tar.gz
-	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
-
-upload-changelog: ChangeLog
-	scp $< $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
+upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
+	scp $(PROJECTNAME)-$(VERSION).tar.gz \
+	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
+	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 
 
 # ----------------------------------------------------------------------------
