@@ -1,33 +1,57 @@
 #!/bin/sh
+# fetchmail like mail notification in case of failure
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
 
 when="$1"
 what="$2"
 endpoint="$3"
 status="$4"
 
+SMD_ROOT=$HOME/.smd
 HOOK_NAMESPACE=mail-on-failure
 
-if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOME/.smd/$HOOK_NAMESPACE ]; then
+# if the file exists, the failure was already reported by email
+HOOK_STATUS=$SMD_ROOT/hooks/$HOOK_NAMESPACE
+
+# on failure we send the mail, and create HOOK_STATUS
+if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOOK_STATUS ]; then
 	# something failed, we mail the $USER
 	TMP=`mktemp`
 	cat > $TMP <<-EOT
-	There was an error while synchronizing you mailbox
-	with $endpoint. You find attached the logs.
+	There was an error while synchronizing with endpoint "$endpoint" 
+	using smd-$what on `date`.  Logs follow:
 
 	EOT
 
 	echo "----------- client log --------------" >> $TMP
-	cat $HOME/.smd/log/client.$endpoint.log >> $TMP
+	cat $SMD_ROOT/log/client.$endpoint.log | tr -d '\015' >> $TMP
+	echo >> $TMP
 	echo "----------- server log --------------" >> $TMP
-	cat $HOME/.smd/log/server.$endpoint.log >> $TMP
+	cat $SMD_ROOT/log/server.$endpoint.log | tr -d '\015' >> $TMP
+	echo >> $TMP
+	echo "-- " >> $TMP
+	echo "Sync Mail Dir - mail-on-failure hook" >> $TMP
 
-	mail -s "smd-$what failed for the $endpoint endpoint" $USER < $TMP
+	mail -s "[smd] sync with $endpoint failed" $USER < $TMP
 
-	touch $HOME/.smd/$HOOK_NAMESPACE
+	touch $HOOK_STATUS
+
+	rm $TMP
 fi
 
-if [ "$status" = 0 ]; then 
-	rm $HOME/.smd/$HOOK_NAMESPACE
+# on success, if HOOK_STATUS exists, we remove it and send an email
+# to say it is now OK
+if [ "$when" = "post" -a "$status" = 0 ]; then 
+	if [ -f $HOOK_STATUS ]; then
+		mail -s "[smd] sync with $endpoint succeeded" \
+			$USER <<-EOT 
+		smd-$what succesfully completed for endpoint "$endpoint".
+		EOT
+		rm -f $HOOK_STATUS
+	fi
 fi
 
 # vim:set ft=sh:
