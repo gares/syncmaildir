@@ -123,8 +123,8 @@ install-misc: $(MANPAGES)
 	$(call mkdir-p,share/man/man1)
 	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
 	$(call mkdir-p,share/doc/syncmaildir)
-	cp -r sample-hooks/ README DESIGN ChangeLog \
-		$(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
+	cp -r sample-hooks/ $(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
+	$(call install,README,share/doc/syncmaildir)
 
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
