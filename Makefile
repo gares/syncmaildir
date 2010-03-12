@@ -56,7 +56,7 @@ check-run: check-w-$(LUA) check-w-bash
 check-w-%:
 	@which $* > /dev/null || echo $* not found
 
-test: all check-run misc/Mail.testcase.tgz
+test: text/all check-run misc/Mail.testcase.tgz
 	@tests.d/test.sh $(addprefix $(shell pwd)/,$T)
 
 misc/Mail.testcase.tgz: 
