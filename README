@@ -120,6 +120,28 @@ or `--dry-run` flags, that do not modify in any way your maildir, but,
 especially when used together with `-v` or `--verbose`, can be very handy to
 understand which changes smd would perform if not told otherwise.
 
+From version 0.9.14, `smd-push` and `smd-pull` can run user defined
+hooks before and after doing their job. Hooks are regular programs (usually
+shell scripts) placed in the following directories:
+ 
+- `~/.smd/hooks/pre-push.d/`
+- `~/.smd/hooks/pre-pull.d/`
+- `~/.smd/hooks/post-pull.d/`
+- `~/.smd/hooks/post-pull.d/`
+
+Hooks receive four arguments in the following order:
+
+1. when: `pre` or `post`
+2. what: `push` or `pull`
+3. endpoint: the endpoint name, usually `default`
+4. status: the current status, `0` for OK, `1` for error. 
+   pre-hooks always receive `0`, post hooks receive the value 
+   `smd-push/pull` will return after hooks terminate
+
+A sample hook is available in the source tarball under the `sample-hooks/`
+directory. Hooks should not fail, if they do so then `smd-push/pull` will
+fail too.
+
 ### smd-loop
 
 `smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
