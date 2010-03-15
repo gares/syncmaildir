@@ -1,3 +1,8 @@
+../../2010 - ...
+	* smd-applet:
+	  - the icon used to stay set to warning even after a successfult
+	  synchronization
+
 12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:
 	  - mkdir_p creates always a maildir, if the last path component

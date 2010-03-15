@@ -1,3 +1,2 @@
-- bug in smd-applet not restoring regular icon when network is back
 - it may happen that a mail message has \n in his name, and thus the 
   mddif output is broken. Fail, but gracefully...
