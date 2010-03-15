@@ -17,7 +17,7 @@ HOOK_NAMESPACE=mail-on-failure
 HOOK_STATUS=$SMD_ROOT/hooks/$HOOK_NAMESPACE
 
 # on failure we send the mail, and create HOOK_STATUS
-if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOOK_STATUS ]; then
+if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOOK_STATUS-$endpoint ]; then
 	# something failed, we mail the $USER
 	TMP=`mktemp`
 	cat > $TMP <<-EOT
@@ -37,7 +37,7 @@ if [ "$when" = "post" -a "$status" != 0 -a ! -f $HOOK_STATUS ]; then
 
 	mail -s "[smd] sync with $endpoint failed" $USER < $TMP
 
-	touch $HOOK_STATUS
+	touch $HOOK_STATUS-$endpoint
 
 	rm $TMP
 fi
@@ -45,12 +45,12 @@ fi
 # on success, if HOOK_STATUS exists, we remove it and send an email
 # to say it is now OK
 if [ "$when" = "post" -a "$status" = 0 ]; then 
-	if [ -f $HOOK_STATUS ]; then
+	if [ -f $HOOK_STATUS-$endpoint ]; then
 		mail -s "[smd] sync with $endpoint succeeded" \
 			$USER <<-EOT 
 		smd-$what succesfully completed for endpoint "$endpoint".
 		EOT
-		rm -f $HOOK_STATUS
+		rm -f $HOOK_STATUS-$endpoint
 	fi
 fi
 
