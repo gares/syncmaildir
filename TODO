@@ -1,2 +1,5 @@
+- xpcall always printing internal-error may cause the output
+  of two distincts tag lines
+- add support for "internal-error" to smd-applet
 - it may happen that a mail message has \n in his name, and thus the 
   mddif output is broken. Fail, but gracefully...
