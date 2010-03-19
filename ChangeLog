@@ -1,7 +1,18 @@
-../../2010 - ...
+../../2010 - ... aka rc4
 	* smd-applet:
 	  - the icon used to stay set to warning even after a successful
-	  synchronization
+	    synchronization
+	* smd-client, smd-server, syncmaildir:
+	  - never use the lua error() function, all errors should generate
+	    a meaningful tag, only internal errors raise error and thus
+	    are tagged as internal-error by the parachute that also prints
+	    a backtrace
+	  - always use log_tags_and_fail, that calls error but with
+	    the exception {text=....} that is recognized by the parachute
+	    so that no backtrace is printed
+	* tests.d/:
+	  - new test for database mismatch (indirectly testing correct
+	    exception handling)
 
 12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:
