@@ -174,8 +174,8 @@ read_conffile() {
 		#
 		CLIENTNAME=`hostname`-$REPNAME
 	
-		# The mailbox to sync, the path is the same on both hosts, but
-		# can be relative to the current working directory.
+		# The mailbox to sync, the path is the same on both hosts, and
+		# is relative to the home directory.
 		MAILBOX="Mail/"
 	
 		# Log client to server and server to client communication.
