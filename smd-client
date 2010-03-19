@@ -42,7 +42,8 @@ function process_get_full_email_queue()
 	for _,v in ipairs(get_full_email_queue) do
 		local hsha_l, bsha_l = inf:read('*l'):match('^(%S+) (%S+)$') 
 		if hsha_l == nil or bsha_l == nil then
-			error('mddiff incorrect behaviour')
+			log_tags_and_fail('mddiff incorrect behaviour',
+				"internal-error","mddiff",true)
 		elseif hsha_l == v.hsha and bsha_l == v.bsha then
 			mkdir_p(v.name)
 			local rc = os.rename(v.tmp, v.name) 
@@ -413,7 +414,8 @@ function execute(cmd)
 	elseif opcode == "REPLACE"       then return (execute_replace(cmd))
 	elseif opcode == "ERROR"         then return (execute_error(cmd))
 	else
-		error('Unknown opcode '..opcode)
+		log_tags_and_fail('Unknown opcode '..opcode,
+			"internal-error","protocol",true)
 	end
 end
 
@@ -430,8 +432,8 @@ function receive_delta(inf)
 	until not line or line == "END"
 	if line ~= "END" then
 		log_error('Unable to receive a complete diff')
-		log_tags("receive-delta","network",false,"retry")
-		error("network error while receiving delta")
+		log_tags_and_fail("network error while receiving delta",
+			"receive-delta","network",false,"retry")
 	end
 
 	return cmds
@@ -533,9 +535,13 @@ set_strict()
 
 -- parachute for errors
 xpcall(main,function(msg)
-	log_error(tostring(msg))
-	log_error(debug.traceback())
-	log_tags("internal-error","unknown",true)
+	if type(msg) == "table" then
+		log_error(tostring(msg.text))
+	else
+		log_tags("internal-error","unknown",true)
+		log_error(tostring(msg))
+		log_error(debug.traceback())
+	end
 	os.exit(6)
 end)
 

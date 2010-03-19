@@ -131,9 +131,13 @@ set_strict()
 
 -- parachute for error
 xpcall(main,function(msg)
-	log_error(tostring(msg))
-	log_error(debug.traceback())
-	log_tags("internal-error","unknown",true)
+	if type(msg) == "table" then
+		log_error(tostring(msg.text))
+	else
+		log_tags("internal-error","unknown",true)
+		log_error(tostring(msg))
+		log_error(debug.traceback())
+	end
 	os.exit(7)
 end)
 

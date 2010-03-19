@@ -12,6 +12,7 @@ local dryrun = false
 local PREFIX = '@PREFIX@'
 
 local __G = _G
+local __error = _G.error
 
 module('syncmaildir',package.seeall)
 
@@ -42,6 +43,18 @@ if string.sub(CPN,1,1) == '@' then
 		CPN = 'cp -n'
 end
 
+-- you should use logs_tags_and_fail
+function error(msg)
+	local d = debug.getinfo(1,"nl")
+	__error((d.name or '?')..': '..(d.currentline or '?')..
+	' :attempt to call error instead of log_tags_and_fail')
+end
+
+function log_tags_and_fail(msg,...)
+	log_tags(...)
+	__error({text=msg})
+end
+
 function set_verbose(v)
 	verbose = v
 end
@@ -66,6 +79,7 @@ function log_tag(tag)
 	io.stderr:write('TAGS: ',tag,'\n')
 end
 
+-- this function shoud be used only by smd-client leaves
 function log_tags(context, cause, human, ...)
 	if human then human = "necessary" else human = "avoidable" end
 	local suggestions = {}
@@ -89,17 +103,17 @@ function transmit(out, path, what)
 	if not f then
 		log_error("Unable to open "..path..": "..(err or "no error"))
 		log_error("The problem should be transient, please retry.")
-		log_tags("transmit", "simultaneous-mailbox-edit",false,"retry")
-		error('Unable to open requested file.')
+		log_tags_and_fail('Unable to open requested file.',
+			"transmit", "simultaneous-mailbox-edit",false,"retry")
 	end
 	local size, err = f:seek("end")
 	if not size then
 		log_error("Unable to calculate the size of "..path)
 		log_error("If it is not a regular file, please move it away.")
 		log_error("If it is a regular file, please report the problem.")
-		log_tags("transmit", "non-regular-file",true,
+		log_tags_and_fail('Unable to calculate the size of the requested file.',
+			"transmit", "non-regular-file",true,
 			"display-permissions("..quote(path)..")")
-		error('Unable to calculate the size of the requested file.')
 	end
 	f:seek("set")
 
@@ -145,16 +159,17 @@ function receive(inf,outfile)
 			log_error("Unable to open "..outfile.." for writing.")
 			log_error('It may be caused by bad directory permissions, '..
 				'please check.')
-			log_tags("receive", "non-writeable-file",true,
+			log_tags_and_fail("Unable to write incoming data",
+				"receive", "non-writeable-file",true,
 				"display-permissions("..quote(outfile)..")")
-			error("Unable to write incoming data")
 	end
 
 	local line = inf:read("*l")
 	if line == nil or line == "ABORT" then
 		log_error("Data transmission failed.")
 		log_error("This problem is transient, please retry.")
-		error('server sent ABORT or connection died')
+		log_tags_and_fail('server sent ABORT or connection died',
+			"receive","network",false,"retry")
 	end
 	local len = tonumber(line:match('^chunk (%d+)'))
 	while len > 0 do
@@ -197,30 +212,28 @@ function handshake(dbfile)
 		log_error("Hint: did you correctly setup the SERVERNAME variable")
 		log_error("on your client? Did you add an entry for it in your ssh")
 		log_error("configuration file?")
-		log_tags("handshake", "network",false,"retry")
-		error('Network error')
+		log_tags_and_fail('Network error',"handshake", "network",false,"retry")
 	end
 	local protocol = line:match('^protocol (.+)$')
 	if protocol ~= PROTOCOL_VERSION then
 		log_error('Wrong protocol version.')
 		log_error('The same version of syncmaildir must be used on '..
 			'both endpoints')
-		log_tags("handshake", "protocol-mismatch",true)
-		error('Protocol version mismatch')
+		log_tags_and_fail('Protocol version mismatch',
+			"handshake", "protocol-mismatch",true)
 	end
 	line = io.read('*l')
 	if line == nil then
 		log_error "The client disconnected during handshake"
-		log_tags("handshake", "network",false,"retry")
-		error('Network error')
+		log_tags_and_fail('Network error',"handshake", "network",false,"retry")
 	end
 	local sha = line:match('^dbfile (%S+)$')
 	if sha ~= db_sha then
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
-		log_tags("handshake", "db-mismatch",true,"run(rm "..
+		log_tags_and_fail('Database mismatch',
+			"handshake", "db-mismatch",true,"run(rm "..
 			quote(dbfile)..")")
-		error('Database mismatch')
 	end
 end
 
@@ -249,9 +262,9 @@ function make_dir_aux(absolute, pieces)
 			log_error("Unable to create directory "..dir)
 			log_error('It may be caused by bad directory permissions, '..
 				'please check.')
-			log_tags("mkdir", "wrong-permissions",true,
+			log_tags_and_fail("Directory creation failed",
+				"mkdir", "wrong-permissions",true,
 				"display-permissions("..quote(dir)..")")
-			error("Directory creation failed")
 		end
 		mkdir_p_cache[dir] = true
 	end
@@ -330,7 +343,8 @@ function tmp_for(path,use_tmp)
 	local attempts = 0
 	while exists(newpath) do 
 		if attempts > 10 then
-			error('unable to generate a fresh tmp name')			
+			log_tags_and_fail('unable to generate a fresh tmp name',
+				"internal-error","tmp_for",true)
 		else 
 			time = os.date("%s")
 			host = host .. 'x'
@@ -376,9 +390,9 @@ function touch(f)
 		h = io.open(f,'w')
 		if h == nil then
 			log_error('Unable to touch '..quote(f))
-			log_tags("touch","bad-permissions",true,
+			log_tags_and_fail("Unable to touch a file",
+				"touch","bad-permissions",true,
 				"display-permissions("..quote(f)..")")
-			error("Unable to touch a file")
 		else
 			h:close()
 		end
@@ -427,12 +441,12 @@ function set_strict()
 	setmetatable(__G,{
 		__newindex = function (t,k,v)
 			local d = debug.getinfo(2,"nl")
-			error((d.name or '?')..': '..(d.currentline or '?')..
+			__error((d.name or '?')..': '..(d.currentline or '?')..
 				' :attempt to create new global '..k)
 		end;
 		__index = function(t,k)
 			local d = debug.getinfo(2,"nl")
-			error((d.name or '?')..': '..(d.currentline or '?')..
+			__error((d.name or '?')..': '..(d.currentline or '?')..
 				' :attempt to read undefined global '..k)
 		end;
 	})
