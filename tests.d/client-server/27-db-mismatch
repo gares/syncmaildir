@@ -12,6 +12,8 @@ sed -i 's/52/35/' .smd/test__Mail.db.txt
 
 mv Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/moved_here
 
+msync 2
+
 test_eq target/Mail.bak target/Mail
 assert $? 0 "altering mailbox even if db mismatch"
 
