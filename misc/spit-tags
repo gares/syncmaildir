@@ -11,6 +11,7 @@ setmetatable(io.stderr,{
 		end
 	}
 })
+error = function() end
 
 require "syncmaildir"
 for k,v in pairs(syncmaildir) do _G[k] = v end
@@ -27,6 +28,10 @@ setmetatable(_G,{
 	end
 })
 
+for tag in string.gmatch(data,"log_tags_and_fail%b()") do
+	--print('exec',tag)
+	loadstring(tag)()
+end
 for tag in string.gmatch(data,"log_tags%b()") do
 	--print('exec',tag)
 	loadstring(tag)()
