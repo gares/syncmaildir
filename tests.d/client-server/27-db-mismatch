@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+msync 1
+
+test_eq Mail target/Mail 
+
+cp -r target/Mail target/Mail.bak
+
+# altering the bd
+sed -i 's/52/35/' .smd/test__Mail.db.txt
+
+mv Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/moved_here
+
+test_eq target/Mail.bak target/Mail
+assert $? 0 "altering mailbox even if db mismatch"
+
+N=`grep TAGS log.client.* | wc -l`
+assert $N 1 "spitting tags more than once"
