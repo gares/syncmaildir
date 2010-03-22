@@ -430,6 +430,20 @@ function assert_exists(name)
 	assert(rc == 0,'Not found: "'..name..'"')
 end
 
+-- parachute
+function parachute(f,rc)
+	xpcall(f,function(msg)
+		if type(msg) == "table" then
+			log_error(tostring(msg.text))
+		else
+			log_tags("internal-error","unknown",true)
+			log_error(tostring(msg))
+			log_error(debug.traceback())
+		end
+		os.exit(rc)
+	end)
+end
+
 -- prints the stack trace. idiom is 'rewturn(trance(x))' so that
 -- we have in the log the path for the leaf that computed x
 function trace(x)

@@ -130,15 +130,6 @@ end
 set_strict()
 
 -- parachute for error
-xpcall(main,function(msg)
-	if type(msg) == "table" then
-		log_error(tostring(msg.text))
-	else
-		log_tags("internal-error","unknown",true)
-		log_error(tostring(msg))
-		log_error(debug.traceback())
-	end
-	os.exit(7)
-end)
+parachute(main, 7)
 
 -- vim:set ts=4:
