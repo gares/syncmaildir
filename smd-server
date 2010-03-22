@@ -110,13 +110,13 @@ function main()
 			if not dry_run() then os.remove(newdbmt) end
 			os.exit(5)
 		elseif l:match('^GET ') then
-			local path = l:match('^GET ([^%s]+)$')
+			local path = parse(l, '^GET (%S+)$')
 			transmit(io.stdout, path, "all")
 		elseif l:match('^GETHEADER ') then
-			local path = l:match('^GETHEADER ([^%s]+)$')
+			local path = parse(l, '^GETHEADER (%S+)$')
 			transmit(io.stdout, path, "header")
 		elseif l:match('^GETBODY ') then
-			local path = l:match('^GETBODY ([^%s]+)$')
+			local path = parse(l, '^GETBODY (%S+)$')
 			transmit(io.stdout, path, "body")
 		else
 			-- protocol error

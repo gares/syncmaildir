@@ -146,7 +146,7 @@ end
 -- ============================= actions =====================================
 
 function execute_add(cmd)
-	local name, hsha, bsha = cmd:match('^ADD (%S+) (%S+) (%S+)$')
+	local name, hsha, bsha = parse(cmd, '^ADD (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
@@ -169,7 +169,7 @@ function execute_add(cmd)
 end
 
 function execute_delete(cmd)
-	local name, hsha, bsha = cmd:match('^DELETE (%S+) (%S+) (%S+)$')
+	local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
@@ -212,7 +212,7 @@ end
 
 function execute_copy(cmd)
 	local name_src, hsha, bsha, name_tgt = 
-		cmd:match('^COPY (%S+) (%S+) (%S+) TO (%S+)$')
+		parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
 	local ex_src, hsha_src, bsha_src = exists_and_sha(name_src)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
 	if ex_src and ex_tgt then
@@ -292,7 +292,7 @@ end
 
 function execute_replaceheader(cmd)
 	local name, hsha, bsha, hsha_new = 
-		cmd:match('^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
+		parse(cmd, '^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
 	if exists(name) then
 		local hsha_l, bsha_l = sha_file(name)
 		if hsha == hsha_l and bsha == bsha_l then
@@ -317,7 +317,7 @@ end
 
 function execute_copybody(cmd)
 	local name, bsha, newname, hsha = 
-		cmd:match('^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
+		parse(cmd, '^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
 	local exn, hsha_ln, bsha_ln = exists_and_sha(newname)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
@@ -368,7 +368,7 @@ end
 
 function execute_replace(cmd)
 	local name1, hsha1, bsha1, hsha2, bsha2 = 
-	   cmd:match('^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
+	   parse(cmd, '^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
 	local exn, hsha_ln, bsha_ln = exists_and_sha(name1)
 	if not exn then
 		return(get_full_email(name1,hsha2,bsha2))
@@ -392,7 +392,7 @@ function execute_replace(cmd)
 end
 
 function execute_error(cmd)
-	local msg = cmd:match('^ERROR (.*)$')
+	local msg = parse(cmd, '^ERROR (.*)$')
 	
 	log_error('mddiff failed: '..msg)
 	log_tags("mddiff","unknown",true)
@@ -404,7 +404,7 @@ end
 -- extra parentheses around execute_* calls make it a non tail call,
 -- thus we get the stack frame print in case of error.
 function execute(cmd)
-	local opcode = cmd:match('^(%S+)')
+	local opcode = parse(cmd, '^(%S+)')
 
 	    if opcode == "ADD"           then return (execute_add(cmd))
 	elseif opcode == "DELETE"        then return (execute_delete(cmd))

@@ -7,5 +7,5 @@ mv Mail/cur/`ls Mail/cur/ | head -n 1` "Mail/cur/moved_here"
 
 msync 2
 
-X=`grep '^TAGS' log.client.* | grep -v internal.error | wc -l`
+X=`grep '^TAGS' log.client.* | wc -l`
 assert $X 1 "missing TAG output"

@@ -358,6 +358,17 @@ end
 
 -- =========================== misc helpers =================================
 
+-- like s:match(spec) but chencks no captures are numm
+function parse(s,spec)
+	local res = {s:match(spec)}
+	local _,expected = spec:gsub('%b()','')
+	if #res ~= expected then
+		log_tags_and_fail('Error parsing "'..s..'"',
+			"internal-error","protocol",true)
+	end
+	return unpack(res)
+end
+
 function sha_file(name)
 	local inf = io.popen(MDDIFF .. ' ' .. name)
 	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
