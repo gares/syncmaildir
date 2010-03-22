@@ -15,6 +15,11 @@
 	* tests.d/:
 	  - new test for database mismatch (indirectly testing correct
 	    exception handling) and for malformed mddiff opcodes arguments
+	* sample-hooks:
+	  - persistent-ssh: exploiting ssh connection sharing capability.
+	    This allows to save a little amount of time every synchronization.
+	    A single secure connection can be established once, at the very
+	    beginning, and then reused for evry subsequent synchronization.
 
 12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:
