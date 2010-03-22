@@ -1,4 +1,4 @@
-../../2010 - ... aka rc4
+../../2010 - minor fix release - version 0.9.15 aka 1.0~rc4
 	* smd-applet:
 	  - the icon used to stay set to warning even after a successful
 	    synchronization
@@ -10,9 +10,11 @@
 	  - always use log_tags_and_fail, that calls error but with
 	    the exception {text=....} that is recognized by the parachute
 	    so that no backtrace is printed
+	  - parse mddiff opcodes with a function that is robust in 
+	    face of malformed arguments
 	* tests.d/:
 	  - new test for database mismatch (indirectly testing correct
-	    exception handling)
+	    exception handling) and for malformed mddiff opcodes arguments
 
 12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:

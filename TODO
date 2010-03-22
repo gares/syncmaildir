@@ -2,7 +2,3 @@ Features:
 - add support for "internal-error" to smd-applet, possibly use a
   bugreport action that generates a decent text to attach to the email
 
-Bugs:
-- test 28: it may happen that a mail message has \n in his name, and thus the
-  mddif output is broken. Fail, but gracefully, reporting an errion in the
-  protocol (assert args of commands are not nil)
