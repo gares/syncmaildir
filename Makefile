@@ -7,7 +7,7 @@ VERSION=0.9.15
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
-HTML=index.html design.html
+HTML=index.html design.html hooks.html
 DESTDIR=
 SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
 SF_LOGIN=gareuselesinge,syncmaildir
@@ -144,6 +144,9 @@ $(HTML): check-w-markdown
 	cat misc/head.html > design.html
 	markdown DESIGN >> design.html
 	cat misc/tail.html >> design.html
+	cat misc/head.html > hooks.html
+	grep -h '^##' sample-hooks/* | sed 's/^## \?//' | markdown >> hooks.html
+	cat misc/tail.html >> hooks.html
 
 upload-website: $(HTML)
 	scp $(HTML) misc/style.css $(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)

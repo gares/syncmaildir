@@ -1,9 +1,31 @@
 #!/bin/sh
-# fetchmail like mail notification in case of failure
 #
 # Released under the terms of GPLv3 or at your option any later version.
 # No warranties.
 # Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
+#
+# lines beginning with a double '#' are considered the documentation
+# of the hook, and should use the markdown syntax
+#
+## Mail on Failure
+## ===============
+##
+## `mail-on-failure` is a simple `post-*` hook that sends mails to the user
+## in case the synchronization failed, in the style of fetchmail's messages
+## about authentication failures.
+##
+## When synchronization fails, `$USER` receives a mail with the following
+## subject containing the logs of the synchronization:
+##
+##     [smd] sync with $endpoint failed
+##
+## When a subsequent synchronization attempt is successful, the `$USER` is
+## notified with the following message:
+##
+##     [smd] sync with $endpoint succeeded
+## 
+## Note that the mail is sent with the `mail` command, thus local
+## delivery has to be functional.
 
 when="$1"
 what="$2"

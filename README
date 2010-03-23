@@ -96,6 +96,7 @@ This file defines the following variables:
   your `~/.ssh/config`, with compression enabled. For example:
 
         Host smd-server-foo
+          BatchMode yes
           Compression yes
           Hostname your.real.server.name
           Username you
@@ -138,9 +139,9 @@ Hooks receive four arguments in the following order:
    pre-hooks always receive `0`, post hooks receive the value 
    `smd-push/pull` will return after hooks terminate
 
-A sample hook is available in the source tarball under the `sample-hooks/`
-directory. Hooks should not fail, if they do so then `smd-push/pull` will
-fail too.
+Hooks should not fail, if they do so then `smd-push/pull` will fail too. 
+Sample hooks are available in the source tarball under the `sample-hooks/`.
+Some documentation about [available hooks](hooks.html) is also present.
 
 ### smd-loop
 
