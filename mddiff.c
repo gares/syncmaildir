@@ -411,7 +411,7 @@ STATIC void load_db(const char* dbname){
 		txtsha(mail(m)->bsha,tmpbuff_2), \
 		txtsha(mail(n)->hsha,tmpbuff_3))
 
-// the hearth 
+// the heart
 STATIC void analize_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
