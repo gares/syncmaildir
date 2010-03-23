@@ -1,4 +1,4 @@
-../../2010 - minor fix release - version 0.9.15 aka 1.0~rc4
+23/03/2010 - minor fix release - version 0.9.15 aka 1.0~rc4
 	* smd-applet:
 	  - the icon used to stay set to warning even after a successful
 	    synchronization
@@ -20,7 +20,7 @@
 	    This allows to save a little amount of time every synchronization.
 	    A single secure connection can be established once, at the very
 	    beginning, and then reused for evry subsequent synchronization.
-	  - properly document hooks
+	  - documentation for hooks in markdown format generating hooks.html
 
 12/03/2010 - major feature relase - version 0.9.14 aka too many changes to be rc
 	* syncmaildir.lua:
