@@ -32,7 +32,7 @@
 ##         Hostname your.real.server.name
 ##         User you
 ##
-## The key ingredient is a to obtain standard name for the master socket of a 
+## The key ingredient is to obtain standard name for the master socket of a 
 ## given endpoint, in that case `~/.ssh/master-socket-smd-server-foo` for
 ## the endpoint `smd-server-foo`. Refer the `ssh_config` man page for a
 ## detailed explanation of `ControlMaster` and `ControlPath`.
