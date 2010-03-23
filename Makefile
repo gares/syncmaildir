@@ -127,7 +127,7 @@ install-misc: $(MANPAGES)
 	$(call install,README,share/doc/syncmaildir)
 
 clean: 
-	rm -rf $(BINARIES) $(MANPAGES)
+	rm -f $(BINARIES) $(MANPAGES)
 	rm -rf tests.d/run
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
