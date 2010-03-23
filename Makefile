@@ -129,7 +129,7 @@ install-misc: $(MANPAGES)
 clean: 
 	rm -rf $(BINARIES) $(MANPAGES)
 	rm -rf tests.d/run
-	rm -rf $(PROJECTNAME)-$(VERSION)/ $(PROJECTNAME)-$(VERSION).tar.gz
+	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 	rm -f config.vala
 
