@@ -1,3 +1,7 @@
+../../2010 - minor fix release - version 1.0.0
+	* smd-pull, smd-push:
+	  - report an error if a wrong flag is supplied
+
 23/03/2010 - minor fix release - version 0.9.15 aka 1.0~rc4
 	* smd-applet:
 	  - the icon used to stay set to warning even after a successful

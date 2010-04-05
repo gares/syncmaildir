@@ -123,6 +123,13 @@ parse_args() {
 			-d|--dry-run)
 				CHILDSARGS=-d
 			;;
+			-*)
+				cat <<-EOT
+				usage: `basename $0` [options] [endpoint]
+				Refer to the man page for `basename $0`
+				EOT
+				exit 1
+			;;
 			*)
 				REPNAME="$arg"		
 			;;
