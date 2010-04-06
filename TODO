@@ -4,6 +4,3 @@ Features:
 
 - test an initial sync with a 800M mailbox, and speed it up.
 
-BUG:
-- smd-pull --help creates a dummy conf file
-- dection of unsupported cp -n
