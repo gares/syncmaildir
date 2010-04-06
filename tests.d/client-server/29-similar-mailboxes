@@ -1,0 +1,14 @@
+#!/bin/bash
+
+rm -rf target/Mail
+cp -r Mail/ target/
+
+test_eq Mail target/Mail 
+
+msync 1
+
+test_eq Mail target/Mail 
+
+X=`grep '^COMMIT$' log.c2s | wc -l`
+assert $X 1 "missing COMMIT in c2s"
+
