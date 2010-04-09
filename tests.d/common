@@ -93,7 +93,8 @@ assert(){
 }
 
 prepare(){
-	local N=$1
+	local testcase=$1
+	local N=$2
 
 	cd $BASE
 	rm -rf $ROOT/$TESTSUITE/$N
@@ -112,31 +113,33 @@ prepare(){
 	chmod a+x $ROOT/$TESTSUITE/$N/bin/fakessh
 	
 	cd $ROOT/$TESTSUITE/$N
-	tar -xzf $BASE/misc/Mail.testcase.tgz
+	tar -xzf $BASE/$testcase
 	mkfifo s2c
 	mkfifo c2s
 }
 
 run_test() {
-	local T="$1"
+	local testcase="$1"
+	local T="$2"
 	echo -n "running $TESTSUITE/`basename $T`: "
 	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-	prepare $N
+	prepare $testcase $N
 	cd $ROOT/$TESTSUITE/$N
 	. $T
 	echo OK
 }
 
 run_tests() {
-	local testfile="$1"
+	local testcase="$1"
+	local testfile="$2"
 	if [ ! -z "$testfile" ]; then
 		if [ -f $testfile ] && 
 		   (echo $testfile | grep $TESTSUITE > /dev/null); then
-			run_test $testfile
+			run_test $testcase $testfile
 		fi
 	else
 		for T in $BASE/tests.d/$TESTSUITE/[0-9]*; do
-			run_test $T
+			run_test $testcase $T
 		done
 	fi
 }

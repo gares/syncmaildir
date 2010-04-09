@@ -12,6 +12,8 @@ DESTDIR=
 SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
 SF_LOGIN=gareuselesinge,syncmaildir
 SF_WEB=htdocs
+TESTCASE_SIZE=100
+TESTCASE_MAILBOX=misc/Mail.testcase.tgz
 
 # ----------------------------------------------------------------------------
 # These variables affect the programs behaviour and their installation;
@@ -56,13 +58,13 @@ check-run: check-w-$(LUA) check-w-bash
 check-w-%:
 	@which $* > /dev/null || echo $* not found
 
-test: text/all check-run misc/Mail.testcase.tgz
-	@tests.d/test.sh $(addprefix $(shell pwd)/,$T)
+test: text/all check-run $(TESTCASE_MAILBOX)
+	@tests.d/test.sh $(TESTCASE_MAILBOX) $(addprefix $(shell pwd)/,$T)
 
-misc/Mail.testcase.tgz: 
+$(TESTCASE_MAILBOX):
 	$(MAKE) check-w-polygen
 	mkdir -p Mail/cur
-	for i in `seq 100`; do \
+	for i in `seq $(TESTCASE_SIZE)`; do \
 		echo "Subject: `polygen /usr/share/polygen/eng/manager.grm`"\
 			>> Mail/cur/$$i; \
 		echo "Message-Id: $$i" >> Mail/cur/$$i; \
