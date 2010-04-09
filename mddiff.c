@@ -593,7 +593,7 @@ STATIC void generate_deletions(){
 	}
 }
 
-STATIC void extra_sha_file(const char* file) {    
+STATIC void extra_sha_file(const char* file, int suddenly_flush) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -629,12 +629,14 @@ STATIC void extra_sha_file(const char* file) {
 	
 	munmap(addr, sb.st_size);
 	close(fd);
+
+	if (suddenly_flush) fflush(stdout);
 }
 
 
 STATIC void extra_sha_files(char* file[], int no) {    
 	int i;
-	for (i=0; i < no; i++) extra_sha_file(file[i]);
+	for (i=0; i < no; i++) extra_sha_file(file[i],0);
 }
 
 // ============================ main =====================================
@@ -751,7 +753,23 @@ int main(int argc, char *argv[]) {
 	c = stat(data, &sb);
 	if (c != 0) ERROR(stat,"unable to stat %s\n",data);
 	
-	if ( S_ISREG(sb.st_mode) ){
+	if ( S_ISFIFO(sb.st_mode) /* TODO check only 1 arg */){
+		FILE *in = fopen(data,"r");
+		if (in == NULL) {
+			ERROR(fopen,"unable to open fifo %s\n",data);
+			exit(EXIT_FAILURE);
+		}
+		while (!feof(in)) {
+			char name[MAX_EMAIL_NAME_LEN];	
+			if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
+				size_t len = strlen(name);
+				if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
+				// TODO assert regular
+				extra_sha_file(name,1);	
+			}
+		}
+		exit(EXIT_SUCCESS);
+	} else if ( S_ISREG(sb.st_mode) ){
 		// simple mode, just hash the files
 		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
 		extra_sha_files(&argv[optind], argc - optind);
