@@ -3,7 +3,7 @@
 rm -rf target/Mail
 mv Mail Mail.template
 mkdir Mail
-for i in `seq 1 500`; do
+for i in `seq 1 250`; do
 	mkdir Mail/$i/
 	cp -r Mail.template Mail/$i/
 done
