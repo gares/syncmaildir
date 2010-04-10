@@ -9,10 +9,11 @@ DESCRIPTION
   generating a set of commands (a diff) that a third party software can 
   apply to synchronize a (eventually remote) copy of the maildir.
 
-  If paths is a list of regular files, mddiff outputs the sha1 of its header
-  and body separated by space.
+  If paths is a single file name, and that file is a fifo, mddiff reads
+  from it file names separated by new line and, mddiff outputs the sha1 
+  of its header and body separated by space.
 
-      $ mddiff Mail/cur/1239038050.14937_1.garfield:2,S Mail/cur/123...
+      $ mddiff /tmp/fifo_for_mddiff 
       806a0ffe4f29766effd764... 463e543da9dac8e298...
       582cbb6a5cd3ce13965c8c... 8fa60a7458b1157193...
       ...
@@ -27,8 +28,6 @@ DESCRIPTION
       $ mddiff ~/Mail/
       ADD ~/Mail/cur/1239038050.14937_1.garfield:2,S 66532ebb05b252e... 
       ...
-  
-  Regular files and directories cannot be mixed in paths.
   
   Every client (endpoint using mddiff for synchronization) must use a different
   db-file, and the db-file is strictly related with the set of directories given
