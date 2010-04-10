@@ -386,6 +386,10 @@ function sha_file(name)
 	mddiff_handler.outf:write(name..'\n')
 	mddiff_handler.outf:flush()
 	local hsha, bsha = mddiff_handler.inf:read('*l'):match('(%S+) (%S+)') 
+	if hsha == nil or bsha == nil then
+		log_tags_and_fail('mddiff incorrect behaviour',
+			"internal-error","mddiff",true)
+	end
 	-- we are now sure that both endpoints opened the file, thus
 	-- we can safely garbage collect it
 	if rm_pipe then os.remove(pipe) end

@@ -37,14 +37,10 @@ function process_get_full_email_queue()
 		v.tmp = tmp[#tmp]
 		receive(io.stdin, tmp[#tmp])
 	end
-	local inf = io.popen(MDDIFF .. ' ' .. table.concat(tmp,' '))
 	tmp = nil
 	for _,v in ipairs(get_full_email_queue) do
-		local hsha_l, bsha_l = inf:read('*l'):match('^(%S+) (%S+)$') 
-		if hsha_l == nil or bsha_l == nil then
-			log_tags_and_fail('mddiff incorrect behaviour',
-				"internal-error","mddiff",true)
-		elseif hsha_l == v.hsha and bsha_l == v.bsha then
+		local hsha_l, bsha_l = sha_file(v.tmp)
+		if hsha_l == v.hsha and bsha_l == v.bsha then
 			mkdir_p(v.name)
 			local rc = os.rename(v.tmp, v.name) 
 			if rc then
@@ -63,7 +59,6 @@ function process_get_full_email_queue()
 			return (trace(false)) -- get full email failed, received wrong mail
 		end
 	end
-	inf:close()
 	get_full_email_queue = {}
 	return (trace(true)) -- get full email OK
 end
