@@ -369,10 +369,35 @@ function parse(s,spec)
 	return unpack(res)
 end
 
+local mddiff_handler = {}
+
 function sha_file(name)
-	local inf = io.popen(MDDIFF .. ' ' .. name)
-	local hsha, bsha = inf:read('*a'):match('(%S+) (%S+)') 
-	inf:close()
+	local pipe, rm_pipe = nil, false
+	if mddiff_handler.inf == nil then
+		local rc
+		repeat 
+			pipe = os.tmpname() .. os.time()
+			rc = os.execute('mkfifo '..pipe)
+		until rc == 0
+		mddiff_handler.inf = io.popen(MDDIFF .. ' ' .. pipe)
+		mddiff_handler.outf = io.open(pipe,'w')
+		rm_pipe = true
+	end
+	mddiff_handler.outf:write(name..'\n')
+	mddiff_handler.outf:flush()
+	local data = mddiff_handler.inf:read('*l')
+	if data:match('^ERROR') then
+		log_tags_and_fail('Failed to sha1 a message',
+			'sha_file','modify-while-update',false,'retry')
+	end
+	local hsha, bsha = data:match('(%S+) (%S+)') 
+	if hsha == nil or bsha == nil then
+		log_tags_and_fail('mddiff incorrect behaviour',
+			"internal-error","mddiff",true)
+	end
+	-- we are now sure that both endpoints opened the file, thus
+	-- we can safely garbage collect it
+	if rm_pipe then os.remove(pipe) end
 	return hsha, bsha
 end
 

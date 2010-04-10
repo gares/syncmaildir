@@ -151,7 +151,6 @@ STATIC void set_mail_name(mail_t mail_idx, name_t name) {
 
 // predicates for assert_all_are
 STATIC int directory(struct stat sb){ return S_ISDIR(sb.st_mode); }
-STATIC int regular_file(struct stat sb){ return S_ISREG(sb.st_mode); }
 
 // stats and asserts pred on argv[optind] ... argv[argc-optind]
 STATIC void assert_all_are(
@@ -593,7 +592,7 @@ STATIC void generate_deletions(){
 	}
 }
 
-STATIC void extra_sha_file(const char* file) {    
+STATIC void extra_sha_file(const char* file, int suddenly_flush) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -603,6 +602,9 @@ STATIC void extra_sha_file(const char* file) {
 	if (fd == -1) ERROR(open,"unable to open file '%s'\n",file);
 
 	if (fstat(fd, &sb) == -1) ERROR(fstat,"unable to stat file '%s'\n",file);
+	if (! S_ISREG(sb.st_mode)) {
+		ERROR(fstat,"not a regular file '%s'\n",file);
+	}
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
@@ -629,12 +631,8 @@ STATIC void extra_sha_file(const char* file) {
 	
 	munmap(addr, sb.st_size);
 	close(fd);
-}
 
-
-STATIC void extra_sha_files(char* file[], int no) {    
-	int i;
-	for (i=0; i < no; i++) extra_sha_file(file[i]);
+	if (suddenly_flush) fflush(stdout);
 }
 
 // ============================ main =====================================
@@ -672,21 +670,20 @@ STATIC void help(char* argv0){
 	int i;
 	char *bname = g_path_get_basename(argv0);
 
-	fprintf(stdout,"\nUsage: %s [options] paths...\n",bname);
+	fprintf(stdout,"\nUsage: %s [options] (dirs...|fifo)\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
 		fprintf(stdout,"  --%-20s%s\n",
 			long_options[i].name,long_options_doc[i]);
 	}
 	fprintf(stdout,"\n\
-If paths is a list of regular files, %s outputs the sha1 of its header\n\
-and body separated by space.\n\n\
+If paths is a single fifo, %s reads from it file names and outputs the\n\
+sha1 of their header and body separated by space.\n\n\
 If paths is a list of directories, %s outputs a list of actions a client\n\
 has to perform to syncronize a copy of the same maildirs. This set of actions\n\
 is relative to a previous status of the maildir stored in the db file.\n\
 The input directories are traversed recursively, and every file encountered\n\
 inside directories named cur/ and new/ is a potential mail message (if it\n\
 contains no \\n\\n it is skipped).\n\n\
-Regular files and directories cannot be mixed in paths.\n\n\
 Every client must use a different db-file, and the db-file is strictly\n\
 related with the set of directories given as arguments, and should not\n\
 be used with a different directory set. Adding items to the directory\n\
@@ -751,13 +748,23 @@ int main(int argc, char *argv[]) {
 	c = stat(data, &sb);
 	if (c != 0) ERROR(stat,"unable to stat %s\n",data);
 	
-	if ( S_ISREG(sb.st_mode) ){
-		// simple mode, just hash the files
-		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
-		extra_sha_files(&argv[optind], argc - optind);
+	if ( S_ISFIFO(sb.st_mode) && argc - optind == 1){
+		FILE *in = fopen(data,"r");
+		if (in == NULL) {
+			ERROR(fopen,"unable to open fifo %s\n",data);
+			exit(EXIT_FAILURE);
+		}
+		while (!feof(in)) {
+			char name[MAX_EMAIL_NAME_LEN];	
+			if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
+				size_t len = strlen(name);
+				if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
+				extra_sha_file(name,1);	
+			}
+		}
 		exit(EXIT_SUCCESS);
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
-		ERROR(stat, "given path is not a regular file or directory: %s\n",data);
+		ERROR(stat, "given path is not a fifo nor a directory: %s\n",data);
 	}
 	
 	// regular case, hash the content of maildirs rooted in the 
