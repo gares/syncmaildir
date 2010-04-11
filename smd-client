@@ -236,8 +236,7 @@ function execute_copy(cmd)
 				mkdir_p(name_tgt)
 				local ok
 				if not dry_run() then
-					ok = os.execute(CPN..' '..quote(name_src)..
-						' '..  quote(name_tgt))
+					ok = cp(name_src,name_tgt)
 				else
 					ok = 0 -- we do not copy for real (--dry-run)
 				end
@@ -319,8 +318,7 @@ function execute_copybody(cmd)
 		if ex and bsha_l == bsha then
 			local ok
 			if not dry_run() then
-				ok = os.execute(CPN..' '..quote(name)..
-					' '..quote(newname))
+				ok = cp(name,newname)
 			else
 				ok = 0 -- we do not copy the body for merging (--dry-run)
 			end

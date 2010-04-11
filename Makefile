@@ -28,7 +28,6 @@ PREFIX=usr/local
 SED=sed
 SHA1SUM=sha1sum
 XDELTA=xdelta
-CPN=cp -n
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
@@ -98,7 +97,6 @@ define install-replacing
 		$(SED) 's?@SED@?$(SED)?'  |\
 		$(SED) 's?@SHA1SUM@?$(SHA1SUM)?' |\
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
-		$(SED) 's?@CPN@?$(CPN)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
 		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
 		cat > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
@@ -193,10 +191,10 @@ static/%:
 		PKG_FLAGS="$(PKG_FLAGS) --static "
 
 osx/%:
-	$(MAKE) $* SED=sed CPN=cp 
+	$(MAKE) $* SED=sed 
 
 abspath/%:
 	$(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
-		XDELTA=/usr/bin/xdelta CPN="/bin/cp -n" SSH=/usr/bin/ssh
+		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh
 
 # eof

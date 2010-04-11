@@ -38,11 +38,6 @@ if string.sub(XDELTA,1,1) == '@' then
 		XDELTA = 'xdelta'
 end
 
-CPN = '@CPN@'
-if string.sub(CPN,1,1) == '@' then
-		CPN = 'cp -n'
-end
-
 -- you should use logs_tags_and_fail
 function error(msg)
 	local d = debug.getinfo(1,"nl")
@@ -418,6 +413,19 @@ function exists_and_sha(name)
 	else
 		return false
 	end
+end
+
+function cp(src,tgt)
+	local s = io.open(src,'r')
+	local t = io.open(tgt,'w+')
+	local data
+	repeat
+		data = s:read(4096)
+		if data then t:write(data) end
+	until data == nil
+	t:close()
+	s:close()
+	return 0
 end
 
 function touch(f)
