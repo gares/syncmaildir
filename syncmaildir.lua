@@ -377,7 +377,7 @@ function sha_file(name)
 	if mddiff_handler.inf == nil then
 		local rc
 		repeat 
-			pipe = '/tmp/smd-'..os.getenv('USER')..
+			pipe = '/tmp/smd-'..(os.getenv('USER') or 'nobody')..
 				os.time()..string.gsub(name,"/","-")
 			rc = os.execute(MKFIFO..' -m 600 '..pipe)
 		until rc == 0
