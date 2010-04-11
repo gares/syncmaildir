@@ -1,14 +1,16 @@
 #!/bin/bash
 
-rm -rf target/Mail
-cp -r Mail/ target/
 
+msync 1
 test_eq Mail target/Mail 
+mkdir -p Mail/foo/
+cp -r Mail/cur Mail/foo
 sync
 
 before=`date +%s`
-msync 1
+msync 2
 after=`date +%s`
 
 test_eq Mail target/Mail 
 echo -n "(`expr $after - $before`s) "
+
