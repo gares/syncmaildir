@@ -316,6 +316,7 @@ function execute_copybody(cmd)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
+			mkdir_p(newname)
 			local ok
 			if not dry_run() then
 				ok = cp(name,newname)
