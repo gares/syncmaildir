@@ -12,8 +12,12 @@ DESTDIR=
 SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
 SF_LOGIN=gareuselesinge,syncmaildir
 SF_WEB=htdocs
-TESTCASE_SIZE=100
-TESTCASE_MAILBOX=misc/Mail.testcase.tgz
+TEST_SIZE=100
+TEST_MAILBOX=misc/Mail.TEST.tgz
+TEST_SUITES=mddiff client-server pull-push
+BENCH_SIZE=25000
+BENCH_MAILBOX=misc/Mail.BENCH.tgz
+BENCH_SUITES=benchmarks
 
 # ----------------------------------------------------------------------------
 # These variables affect the programs behaviour and their installation;
@@ -58,19 +62,29 @@ check-run: check-w-$(LUA) check-w-bash
 check-w-%:
 	@which $* > /dev/null || echo $* not found
 
-test: text/all check-run $(TESTCASE_MAILBOX)
-	@tests.d/test.sh $(TESTCASE_MAILBOX) $(addprefix $(shell pwd)/,$T)
+test: text/all check-run $(TEST_MAILBOX)
+	@SUITES="$(TEST_SUITES)" tests.d/test.sh \
+		$(TEST_MAILBOX) $(addprefix $(shell pwd)/,$T)
 
-$(TESTCASE_MAILBOX):
+bench: text/all check-run $(BENCH_MAILBOX)
+	@SUITES="$(BENCH_SUITES)" tests.d/test.sh \
+		$(BENCH_MAILBOX) $(addprefix $(shell pwd)/,$T)
+
+misc/Mail.%.tgz:
 	$(MAKE) check-w-polygen
+	rm -rf Mail 
 	mkdir -p Mail/cur
-	for i in `seq $(TESTCASE_SIZE)`; do \
-		echo "Subject: `polygen /usr/share/polygen/eng/manager.grm`"\
-			>> Mail/cur/$$i; \
-		echo "Message-Id: $$i" >> Mail/cur/$$i; \
-		echo >> Mail/cur/$$i;\
-		polygen -X 10 /usr/share/polygen/eng/manager.grm\
-	       		>> Mail/cur/$$i;\
+	namea=Mail/cur/`date +%s`.$$$$;\
+	nameb=`hostname`;\
+	date=`date`;\
+	for i in `seq $$core $($*_SIZE) $$CORES`; do \
+		name=$${namea}_$$i.$$nameb;\
+		echo "Subject: foo-subject $$i" >> $$name; \
+		echo "Message-Id: $$i" >> $$name; \
+		echo "Date: $$date" >> $$name; \
+		echo "X-Foo: foo.foo.com" >> $$name; \
+		echo >> $$name;\
+		polygen -X 10 /usr/share/polygen/eng/manager.grm >> $$name;\
 	done
 	tar -czf $@ Mail
 	rm -rf Mail
@@ -134,6 +148,7 @@ clean:
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 	rm -f config.vala
+	rm -f $(BENCHCASE_MAILBOX)
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz:
 	git archive --format=tar --prefix=$(PROJECTNAME)-$(VERSION)/ HEAD |\

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-SUITES="mddiff client-server pull-push"
+# set -x
+
+SUITES=${SUITES:-"mddiff client-server pull-push benchmarks"}
 BASE=$PWD
 
 . $BASE/tests.d/common

@@ -1,15 +1,7 @@
 #!/bin/bash
 
 rm -rf target/Mail
-mv Mail Mail.template
-mkdir Mail
-for i in `seq 1 250`; do
-	mkdir Mail/$i/
-	cp -r Mail.template Mail/$i/
-done
 cp -r Mail/ target/
-rm -rf Mail.template
-sync
 
 size=`du -sh Mail | cut -f 1`
 test_eq Mail target/Mail 
