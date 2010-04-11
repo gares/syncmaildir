@@ -146,7 +146,6 @@ clean:
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
 	rm -f config.vala
-	rm -f $(BENCHCASE_MAILBOX)
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz:
 	git archive --format=tar --prefix=$(PROJECTNAME)-$(VERSION)/ HEAD |\
