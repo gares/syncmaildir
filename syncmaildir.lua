@@ -416,8 +416,10 @@ function exists_and_sha(name)
 end
 
 function cp(src,tgt)
-	local s = io.open(src,'r')
-	local t = io.open(tgt,'w+')
+	local s,err = io.open(src,'r')
+	if not s then return 1 end
+	local t,err = io.open(tgt,'w+')
+	if not t then return 1 end
 	local data
 	repeat
 		data = s:read(4096)
