@@ -38,6 +38,12 @@ if string.sub(XDELTA,1,1) == '@' then
 		XDELTA = 'xdelta'
 end
 
+-- set mkfifo executable name
+MKFIFO = '@MKFIFO@'
+if string.sub(MKFIFO,1,1) == '@' then
+		MKFIFO = 'mkfifo'
+end
+
 -- you should use logs_tags_and_fail
 function error(msg)
 	local d = debug.getinfo(1,"nl")
@@ -371,8 +377,9 @@ function sha_file(name)
 	if mddiff_handler.inf == nil then
 		local rc
 		repeat 
-			pipe = os.tmpname() .. os.time()
-			rc = os.execute('mkfifo '..pipe)
+			pipe = '/tmp/smd-'..os.getenv('USER')..
+				os.time()..string.gsub(name,"/","-")
+			rc = os.execute(MKFIFO..' -m 600 '..pipe)
 		until rc == 0
 		mddiff_handler.inf = io.popen(MDDIFF .. ' ' .. pipe)
 		mddiff_handler.outf = io.open(pipe,'w')
