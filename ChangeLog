@@ -1,10 +1,17 @@
-../../2010 - minor fix release - version 1.0.0
-	* syncmaildir, smd-client:
+../../2010 - minor fix/speedup release - version 0.9.16 aka 1.0~rc5
+	* smd-client:
+	  - fixed a little bug preventing copybody to work properly
+	    if the target directory was not existing
+	* syncmaildir.lua, smd-client:
 	  - call mddiff passing a pipe, and use the very same instance
 	    every time the sha1 of a file needs to be computed. This improves
 	    performances considerably when a large number of files needs to
 	    be hashed, for example when two very similar mailboxes are
 	    synced for the first time (here, 8x speedup)
+	  - implement cp in lua to avoid spawning a new process every
+	    time a file is copied/moved. The overhead, for small files,
+	    is too high and the pure lua implementation of cp is 10 times
+	    faster on small files (but could be way slower for big ones).
 	* mddiff:
 	  - interface change: only a list of directories or a fifo can
 	    be passed as arguments
