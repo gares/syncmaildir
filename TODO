@@ -2,9 +2,5 @@ Features:
 - add support for "internal-error" to smd-applet, possibly use a
   bugreport action that generates a decent text to attach to the email
 
-- fix the patch and make use of the "server" mode even in smd-server
-  that is actually passing a list of files
-
-- internalize cp
 - mkfifo -> MKFIFO
 
