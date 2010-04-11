@@ -1,0 +1,19 @@
+#!/bin/bash
+
+msync 1
+
+test_eq Mail target/Mail 
+
+mkdir -p Mail/foo/cur
+mkdir -p Mail/foo/tmp
+mkdir -p Mail/foo/new
+
+cp Mail/cur/`ls Mail/cur | head -n 1` Mail/foo/new
+sed -i 's/^Subject:.*/Subject: XXX/' Mail/foo/new/*
+
+msync 2
+
+test_eq Mail target/Mail
+test -d target/Mail/foo/new
+assert $? 0 "not creating foo/new"
+
