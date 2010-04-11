@@ -1,4 +1,15 @@
 ../../2010 - minor fix release - version 1.0.0
+	* syncmaildir, smd-client:
+	  - call mddiff passing a pipe, and use the very same instance
+	    every time the sha1 of a file needs to be computed. This improves
+	    performances considerably when a large number of files needs to
+	    be hashed, for example when two very similar mailboxes are
+	    synced for the first time (here, 8x speedup)
+	* mddiff:
+	  - interface change: only a list of directories or a fifo can
+	    be passed as arguments
+	  - in case the fifo is passed, mddiff reads file names separated
+	    by \n and outputs their sha1 sums
 	* smd-pull, smd-push:
 	  - report an error if a wrong flag is supplied
 
