@@ -170,7 +170,7 @@ upload-website: $(HTML)
 upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $(PROJECTNAME)-$(VERSION).tar.gz \
 	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
-	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
+	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/ChangeLog
 
 
 # ----------------------------------------------------------------------------
