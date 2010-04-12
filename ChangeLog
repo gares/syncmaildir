@@ -1,4 +1,4 @@
-../../2010 - minor fix/speedup release - version 0.9.16 aka 1.0~rc5
+12/04/2010 - minor fix/speedup release - version 0.9.16 aka 1.0~rc5
 	* smd-client:
 	  - fixed a little bug preventing copybody to work properly
 	    if the target directory was not existing

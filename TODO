@@ -2,5 +2,3 @@ Features:
 - add support for "internal-error" to smd-applet, possibly use a
   bugreport action that generates a decent text to attach to the email
 
-- mkfifo -> MKFIFO
-
