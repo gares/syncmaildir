@@ -310,7 +310,7 @@ run_hooks() {
 	local status="$4"
 	for h in $dir/hooks/$when-$what.d/*; do
 		if [ -x $h ]; then 
-			$h $when $what $REPNAME $status
+			SL=$SL CL=$CL $h $when $what $REPNAME $status
 		fi
 	done
 }

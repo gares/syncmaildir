@@ -75,7 +75,13 @@ if [ "$when" = "pre" -a ! -e $MASTER_SOCKET ]; then
 	# we spawn ssh and put it in the background
 	# so that all subsequent connection attempts
         # reuse the same socket
-	ssh -fN $SERVERNAME
+	set +e
+	if [ "$what" = "pull" ]; then
+		ssh -fN $SERVERNAME 2> $SL
+	else
+		ssh -fN $SERVERNAME 2> $CL
+	fi
+	set -e
 fi
 
 # vim:set ft=sh:
