@@ -1,4 +1,10 @@
 ../../2010 - minor fix - version 1.0.0
+	* smd-common:
+	  - export CL and SL (client/server log file names) to hooks
+	    so that they can properly log errors
+	* sample-hooks/persistent-ssh:
+	  - log ssh activity e set +e so that if ssh fails proper tags are
+	    generated
 	* Makefile:
 	  - fixed upload target, used to overwrite the tarball with the
 	    changelog
