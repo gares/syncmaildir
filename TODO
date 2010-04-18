@@ -1,7 +1,5 @@
-Features:
-- add support for "internal-error" to smd-applet, possibly use a
-  bugreport action that generates a decent text to attach to the email
+For 1.0.0:
+- craft a nice message body for the mailto: action 
 
-
-After 1.0:
-- smd-loop rewritten in Lua?
+After 1.0.0:
+- rewrite smd-loop in Lua?
