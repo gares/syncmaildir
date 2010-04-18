@@ -378,7 +378,6 @@ class smdApplet {
 			var r_perm = new GLib.Regex("display-permissions\\(([^\\)]+)\\)");
 			var r_mail = new GLib.Regex("display-mail\\(([^\\)]+)\\)");
 			var r_cmd = new GLib.Regex("run\\(([^\\)]+)\\)");
-			var r_bug = new GLib.Regex("reportbug\\(([^\\)]+)\\)");
 
 			int from = 0;
 			for (;acts != null && acts.len() > 0;){
@@ -412,8 +411,6 @@ class smdApplet {
 					string command = i_cmd.fetch(1);
 					i_cmd.fetch_pos(0,null,out from);
 					commands.insert(commands.size,command);
-				} else if ( r_bug.match(acts,0,out i_cmd) ){
-					// XXX implement this
 				} else {
 					stderr.printf("Unrecognized action: %s\n",acts);
 					break;
@@ -611,7 +608,21 @@ class smdApplet {
 			if (e.commands != null) {
 				foreach (string command in e.commands) {
 					var hb = new Gtk.HBox(false,10);
-					var lbl = new Gtk.Label(command);
+					string nice_command;
+					try {
+						GLib.MatchInfo i_mailto;
+						var mailto_rex = new GLib.Regex("^gnome-open..mailto:");
+						if ( mailto_rex.match(command,0,out i_mailto)) {
+							nice_command = 
+								GLib.Uri.unescape_string(command).
+									substring(12,70) + "...";
+						} else {
+							nice_command = command;
+						}
+					} catch (GLib.RegexError e) {
+						nice_command = command;
+					}
+					var lbl = new Gtk.Label(nice_command);
 					lbl.set_alignment(0.0f,0.5f);
 					var but = new Gtk.Button.from_stock("gtk-execute");
 					command_hash.insert(but,command);
