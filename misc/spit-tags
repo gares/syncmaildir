@@ -28,6 +28,10 @@ setmetatable(_G,{
 	end
 })
 
+for tag in string.gmatch(data,"log_internal_error_and_fail%b()") do
+	--print('exec',tag)
+	loadstring(tag)()
+end
 for tag in string.gmatch(data,"log_tags_and_fail%b()") do
 	--print('exec',tag)
 	loadstring(tag)()
@@ -36,6 +40,10 @@ for tag in string.gmatch(data,"log_tags%b()") do
 	--print('exec',tag)
 	loadstring(tag)()
 end
+
+-- for i,e in ipairs(errs) do
+-- 	print(i,e)
+-- end
 
 n = 1
 f = io.open('/tmp/spit-tags','r')
