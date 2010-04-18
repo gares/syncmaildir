@@ -496,7 +496,7 @@ class smdApplet {
 		int child_in;
 		int child_out;
 		int child_err;
-		char[] buff = new char[1024];
+		char[] buff = new char[10240];
 		GLib.SpawnFlags flags = 0;
 		bool rc;
 		debug("spawning %s\n".printf(smd_loop_cmd));
