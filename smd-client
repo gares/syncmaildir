@@ -408,8 +408,7 @@ function execute(cmd)
 	elseif opcode == "REPLACE"       then return (execute_replace(cmd))
 	elseif opcode == "ERROR"         then return (execute_error(cmd))
 	else
-		log_tags_and_fail('Unknown opcode '..opcode,
-			"internal-error","protocol",true)
+		log_internal_error_and_fail('Unknown opcode '..opcode, "protocol")
 	end
 end
 

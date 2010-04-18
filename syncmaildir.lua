@@ -44,6 +44,12 @@ if string.sub(MKFIFO,1,1) == '@' then
 		MKFIFO = 'mkfifo'
 end
 
+-- set smd version 
+SMDVERSION = '@SMDVERSION@'
+if string.sub(SMDVERSION,1,1) == '@' then
+		SMDVERSION = '0.0.0'
+end
+
 -- you should use logs_tags_and_fail
 function error(msg)
 	local d = debug.getinfo(1,"nl")
@@ -53,6 +59,11 @@ end
 
 function log_tags_and_fail(msg,...)
 	log_tags(...)
+	__error({text=msg})
+end
+
+function log_internal_error_and_fail(msg,...)
+	log_internal_error_tags(msg,...)
 	__error({text=msg})
 end
 
@@ -344,8 +355,8 @@ function tmp_for(path,use_tmp)
 	local attempts = 0
 	while exists(newpath) do 
 		if attempts > 10 then
-			log_tags_and_fail('unable to generate a fresh tmp name',
-				"internal-error","tmp_for",true)
+			log_internal_error_and_fail('unable to generate a fresh tmp name',
+				"tmp_for")
 		else 
 			time = os.date("%s")
 			host = host .. 'x'
@@ -364,8 +375,7 @@ function parse(s,spec)
 	local res = {s:match(spec)}
 	local _,expected = spec:gsub('%b()','')
 	if #res ~= expected then
-		log_tags_and_fail('Error parsing "'..s..'"',
-			"internal-error","protocol",true)
+		log_internal_error_and_fail('Error parsing "'..s..'"', "protocol")
 	end
 	return unpack(res)
 end
@@ -394,8 +404,7 @@ function sha_file(name)
 	end
 	local hsha, bsha = data:match('(%S+) (%S+)') 
 	if hsha == nil or bsha == nil then
-		log_tags_and_fail('mddiff incorrect behaviour',
-			"internal-error","mddiff",true)
+		log_internal_error_and_fail('mddiff incorrect behaviour', "mddiff")
 	end
 	-- we are now sure that both endpoints opened the file, thus
 	-- we can safely garbage collect it
@@ -472,13 +481,29 @@ function assert_exists(name)
 	assert(rc == 0,'Not found: "'..name..'"')
 end
 
+-- a bit brutal, but correct
+function url_quote(txt)
+	return string.gsub(txt,'.',
+		function(x) return string.format("%%%02X",string.byte(x)) end)
+end
+
+function log_internal_error_tags(msg,ctx)
+	log_tags("internal-error",ctx,true,
+	'run(gnome-open "mailto:gares@fettunta.org?'..
+		'subject='..url_quote("[smd-bug] internal error")..'&'..
+		'body='..url_quote('smd-version: '..SMDVERSION..'\n'..
+		     'error-message: '..tostring(msg)..'\n'..
+		     'backtrace:\n'..debug.traceback())..
+		'")')
+end
+
 -- parachute
 function parachute(f,rc)
 	xpcall(f,function(msg)
 		if type(msg) == "table" then
 			log_error(tostring(msg.text))
 		else
-			log_tags("internal-error","unknown",true)
+			log_internal_error_tags("unknown","unknown")
 			log_error(tostring(msg))
 			log_error(debug.traceback())
 		end
