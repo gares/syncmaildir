@@ -378,6 +378,7 @@ class smdApplet {
 			var r_perm = new GLib.Regex("display-permissions\\(([^\\)]+)\\)");
 			var r_mail = new GLib.Regex("display-mail\\(([^\\)]+)\\)");
 			var r_cmd = new GLib.Regex("run\\(([^\\)]+)\\)");
+			var r_bug = new GLib.Regex("reportbug\\(([^\\)]+)\\)");
 
 			int from = 0;
 			for (;acts != null && acts.len() > 0;){
@@ -411,6 +412,8 @@ class smdApplet {
 					string command = i_cmd.fetch(1);
 					i_cmd.fetch_pos(0,null,out from);
 					commands.insert(commands.size,command);
+				} else if ( r_bug.match(acts,0,out i_cmd) ){
+					// XXX implement this
 				} else {
 					stderr.printf("Unrecognized action: %s\n",acts);
 					break;
