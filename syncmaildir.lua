@@ -10,6 +10,7 @@ local verbose = false
 local dryrun = false
 
 local PREFIX = '@PREFIX@'
+local BUGREPORT_ADDRESS = 'syncmaildir-users@lists.sourceforge.net'
 
 local __G = _G
 local __error = _G.error
@@ -489,12 +490,13 @@ end
 
 function log_internal_error_tags(msg,ctx)
 	log_tags("internal-error",ctx,true,
-	'run(gnome-open "mailto:gares@fettunta.org?'..
+	'run(gnome-open "mailto:'..BUGREPORT_ADDRESS..'?'..
 		'subject='..url_quote("[smd-bug] internal error")..'&'..
-		'body='..url_quote('smd-version: '..SMDVERSION..'\n'..
-		     'error-message: '..tostring(msg)..'\n'..
-		     'backtrace:\n'..debug.traceback())..
-		'")')
+		'body='..url_quote(
+			'smd-version: '..SMDVERSION..'\n'..
+			'error-message: '..tostring(msg)..'\n'..
+			'backtrace:\n'..debug.traceback()
+		)..'")')
 end
 
 -- parachute
