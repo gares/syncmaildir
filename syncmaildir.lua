@@ -493,6 +493,15 @@ function log_internal_error_tags(msg,ctx)
 	'run(gnome-open "mailto:'..BUGREPORT_ADDRESS..'?'..
 		'subject='..url_quote("[smd-bug] internal error")..'&'..
 		'body='..url_quote(
+			'This email reports an internal error, '..
+			'something that should never happen.\n'..
+			'To help the developers to find and solve the issue, please '..
+			'send this email.\n'..
+			'If you are able to reproduce the bug, please attach a '..
+			'detailed description\n'..
+			'of what you do to help the developers to experience the '..
+			'same malfunctioning.'..
+			'\n\n'..
 			'smd-version: '..SMDVERSION..'\n'..
 			'error-message: '..tostring(msg)..'\n'..
 			'backtrace:\n'..debug.traceback()
