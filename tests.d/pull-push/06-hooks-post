@@ -6,6 +6,6 @@ echo \$@
 EOT
 chmod a+x target/.smd/hooks/post-pull.d/01-test
 mpull 
-grep 'post pull default 0' log.pull > /dev/null
+grep 'post pull default 0' target/.smd/log/client.default.log > /dev/null
 assert $? 0 "hook not called"
 

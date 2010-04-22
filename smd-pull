@@ -34,6 +34,9 @@ setup_logging
 # to the home
 cd
 
+# reset log file before caclling hooks
+> $CL
+
 run_hooks $CONFDIR pre pull 0
 
 ($MITM $CtS > $LtS) < $CtL &
@@ -42,7 +45,7 @@ LOGGER1=$!
 ($MITM $StC > $LtC) < $StL &
 LOGGER2=$!
 
-($SMDCLIENT $CHILDSARGS $CLIENTNAME $MAILBOX < $LtC 2> $CL) > $CtL &
+($SMDCLIENT $CHILDSARGS $CLIENTNAME $MAILBOX < $LtC 2>> $CL) > $CtL &
 CLIENT=$!
 
 ($SSH $SERVERNAME $REMOTESMDSERVER $CHILDSARGS $CLIENTNAME $MAILBOX < $LtS 2> $SL) > $StL &

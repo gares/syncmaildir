@@ -6,6 +6,6 @@ echo \$@
 EOT
 chmod a+x target/.smd/hooks/pre-pull.d/01-test
 mpull 
-grep 'pre pull default' log.pull > /dev/null
+grep 'pre pull default' target/.smd/log/client.default.log > /dev/null
 assert $? 0 "hook not called"
 

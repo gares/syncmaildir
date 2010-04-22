@@ -8,6 +8,6 @@ chmod a+x target/.smd/hooks/post-pull.d/01-test
 chmod a-w target/
 mpull 
 chmod u+w target/
-grep 'post pull default 1' log.pull > /dev/null
+grep 'post pull default 1' target/.smd/log/client.default.log > /dev/null
 assert $? 0 "hook not called correctly"
 
