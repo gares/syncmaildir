@@ -145,7 +145,7 @@ The server can transmit data or refuse. In the latter case it just sends
 `ABORT`. In the former case it sends
  
     chunk NUMBER
-    DATA
+    ...DATA...
 
 First it declares with `chunk` the number of bytes to be sent, then 
 its sends the data.
@@ -219,16 +219,33 @@ and bsha to the sha1 sum of its body.
 - `ERROR message` is emitted whenever an error is encountered; message is
   intended to be human readable.
 
+Messages should be processed in order, with the exception of `ADD` that can be 
+safely postponed. In particular `DELETE` messages are always sent last, and
+`COPY` or `COPYBODY` messages preceeding them may refer to the same file 
+`name`. Performing deletions in advance is still sound (since the client
+can always ask the servevr for the message) but clearly suboptimal, since
+a local copy does not involve any network traffic.
+
+`mddiff` as an hashing server
+-----------------------------
+
+`mddiff` is also used by the client to compute the sha1 sums of header
+and body of local mails, for example to check that the source of a copy
+command holds the intended content. Since this operation may be really
+frequent, `mddiff` can operate in server mode. If the argument is a single
+file name and that file is a fifo, then `mddiff` reads file names, separated
+by `\n` from that fifo and outputs the sha1 sums of their header and body.
+
 Easy to parse output messages
 =============================
 
 `smd-pull` and `smd-push` prefix all error messages with `ERROR:`, but
 what follows is meant to be read by a human being. To make other tools able to
 parse and react to error messages, a more formal output is given.
-A single line, prefixed with `TAGS:` is output. It can be followed by
-`error::` or `stats::`, that denote an error message or a statistical one 
-respectively. Then a list of improperly called tags is output. Their meaning 
-should be easy to guess.
+A single line, prefixed with `TAGS:` is output if requested (`-v` option). 
+It can be followed by `error::` or `stats::`, that denote an error message or a
+statistical one respectively. Then a list of improperly called tags is output.
+Their meaning should be easy to guess.
 
     <M>    ::= "error::" <ET> | "stats::" <ST>
     <ET>   ::= "context(" <STR> ")" 
