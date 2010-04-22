@@ -10,8 +10,8 @@ DESCRIPTION
   apply to synchronize a (eventually remote) copy of the maildir.
 
   If paths is a single file name, and that file is a fifo, mddiff reads
-  from it file names separated by new line and, mddiff outputs the sha1 
-  of its header and body separated by space.
+  from it file names separated by new line and outputs the sha1 of its header
+  and body separated by space.
 
       $ mddiff /tmp/fifo_for_mddiff 
       806a0ffe4f29766effd764... 463e543da9dac8e298...
