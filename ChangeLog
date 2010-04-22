@@ -6,12 +6,18 @@
 	  - generate as suggested action for internal errors:
 	    gnome-open "mailto:...."
 	* sample-hooks/persistent-ssh:
-	  - log ssh activity e set +e so that if ssh fails proper tags are
-	    generated
+	  - set +e so that if ssh fails smd-pull/push does not fail too and 
+	    generates proper tags
 	* Makefile:
 	  - fixed upload target, used to overwrite the tarball with the
 	    changelog
 	  - substitute SMDVERSION when installing scripts
+	* README:
+	  - added notes about the firt synchronization
+	* DESIGN:
+	  - better doc for mddiff
+	* tests.d/:
+	  - new tests for hooks logging 
 
 12/04/2010 - minor fix/speedup release - version 0.9.16 aka 1.0~rc5
 	* smd-client:
