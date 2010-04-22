@@ -120,7 +120,7 @@ The first synchronization can take a while, since all mail messages have to be
 inspected and their hash recorded in the db-file. While it is not strictly
 needed, you may want to copy a huge mailbox (hundreds of megabytes) to the
 other endpoint by hand (for example zipping it with a slow but space efficient
-compressors like `bzip2` and `lzma`) to save some bandwidth. `smd` is not
+compressor like `bzip2` and `lzma`) to save some bandwidth. `smd` is not
 optimized for such a (uncommon) situation: it uses regular ssh stream
 compression to transfer mails, that can be way less space efficient than
 running a compression utility over the whole mailbox.
@@ -136,7 +136,7 @@ shell scripts) placed in the following directories:
  
 - `~/.smd/hooks/pre-push.d/`
 - `~/.smd/hooks/pre-pull.d/`
-- `~/.smd/hooks/post-pull.d/`
+- `~/.smd/hooks/post-push.d/`
 - `~/.smd/hooks/post-pull.d/`
 
 Hooks receive four arguments in the following order:
