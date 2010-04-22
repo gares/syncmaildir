@@ -5,9 +5,6 @@
 	* smd-client, syncmaildir.lua:
 	  - generate as suggested action for internal errors:
 	    gnome-open "mailto:...."
-	* smd-common:
-	  - export CL and SL (client/server log file names) to hooks
-	    so that they can properly log errors
 	* sample-hooks/persistent-ssh:
 	  - log ssh activity e set +e so that if ssh fails proper tags are
 	    generated

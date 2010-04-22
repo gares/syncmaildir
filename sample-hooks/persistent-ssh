@@ -76,11 +76,7 @@ if [ "$when" = "pre" -a ! -e $MASTER_SOCKET ]; then
 	# so that all subsequent connection attempts
         # reuse the same socket
 	set +e
-	if [ "$what" = "pull" ]; then
-		ssh -fN $SERVERNAME 2> $SL
-	else
-		ssh -fN $SERVERNAME 2> $CL
-	fi
+	ssh -fN $SERVERNAME 
 	set -e
 fi
 
