@@ -1,0 +1,11 @@
+#!/bin/sh
+
+mpull -t 
+cat > target/.smd/hooks/post-pull.d/01-test <<EOT
+ssh nonexistent || echo ssh: ssh not installed
+EOT
+chmod a+x target/.smd/hooks/post-pull.d/01-test
+mpull -v
+grep 'TAGS:' log.pull > /dev/null
+assert $? 0 "no tags generated"
+
