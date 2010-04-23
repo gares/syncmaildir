@@ -104,18 +104,19 @@ prepare(){
 		SSH=$ROOT/$TESTSUITE/$N/bin/fakessh \
 		PREFIX=$ROOT/$TESTSUITE/$N
 
-	cat > $ROOT/$TESTSUITE/$N/bin/fakessh <<-EOT
+	cd $ROOT/$TESTSUITE/$N
+	cat > bin/fakessh <<-EOT
 	#!/bin/sh
 	shift
 	cd \$HOMES
 	HOME=\$HOMES \$@
 	EOT
-	chmod a+x $ROOT/$TESTSUITE/$N/bin/fakessh
-	
-	cd $ROOT/$TESTSUITE/$N
+	chmod a+x bin/fakessh
 	tar -xzf $BASE/$testcase
 	mkfifo s2c
 	mkfifo c2s
+	mkdir -p .smd/fifo/
+	mkdir -p target/.smd/fifo/
 }
 
 run_test() {
