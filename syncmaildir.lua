@@ -387,11 +387,24 @@ function sha_file(name)
 	local pipe, rm_pipe = nil, false
 	if mddiff_handler.inf == nil then
 		local rc
+		local base_dir
+		local home = os.getenv('HOME')
+		local user = os.getenv('USER') or 'nobody'
+		local mangled_name = string.gsub(name,"/","-")
+		local attempt = 0
+		if home ~= nil then
+			base_dir = home ..'/.smd/fifo/'
+		else
+			base_dir = '/tmp/'
+		end
 		repeat 
-			pipe = '/tmp/smd-'..(os.getenv('USER') or 'nobody')..
-				os.time()..string.gsub(name,"/","-")
+			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
+			attempt = attempt + 1
 			rc = os.execute(MKFIFO..' -m 600 '..pipe)
-		until rc == 0
+		until rc == 0 or attempt > 10
+		if rc ~= 0 then
+			log_internal_error_and_fail('unable to create fifo', "sha_file")
+		end
 		mddiff_handler.inf = io.popen(MDDIFF .. ' ' .. pipe)
 		mddiff_handler.outf = io.open(pipe,'w')
 		rm_pipe = true
