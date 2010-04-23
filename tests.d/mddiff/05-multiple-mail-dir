@@ -1,0 +1,13 @@
+#!/bin/sh
+
+mv Mail MailA
+cp -r MailA MailB
+
+mdiff MailA MailB
+assert $? 0 "mdiff failed"
+
+grep '^ADD.* MailA' log.mddiff > /dev/null
+assert $? 0 "mdiff not processing MailA"
+grep '^ADD.* MailB' log.mddiff > /dev/null
+assert $? 0 "mdiff not processing MailB"
+
