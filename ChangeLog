@@ -12,6 +12,7 @@
 	  - fixed upload target, used to overwrite the tarball with the
 	    changelog
 	  - substitute SMDVERSION when installing scripts
+	  - new test/SUITE target to run onl one testsuite
 	* README:
 	  - added notes about the firt synchronization
 	* DESIGN:
