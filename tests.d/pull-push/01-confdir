@@ -1,5 +1,7 @@
 #!/bin/sh
 
+rm -rf .smd target/.smd
+
 mpull -t
 assert $? 0 "mpull -t failed"
 
