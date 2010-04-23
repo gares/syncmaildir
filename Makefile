@@ -62,6 +62,9 @@ check-run: check-w-$(LUA) check-w-bash
 check-w-%:
 	@which $* > /dev/null || echo $* not found
 
+test/%: text/all check-run $(TEST_MAILBOX)
+	@SUITES="$*" tests.d/test.sh $(TEST_MAILBOX) 
+
 test: text/all check-run $(TEST_MAILBOX)
 	@SUITES="$(TEST_SUITES)" tests.d/test.sh \
 		$(TEST_MAILBOX) $(addprefix $(shell pwd)/,$T)
