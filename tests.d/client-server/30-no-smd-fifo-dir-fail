@@ -1,0 +1,9 @@
+#!/bin/bash
+
+rmdir .smd/fifo
+rmdir target/.smd/fifo
+
+msync 1
+X=`grep '^TAGS: error::.*internal-error' log.client.* | wc -l`
+assert $X 1 "not failing"
+
