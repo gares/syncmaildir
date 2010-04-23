@@ -199,7 +199,7 @@ Advanced Usage
 
 From verion `0.9.4` multiple configuration files are supported. This means
 you can push/pull from/to different remote mailboxes (one at a time). This
-proved to be useful when migrating a mailbox:
+turned out to be useful when migrating a mailbox:
 
     smd-pull oldserver
     smd-push newserver
@@ -226,7 +226,8 @@ at the end of `Makefile`, for example you may want to run `make osx/text/all &&
 make osx/text/install` to properly build and install text mode only syncmaildir
 utilities on an MacOSX platform.
 
-Runtime dependencies are: `ssh`, `xdelta`, `sha1sum`, `lua5.1` and `bash`.
+Runtime dependencies are: `ssh`, `xdelta`, `lua5.1` and `bash`.
+Moreover some core utilities are also needed: `sha1sum`, `mkfifo` and `mkdir`.
 
 Design
 ======
