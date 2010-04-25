@@ -8,14 +8,14 @@
 	* syncmaildir.lua:
 	  - place fifo for mddiff in HOME/.smd/fifo/ if HOME is set, /tmp
 	    otherwise
-	  - added upperbound to to loop generating a fresh name for the fifo
+	  - added upperbound to loop generating a fresh name for the fifo
 	* sample-hooks/persistent-ssh:
 	  - set +e so that if ssh fails smd-pull/push does not fail too and 
 	    generates proper tags
 	* Makefile:
 	  - fixed upload target, used to overwrite the tarball with the
 	    changelog
-	  - substitute SMDVERSION when installing scripts
+	  - substitute SMDVERSION, MKFIFO and MKDIR when installing scripts
 	  - new test/SUITE target to run onl one testsuite
 	* README:
 	  - added notes about the firt synchronization
