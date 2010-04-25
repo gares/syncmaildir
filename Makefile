@@ -29,6 +29,7 @@ SED=sed
 SHA1SUM=sha1sum
 XDELTA=xdelta
 MKFIFO=mkfifo
+MKDIR=mkdir -p
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
@@ -102,6 +103,7 @@ define install-replacing
 		$(SED) 's?@SHA1SUM@?$(SHA1SUM)?' |\
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
 		$(SED) 's?@MKFIFO@?$(MKFIFO)?' |\
+		$(SED) 's?@MKDIR@?$(MKDIR)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
 		$(SED) 's?@SMDVERSION@?$(VERSION)?' |\
 		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
@@ -200,6 +202,7 @@ osx/%:
 
 abspath/%:
 	$(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
-		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh MKFIFO=/usr/bin/mkfifo
+		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
+		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p'
 
 # eof

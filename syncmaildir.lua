@@ -45,6 +45,12 @@ if string.sub(MKFIFO,1,1) == '@' then
 		MKFIFO = 'mkfifo'
 end
 
+-- set mkdir executable name
+MKDIR = '@MKDIR@'
+if string.sub(MKDIR,1,1) == '@' then
+		MKDIR = 'mkdir -p'
+end
+
 -- set smd version 
 SMDVERSION = '@SMDVERSION@'
 if string.sub(SMDVERSION,1,1) == '@' then
@@ -252,7 +258,7 @@ end
 
 function dbfile_name(endpoint, mailboxes)
 	local HOME = os.getenv('HOME')
-	os.execute('mkdir -p '..HOME..'/.smd/')
+	os.execute(MKDIR..' '..HOME..'/.smd/')
 	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
 		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
 	return dbfile
@@ -270,7 +276,7 @@ function make_dir_aux(absolute, pieces)
 	if absolute then root = '/' end
 	local dir = root .. table.concat(pieces,'/')
 	if not mkdir_p_cache[dir] then
-		local rc = os.execute('mkdir -p '..dir)
+		local rc = os.execute(MKDIR..' '..dir)
 		if rc ~= 0 then
 			log_error("Unable to create directory "..dir)
 			log_error('It may be caused by bad directory permissions, '..
