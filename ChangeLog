@@ -5,6 +5,8 @@
 	* smd-client, syncmaildir.lua:
 	  - generate as suggested action for internal errors:
 	    gnome-open "mailto:...."
+	* smd-server:
+	  - do not es.execute(touch), use io.open instead
 	* syncmaildir.lua:
 	  - place fifo for mddiff in HOME/.smd/fifo/ if HOME is set, /tmp
 	    otherwise
@@ -24,6 +26,9 @@
 	* tests.d/:
 	  - new tests for hooks logging 
 	  - new test for fifo creation (syncmaildir.lua function sha_file)
+	* Makefile, smd-common, syncmaildir.lua:
+	  - remove all explicit mentions of my username on sourceforge
+	    or my home directory layout
 
 12/04/2010 - minor fix/speedup release - version 0.9.16 aka 1.0~rc5
 	* smd-client:
