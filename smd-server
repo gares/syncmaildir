@@ -89,7 +89,8 @@ function main()
 				rc = os.execute(
 					XDELTA..' delta '..dbfile..' '..newdb..' '..xdelta)
 			else
-				os.execute('touch '..xdelta)
+				local f = io.open(xdelta,'w')
+				f:close()
 				rc = 0 -- there is no newdb if --dry-run is given
 			end
 			if rc ~= 0 and rc ~= 256 then
