@@ -1,4 +1,2 @@
-- mkdir -p --> MKDIR as MKFIFO
-
 After 1.0.0:
 - rewrite smd-loop in Lua?
