@@ -2,7 +2,8 @@ NAME
   smd-server - sends diffs and mails to smd-client
 
 SYNOPSIS
-  smd-server [-v|--verbose] [-d|--dry-run] endpoint mailboxes
+  smd-server [-v|--verbose] [-d|--dry-run] 
+             [-w|--wait-for-disconnect] endpoint mailboxes
 
 DESCRIPTION
   smd-server needs to know a name (endpoint) for the client (that must not
@@ -16,8 +17,10 @@ DESCRIPTION
   in case the client communicates a successful sync.
 
 OPTIONS
-  -v --verbose  Increase program verbosity (printed on stderr)
-  -d --dry-run  Do not perform any action for real
+  -v --verbose              Increase program verbosity (printed on stderr)
+  -d --dry-run              Do not perform any action for real
+  -w --wait-for-disconnect  Wait the disconnection of the other endpoint
+                            bofore exiting
 
 NOTES
   smd-server is a low level utility. You should use higher level tools like
