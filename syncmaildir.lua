@@ -420,6 +420,7 @@ function sha_file(name)
 		repeat 
 			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
 			attempt = attempt + 1
+			mkdir_p(pipe)
 			rc = os.execute(MKFIFO..' -m 600 '..pipe)
 		until rc == 0 or attempt > 10
 		if rc ~= 0 then
