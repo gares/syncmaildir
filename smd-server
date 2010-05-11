@@ -18,16 +18,13 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
-	local usage = "Usage: "..arg[0].." [-vdw] endpointname mailboxes...\n"
+	local usage = "Usage: "..arg[0].." [-vd] endpointname mailboxes...\n"
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
 			table.remove(arg,1)
 		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
 			set_dry_run(true)
-			table.remove(arg,1)
-		elseif arg[1] == '-w' or arg[1] == '--wait-for-disconnect' then
-			set_wait_for_disconnection(true)
 			table.remove(arg,1)
 		else
 			break
@@ -105,9 +102,6 @@ function main()
 		elseif l:match('^DONE$') then
 			if not dry_run() then os.rename(newdb, dbfile) end 
 			if not dry_run() then os.rename(newdbmt, dbfilemt) end 
-			-- not to bother ssh, we let the other endpoint close the connection
-			-- if -w was passed
-			wait_disconnect(io.stdin)
 			os.exit(0)
 		elseif l:match('^ABORT$') then
 			-- the client failed in applying the diff

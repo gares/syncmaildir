@@ -2,8 +2,7 @@ NAME
   smd-client - receives diffs and performs actions
 
 SYNOPSIS
-  smd-client [-v|--verbose] [-d|--dry-run] 
-             [-w|--wait-for-disconnect] endpoint mailboxes
+  smd-client [-v|--verbose] [-d|--dry-run] endpoint mailboxes
 
 DESCRIPTION
   smd-client needs to know a name (endpoint) for the client (that must not
@@ -14,10 +13,8 @@ DESCRIPTION
   on stdout and expecting the data on stdin. 
 
 OPTIONS
-  -v --verbose              Increase program verbosity (printed on stderr)
-  -d --dry-run              Do not perform any action for real
-  -w --wait-for-disconnect  Wait the disconnection of the other endpoint
-                            bofore exiting
+  -v --verbose  Increase program verbosity (printed on stderr)
+  -d --dry-run  Do not perform any action for real
 
 NOTES
   smd-client is a low level utility. You should use higher level tools like

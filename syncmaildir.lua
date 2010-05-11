@@ -8,7 +8,6 @@ local PROTOCOL_VERSION="1.0"
 
 local verbose = false
 local dryrun = false
-local wait_for_disconnection = false
 
 local PREFIX = '@PREFIX@'
 local BUGREPORT_ADDRESS = 'syncmaildir-users@lists.sourceforge.net'
@@ -81,10 +80,6 @@ end
 
 function set_dry_run(v)
 	dryrun = v
-end
-
-function set_wait_for_disconnection(v)
-	wait_for_disconnection = v
 end
 
 function dry_run() return dryrun end
@@ -258,15 +253,6 @@ function handshake(dbfile)
 		log_tags_and_fail('Database mismatch',
 			"handshake", "db-mismatch",true,"run(rm "..
 			quote(dbfile)..")")
-	end
-end
-
-function wait_disconnect(f)
-	if wait_for_disconnection then
-		local data = f:read('*l')
-		if data ~= nil then
-			log_internal_error_and_fail('protocol error', "wait_disconnect")
-		end
 	end
 end
 
