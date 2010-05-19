@@ -20,7 +20,7 @@
 	  - substitute SMDVERSION, MKFIFO and MKDIR when installing scripts
 	  - new test/SUITE target to run onl one testsuite
 	* README:
-	  - added notes about the firt synchronization
+	  - added notes about the first synchronization
 	* DESIGN:
 	  - better doc for mddiff
 	* tests.d/:
