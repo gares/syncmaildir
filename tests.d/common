@@ -4,7 +4,7 @@
 # TESTSUITE: client-server, pull-push
 
 #set -x
-VALGRIND="valgrind --log-file=log.valgrind --leak-check=no --error-exitcode=1 --"
+VALGRIND=${VALGRIND:-"valgrind --log-file=log.valgrind --leak-check=no --error-exitcode=1 --"}
 
 ROOT=$BASE/tests.d/run/$TESTSUITE/
 
