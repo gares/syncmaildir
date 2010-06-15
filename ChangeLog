@@ -2,6 +2,7 @@
 	* smd-applet:
 	  - recognize mailto: actions so that a nice label is used
 	    istead of the raw command that comprises subject and body
+	  - ported to vala 0.9.1, use .connect instead of deprecated +=
 	* smd-client, syncmaildir.lua:
 	  - generate as suggested action for internal errors:
 	    gnome-open "mailto:...."

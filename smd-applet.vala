@@ -173,7 +173,7 @@ class smdApplet {
 		logs_vb.pack_start(cblogs,false,true,0);
 		logs_vb.reorder_child(cblogs,0);
 		cblogs.show();
-		cblogs.changed += (cb) => {
+		cblogs.changed.connect((cb) => {
 			int selected = cblogs.get_active();
 			if (selected >= 0) {
 				string file = lognames.get(selected);
@@ -196,36 +196,36 @@ class smdApplet {
 							SMD_LOGS_DIR+file, e.message);
 				}
 			}
-		};
+		});
 
 		var close_log = builder.get_object("bLogClose") as Gtk.Button;
-		close_log.clicked += close_logs_action;
-		log_win.delete_event += close_logs_event;
+		close_log.clicked.connect(close_logs_action);
+		log_win.delete_event.connect(close_logs_event);
 
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked += close_prefs_action;
+		close.clicked.connect(close_prefs_action);
 
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
 		try { bicon.set_active( gconf.get_bool(key_icon)); }
 		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-		bicon.toggled += (b) => {
+		bicon.toggled.connect((b) => {
 			try { 
 				gconf.set_bool(key_icon,b.active); 
 				si.set_visible(!gconf.get_bool(key_icon));
 			} catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-		};
+		});
 		var bnotify = builder.get_object("cbNotify") as Gtk.CheckButton;
 		try { bnotify.set_active(gconf.get_bool(key_newmail)); }
 		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-		bnotify.toggled += (b) => {
+		bnotify.toggled.connect((b) => {
 			try { gconf.set_bool(key_newmail,b.active); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-		};
+		});
 		var bc = builder.get_object("bClose") as Gtk.Button;
-		bc.clicked += close_err_action;
+		bc.clicked.connect(close_err_action);
 
 		var bel = builder.get_object("bEditLoopCfg") as Gtk.Button;
-		bel.clicked += (b) => {
+		bel.clicked.connect((b) => {
 			// if not existent, create the template first
 			try {
 				if (!is_smd_loop_configured()){
@@ -238,9 +238,9 @@ class smdApplet {
 			} catch (GLib.SpawnError e) {
 				stderr.printf("%s\n",e.message);
 			}
-		};
+		});
 		var bepp = builder.get_object("bEditPushPullCfg") as Gtk.Button;
-		bepp.clicked += (b) => {
+		bepp.clicked.connect((b) => {
 			// if not existent, create the template first
 			try {
 				if (!is_smd_pushpull_configured()){
@@ -253,22 +253,22 @@ class smdApplet {
 			} catch (GLib.SpawnError e) {
 				stderr.printf("%s\n",e.message);
 			}
-		};
+		});
 
 		// menu popped up when the user clicks on the notification area
         menuL = builder.get_object ("mLeft") as Gtk.Menu;
         menuR = builder.get_object ("mRight") as Gtk.Menu;
 		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
-		quit.activate += (b) => { 
+		quit.activate.connect((b) => { 
 			thread_die = true;
 			if ((int)pid != 0) {
 				debug("sending SIGTERM to %d".printf(-(int)pid));
 				Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 			}
 			Gtk.main_quit(); 
-		};
+		});
 		miPause = builder.get_object("miPause") as Gtk.CheckMenuItem;
-		miPause.toggled += (b) => {
+		miPause.toggled.connect((b) => {
 			if (miPause.get_active()) {
 				debug("enter pause mode");
 				if ((int)pid != 0) {
@@ -281,28 +281,28 @@ class smdApplet {
 				debug("exit pause mode");
 				reset_to_regular_run();
 			}
-		};
+		});
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
-		about_win.response += (id) => { about_win.hide(); };
-		about.activate += (b) => { about_win.run(); };
+		about_win.response.connect((id) => { about_win.hide(); });
+		about.activate.connect((b) => { about_win.run(); });
 		about_win.set_comments("GNOME applet for syncmaildir version " + 
 			SMDConf.VERSION);
 		var prefs = builder.get_object ("miPrefs") as Gtk.MenuItem;
-		prefs.activate += (b) => {  win.show(); };
+		prefs.activate.connect((b) => {  win.show(); });
 		var logs = builder.get_object ("miLog") as Gtk.MenuItem;
-		logs.activate += (b) => { 
+		logs.activate.connect((b) => { 
 			update_loglist();
 			log_win.show(); 
-		};
+		});
 
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
 		si.set_visible(!hide_status_icon);
 		si.set_tooltip_text("smd-applet is running");
-		si.popup_menu += (button,time) => {
+		si.popup_menu.connect((button,time) => {
 				menuR.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
-		};
-		si.activate += (s) => { 
+		});
+		si.activate.connect((s) => { 
 			if ( error_mode ) 
 				err_win.reshow_with_initial_size();
 			else if( config_wait_mode )
@@ -310,7 +310,7 @@ class smdApplet {
 			else
 				menuL.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
-		};
+		});
 
 		// error mode data
 		command_hash = new GLib.HashTable<Gtk.Widget,string>(
@@ -626,7 +626,7 @@ class smdApplet {
 					lbl.set_alignment(0.0f,0.5f);
 					var but = new Gtk.Button.from_stock("gtk-execute");
 					command_hash.insert(but,command);
-					but.clicked += (b) => {
+					but.clicked.connect((b) => {
 						int cmd_status;
 						string output;
 						string error;
@@ -651,7 +651,7 @@ class smdApplet {
 						} catch (GLib.SpawnError e) {
 							stderr.printf("Spawning: %s\n",e.message);
 						}
-					};
+					});
 					hb.pack_end(lbl,true,true,0);
 					hb.pack_end(but,false,false,0);
 					vb.pack_end(hb,true,true,0);
@@ -829,8 +829,8 @@ class smdApplet {
 
 		// windows will last for the whole execution,
 		// so the (x) button should just hide them
-		win.delete_event += close_prefs_event;
-		err_win.delete_event += close_err_event;
+		win.delete_event.connect(close_prefs_event);
+		err_win.delete_event.connect(close_err_event);
 
 		// we show the icon if we have to.
 		// this is performed here and not in the constructor
@@ -863,12 +863,12 @@ class smdApplet {
 	// just displays the config win
 	public void configure() {
 		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked += my_gtk_main_quit_button;
-		win.delete_event += my_gtk_main_quit_event;
+		close.clicked.connect(my_gtk_main_quit_button);
+		win.delete_event.connect(my_gtk_main_quit_event);
 		win.show();	
 		Gtk.main(); 
-		close.clicked -= my_gtk_main_quit_button;
-		win.delete_event -= my_gtk_main_quit_event;
+		close.clicked.disconnect(my_gtk_main_quit_button);
+		win.delete_event.disconnect(my_gtk_main_quit_event);
 	}
 
 } // class end
