@@ -1,4 +1,4 @@
-../../2010 - minor fix - version 1.0.0
+15/06/2010 - minor fix - version 1.0.0
 	* smd-applet:
 	  - recognize mailto: actions so that a nice label is used
 	    istead of the raw command that comprises subject and body
@@ -19,7 +19,7 @@
 	  - fixed upload target, used to overwrite the tarball with the
 	    changelog
 	  - substitute SMDVERSION, MKFIFO and MKDIR when installing scripts
-	  - new test/SUITE target to run onl one testsuite
+	  - new test/SUITE target to run only one testsuite
 	* README:
 	  - added notes about the first synchronization
 	* DESIGN:
@@ -27,6 +27,7 @@
 	* tests.d/:
 	  - new tests for hooks logging 
 	  - new test for fifo creation (syncmaildir.lua function sha_file)
+	  - allow disabling valgrind by exporting the VALGRIND variable
 	* Makefile, smd-common, syncmaildir.lua:
 	  - remove all explicit mentions of my username on sourceforge
 	    or my home directory layout
