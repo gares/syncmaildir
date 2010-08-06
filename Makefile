@@ -50,7 +50,8 @@ all: check-build $(BINARIES)
 	valac -o $@ $< config.vala --thread \
 		--pkg glib-2.0 --pkg gtk+-2.0 \
 		--pkg libnotify --pkg gconf-2.0 \
-		--pkg posix --pkg gee-1.0
+		--pkg posix --pkg gee-1.0 \
+		--pkg dbus-glib-1
 
 %: %.c
 	pkg-config --atleast-version=2.19.1 glib-2.0

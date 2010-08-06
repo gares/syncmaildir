@@ -1,3 +1,8 @@
+??/??/???? - minor fix - version 1.1.0
+	* smd-applet:
+	  - connect to NetworkManager to query network status, if the
+	    connection is not present, we enter pause mode.
+
 15/06/2010 - minor fix - version 1.0.0
 	* smd-applet:
 	  - recognize mailto: actions so that a nice label is used

@@ -8,7 +8,18 @@ bool verbose = false;
 
 void debug(string message) {
 	if (verbose) stderr.printf("DEBUG: %s\n",message);
+} 
+
+// minimalistic NetworkManager interface
+[DBus (name = "org.freedesktop.NetworkManager")]
+interface NetworkManager : Object {
+        public signal void state_changed(uint state);
+        public abstract uint state { owned get; }
 }
+const uint NM_CONNECTED = 3;
+const string NM_SERVICE = "org.freedesktop.NetworkManager";
+const string NM_PATH = "/org/freedesktop/NetworkManager";
+
 
 // a simple class to pass data from the child process to the
 // notifier
@@ -143,6 +154,11 @@ class smdApplet {
 	bool config_wait_mode;
 	GLib.HashTable<Gtk.Widget,string> command_hash = null;
 
+	// dbus connection to NetworkManager
+	DBus.Connection dbus = null;
+	NetworkManager net_manager = null;
+
+
 	// ======================= constructor ================================
 
 	// initialize data structures and build gtk+ widgets
@@ -161,6 +177,20 @@ class smdApplet {
 
 		// connect to gconf
 		gconf = GConf.Client.get_default();
+
+		// connect to dbus
+		try {
+			dbus = DBus.Bus.get (DBus.BusType.SYSTEM);
+			net_manager = (NetworkManager) dbus.get_object(NM_SERVICE, NM_PATH);
+	        net_manager.state_changed.connect((s) => {
+				if (s == NM_CONNECTED) unpause(); 
+				else pause(); 
+			});
+		} catch (GLib.Error e) {
+			stderr.printf("%s\n",e.message);
+			dbus = null;
+			net_manager=null;
+		}
 
 		// load widgets and attach callbacks
 		win = builder.get_object("wPrefs") as Gtk.Window;
@@ -269,18 +299,8 @@ class smdApplet {
 		});
 		miPause = builder.get_object("miPause") as Gtk.CheckMenuItem;
 		miPause.toggled.connect((b) => {
-			if (miPause.get_active()) {
-				debug("enter pause mode");
-				if ((int)pid != 0) {
-					debug("sending SIGTERM to %d".printf(-(int)pid));
-					Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
-				}
-				thread_die = true;
-				si.set_from_stock("gtk-media-pause");
-			} else {
-				debug("exit pause mode");
-				reset_to_regular_run();
-			}
+			if (miPause.get_active()) pause();
+			else unpause(); 
 		});
 		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
 		about_win.response.connect((id) => { about_win.hide(); });
@@ -753,6 +773,22 @@ class smdApplet {
 		return false;
 	}
 
+	// pause/unpause the program
+	private void pause() {
+		debug("enter pause mode");
+		if ((int)pid != 0) {
+			debug("sending SIGTERM to %d".printf(-(int)pid));
+			Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
+		}
+		thread_die = true;
+		si.set_from_stock("gtk-media-pause");
+	}
+
+	private void unpause() {
+		debug("exit pause mode");
+		reset_to_regular_run();
+	}
+
 	// ======================== config check ===========================
 
     private bool is_smd_loop_configured() {
@@ -817,11 +853,17 @@ class smdApplet {
 		// before running, we need the whole smd stack
 		// to be configured
     	if (is_smd_stack_configured()) {
-			// the thread fills the event queue
-			try { thread = GLib.Thread.create(smdThread,true); }
-			catch (GLib.ThreadError e) { 
-				stderr.printf("Unable to start a thread\n"); 
-				throw new Exit.ABORT("Unable to spawn a thread");
+			// if no network, we do not start the thread and enter pause mode
+			// immediately
+			if (net_manager != null && net_manager.state != NM_CONNECTED) {
+				pause();
+			} else {
+				// the thread fills the event queue
+				try { thread = GLib.Thread.create(smdThread,true); }
+				catch (GLib.ThreadError e) { 
+					stderr.printf("Unable to start a thread\n"); 
+					throw new Exit.ABORT("Unable to spawn a thread");
+				}
 			}
 		} else {
 			config_wait_mode = true;
