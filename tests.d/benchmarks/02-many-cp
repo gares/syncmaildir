@@ -4,7 +4,11 @@
 msync 1
 test_eq Mail target/Mail 
 mkdir -p Mail/foo/
+sync
+
+cbefore=`date +%s`
 cp -r Mail/cur Mail/foo
+cafter=`date +%s`
 sync
 
 before=`date +%s`
@@ -12,5 +16,5 @@ msync 2
 after=`date +%s`
 
 test_eq Mail target/Mail 
-echo -n "(`expr $after - $before`s) "
+echo -n "(`expr $after - $before`s, cp takes `expr $cafter - $cbefore`s) "
 
