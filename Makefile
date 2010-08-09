@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.0.0
+VERSION=1.1.0
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
