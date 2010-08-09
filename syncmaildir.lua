@@ -377,7 +377,7 @@ end
 
 -- =========================== misc helpers =================================
 
--- like s:match(spec) but chencks no captures are numm
+-- like s:match(spec) but chencks no captures are nil
 function parse(s,spec)
 	local res = {s:match(spec)}
 	local _,expected = spec:gsub('%b()','')
