@@ -183,8 +183,8 @@ class smdApplet {
 			dbus = DBus.Bus.get (DBus.BusType.SYSTEM);
 			net_manager = (NetworkManager) dbus.get_object(NM_SERVICE, NM_PATH);
 	        net_manager.state_changed.connect((s) => {
-				if (s == NM_CONNECTED) unpause(); 
-				else pause(); 
+				if (s == NM_CONNECTED) miPause.set_active(false);
+				else miPause.set_active(true);
 			});
 		} catch (GLib.Error e) {
 			stderr.printf("%s\n",e.message);
@@ -856,7 +856,7 @@ class smdApplet {
 			// if no network, we do not start the thread and enter pause mode
 			// immediately
 			if (net_manager != null && net_manager.state != NM_CONNECTED) {
-				pause();
+				miPause.set_active(true);
 			} else {
 				// the thread fills the event queue
 				try { thread = GLib.Thread.create(smdThread,true); }
