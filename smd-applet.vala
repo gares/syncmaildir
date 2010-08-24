@@ -352,6 +352,21 @@ class smdApplet {
 		return null;
 	}
 
+	private void start_smdThread() {
+		// if no network, we do not start the thread and enter pause mode
+		// immediately
+		if (net_manager != null && net_manager.state != NM_CONNECTED) {
+			miPause.set_active(true);
+		} else {
+			// the thread fills the event queue
+			try { thread = GLib.Thread.create(smdThread,true); }
+			catch (GLib.ThreadError e) {
+				stderr.printf("Unable to start a thread\n");
+				Gtk.main_quit();
+			}
+		}
+	}
+
 	private bool eval_smd_loop_error_message(
 		string args, string account, string host) throws GLib.RegexError{
 		var context = new GLib.Regex("context\\(([^\\)]+)\\)");
@@ -720,11 +735,7 @@ class smdApplet {
 		thread.join();
 		thread_die = false;
 		debug("starting smdThread");
-		try { thread = GLib.Thread.create(smdThread,true); }
-		catch (GLib.ThreadError e) { 
-			stderr.printf("Unable to re-start a thread\n"); 
-			Gtk.main_quit();
-		}
+		start_smdThread();
 	}
 	
 	// these are just wrappers for close_prefs
@@ -740,18 +751,17 @@ class smdApplet {
 		win.hide(); 
 		if (is_smd_stack_configured() && config_wait_mode) {
 			config_wait_mode = false;
-			debug("starting smdThread since smd stack is configured");
-			try { thread = GLib.Thread.create(smdThread,true); }
-			catch (GLib.ThreadError e) { 
-				stderr.printf("Unable to re-start a thread\n"); 
-				Gtk.main_quit();
-			}
+			// restore the default icon
 			try { si.set_visible(!gconf.get_bool(key_icon)); } 
 			catch (GLib.Error e) {
 				stderr.printf("Unable to read gconf key %s: %s\n",
 					key_icon,e.message); 
 			}
 			si.set_from_icon_name("mail-send-receive");
+
+			// start the thread (if connected)
+			debug("starting smdThread since smd stack is configured");
+			start_smdThread();
 		}
 	}
 
@@ -853,18 +863,7 @@ class smdApplet {
 		// before running, we need the whole smd stack
 		// to be configured
     	if (is_smd_stack_configured()) {
-			// if no network, we do not start the thread and enter pause mode
-			// immediately
-			if (net_manager != null && net_manager.state != NM_CONNECTED) {
-				miPause.set_active(true);
-			} else {
-				// the thread fills the event queue
-				try { thread = GLib.Thread.create(smdThread,true); }
-				catch (GLib.ThreadError e) { 
-					stderr.printf("Unable to start a thread\n"); 
-					throw new Exit.ABORT("Unable to spawn a thread");
-				}
-			}
+			start_smdThread();
 		} else {
 			config_wait_mode = true;
 		}
@@ -879,12 +878,16 @@ class smdApplet {
 		// since if we passed --configure the icon has not
 		// to be shown
 		if ( config_wait_mode ) {
+			// this is an hack to avoid cluttering the bar
+			si.set_visible(false);
+			while ( Gtk.events_pending() ) Gtk.main_iteration();
 			// we wait a bit, hopefully the gnome bar will be drawn in the
 			// meanwhile
 			Posix.sleep(5);
 			// we draw the icon
 			si.set_visible(true);
 			si.set_from_icon_name("error"); 
+			// we process events to have the icon before the notification baloon
 			while ( Gtk.events_pending() ) Gtk.main_iteration();
 			// we do the notification
 			var not = new Notify.Notification(

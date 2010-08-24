@@ -1,3 +1,2 @@
 After 1.0.0:
 - rewrite smd-loop in Lua?
-- test auto pause when offline and unconfigured smd
