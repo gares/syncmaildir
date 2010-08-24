@@ -990,6 +990,7 @@ static int main(string[] args){
 		}
 	} catch (Exit e) { 
 		stderr.printf("abort: %s\n",e.message); 
+		return 1;
 	}
 	
 	return 0;
