@@ -20,6 +20,8 @@ if [ -e $LOCKFILE ]; then
 		echo "Found lock file of a dead instance. Ignored."
 	fi
 fi
+
+[ -d ~/.smd ] || mkdir -p ~/.smd
 echo $$ > $LOCKFILE
 
 # The log file
