@@ -189,9 +189,9 @@ On my core duo 2 laptop equipped with a 5400rpm hard drive and with an hot
 cache, copying a 150MB mailbox with `tar cf - Mail | ssh -C localhost tar
 xf -` takes 17 seconds. Doing the same with `smd-pull` takes 19 seconds.
 This is clearly an uncommon workload, since you rarely get 150MB of new
-mails, but it shows the extra work the tool is doing (like calculating
+mails, but it shows the extra work the tool is doing (like computing
 `sha1` sums for every mail, or the client-server protocol overhead) makes
-`smd` not so inefficient.  Once the mailbox has been copied, running
+`smd` not so inefficient. Once the mailbox has been copied, running
 `smd-pull` again to check for updates is almost instantaneous.
 
 Advanced Usage
