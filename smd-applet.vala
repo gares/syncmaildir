@@ -792,6 +792,7 @@ class smdApplet {
 		}
 		thread_die = true;
 		si.set_from_stock("gtk-media-pause");
+		si.set_tooltip_text("smd-applet is paused");
 	}
 
 	private void unpause() {
