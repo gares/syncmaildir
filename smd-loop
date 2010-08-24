@@ -194,6 +194,7 @@ if [ "$TEMPLATE_ONLY" = 1 ]; then
 fi
 
 log "starting"
+first_run=1
 while true; do
 	while read pull push endpoint; do
 		do_pull=1
@@ -201,9 +202,15 @@ while true; do
 		if [ $pull -gt 0 ]; then do_pull=$((TIME % pull)); fi
 		if [ $push -gt 0 ]; then do_push=$((TIME % push)); fi
 	
-		if [ $do_pull -eq 0 ]; then perform $PULL $endpoint; fi
-		if [ $do_push -eq 0 ]; then perform $PUSH $endpoint; fi
+		if [ $do_pull -eq 0 ]; then
+			perform $PULL $endpoint
+			first_run=0
+		fi
+		if [ $do_push -eq 0 ]; then
+			perform $PUSH $endpoint
+			first_run=0
+		fi
 	done < <(grep -v '^#' $CONFFILE)
 	TIME=$((TIME+1))
-	sleep $MINUTE 
+	if [ $first_run -eq 0 ]; then sleep $MINUTE; fi
 done

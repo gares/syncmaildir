@@ -1,4 +1,7 @@
 ??/??/???? - minor fix - version 1.1.0
+	* smd-loop:
+	  - when run, immediately execute the first pull/push scheduled.
+	    it used to sleep for its interval
 	* smd-applet:
 	  - connect to NetworkManager to query network status, if the
 	    connection is not present, we enter pause mode.
