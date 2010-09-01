@@ -1,2 +1,2 @@
 After 1.0.0:
-- rewrite smd-loop in Lua?
+- rewrite smd-loop in Lua? still not convinced it's a good idea
