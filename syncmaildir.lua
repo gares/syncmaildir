@@ -542,7 +542,7 @@ function parachute(f,rc)
 	end)
 end
 
--- prints the stack trace. idiom is 'rewturn(trance(x))' so that
+-- prints the stack trace. idiom is 'return(trance(x))' so that
 -- we have in the log the path for the leaf that computed x
 function trace(x)
 	if verbose then
