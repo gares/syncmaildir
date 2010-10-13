@@ -327,6 +327,9 @@ end
 -- complex function to generate a valid tempfile name for path, possibly using
 -- the tmp directory if a subdir of path is new or cur and use_tmp is true
 --
+-- we want something that changes, so we keep a local variable and increment it
+local smd_pid = 1
+
 function tmp_for(path,use_tmp)
 	if use_tmp == nil then use_tmp = true end
 	local t = {} 
@@ -334,9 +337,10 @@ function tmp_for(path,use_tmp)
 	if string.byte(path,1) == string.byte('/',1) then absolute = '/' end
 	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
 	local fname = t[#t]
-	local time, pid, host, tags = fname:match('^(%d+)%.(%d+)%.([^:]+)(.*)$')
+	local time, pid, host, tags = fname:match('^(%d+)%.([%d_]+)%.([^:]+)(.*)$')
 	time = time or os.date("%s")
-	pid = pid or "1"
+	pid = pid or smd_pid
+	smd_pid = smd_pid + 1
 	host = host or "localhost"
 	tags = tags or ""
 	table.remove(t,#t)
@@ -362,7 +366,7 @@ function tmp_for(path,use_tmp)
 	local attempts = 0
 	while exists(newpath) do 
 		if attempts > 10 then
-			log_internal_error_and_fail('unable to generate a fresh tmp name',
+			log_internal_error_and_fail('unable to generate a fresh tmp name: last attempt was '..newpath,
 				"tmp_for")
 		else 
 			time = os.date("%s")
