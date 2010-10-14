@@ -1,10 +1,14 @@
-../../.... - ...
+14/10/2010 - minor fix - version 1.1.1
 	* syncmaildir.lua:
-	  - tmp_for fixed, the pid component is now a unique index instead of
-	    a fixed one. Was causing troubles when receiving more then 10 mail
-	    during the same second and in the same mailbox where the pid
-	    component of the mail name was not made just of digits. Also
-	    relaxed the regular expression to "[%d_]+".
+	  - tmp_for fixed: the pid component is now a unique index instead of
+	    a fixed one. 
+	    
+	    The old code Was causing troubles when receiving more then 10 
+	    mails during the same second and in the same mailbox and when
+	    the pid component of the mail name was not made just of digits. 
+	    
+	    The regular expression to capture the pid component has also been
+	    relaxed accepting "_" too.
 
 01/09/2010 - minor feature release - version 1.1.0
 	* smd-loop:
