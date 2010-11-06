@@ -29,6 +29,15 @@
 # define O_NOATIME 0
 #endif
 
+// C99 has a printf length modifier for size_t
+#if __STDC_VERSION__ >= 199901L
+	#define SIZE_T_FMT "%zu"
+	#define SIZE_T_CAST(x) x
+#else
+	#define SIZE_T_FMT "%lu"
+	#define SIZE_T_CAST(x) ((unsigned long)x)
+#endif
+
 #define STATIC static
 
 #define SHA_DIGEST_LENGTH 20
@@ -180,7 +189,8 @@ STATIC mail_t alloc_mail(){
 	if (mailno >= max_mailno) {
 		mails = realloc(mails, sizeof(struct mail) * max_mailno * 2);
 		if (mails == NULL){
-			ERROR(realloc,"allocation failed for %lu mails\n", max_mailno * 2);
+			ERROR(realloc,"allocation failed for " SIZE_T_FMT " mails\n", 
+				SIZE_T_CAST(max_mailno * 2));
 		}
 		max_mailno *= 2;
 	}
@@ -262,8 +272,9 @@ STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
 	// allocate space for mail filenames
 	names = malloc(mno * fnlen);
 	if (names == NULL)
-		ERROR(malloc, "memory allocation failed for %lu mails with an "
-			"average filename length of %u\n",mailno,fnlen);
+		ERROR(malloc, "memory allocation failed for " SIZE_T_FMT 
+			" mails with an average filename length of %u\n",
+			SIZE_T_CAST(mailno),fnlen);
 
 	curname=0;
 	max_curname=mno * fnlen;
