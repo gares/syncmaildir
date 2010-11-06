@@ -33,7 +33,7 @@ MKDIR=mkdir -p
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
-CFLAGS=-O2 -Wall -Wextra -g
+CFLAGS=-O2 -Wall -Wextra -Wcast-align -g
 PKG_FLAGS=
 
 # ----------------------------------------------------------------------------
