@@ -13,7 +13,7 @@ void debug(string message) {
 // minimalistic NetworkManager interface
 [DBus (name = "org.freedesktop.NetworkManager")]
 interface NetworkManager : Object {
-        public signal void state_changed(uint state);
+        public signal void state_changed(uint state); // throws IOErrror;
         public abstract uint state { owned get; }
 }
 const uint NM_CONNECTED = 3;
@@ -155,7 +155,6 @@ class smdApplet {
 	GLib.HashTable<Gtk.Widget,string> command_hash = null;
 
 	// dbus connection to NetworkManager
-	DBus.Connection dbus = null;
 	NetworkManager net_manager = null;
 
 
@@ -180,15 +179,13 @@ class smdApplet {
 
 		// connect to dbus
 		try {
-			dbus = DBus.Bus.get (DBus.BusType.SYSTEM);
-			net_manager = (NetworkManager) dbus.get_object(NM_SERVICE, NM_PATH);
+			net_manager=Bus.get_proxy_sync(BusType.SYSTEM,NM_SERVICE,NM_PATH);
 	        net_manager.state_changed.connect((s) => {
 				if (s == NM_CONNECTED) miPause.set_active(false);
 				else miPause.set_active(true);
 			});
 		} catch (GLib.Error e) {
 			stderr.printf("%s\n",e.message);
-			dbus = null;
 			net_manager=null;
 		}
 
@@ -415,7 +412,7 @@ class smdApplet {
 			var r_cmd = new GLib.Regex("run\\(([^\\)]+)\\)");
 
 			int from = 0;
-			for (;acts != null && acts.len() > 0;){
+			for (;acts != null && acts.length > 0;){
 				MatchInfo i_cmd = null;
 				if ( r_perm.match(acts,0,out i_cmd) ){
 					i_cmd.fetch_pos(0,null,out from);
