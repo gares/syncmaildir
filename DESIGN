@@ -17,9 +17,10 @@ inverts the sync direction.
     smd-server ------- ssh ----- smd-client
         |                           |
         |                           |
-      mddiff                      mddiff
+      mddiff                     (mddiff)
 
-
+`smd-client` uses `mddiff` only compute sha1 sums, not to compute
+a diff as `smd-server` does.
 
 END USER tools 
 ==============
