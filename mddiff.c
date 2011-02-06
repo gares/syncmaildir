@@ -260,8 +260,44 @@ STATIC gboolean name_equal(gconstpointer k1, gconstpointer k2){
 	return g_str_equal(mail_name(m1), mail_name(m2));
 }
 
+// wc -l, returning 0 on error
+STATIC unsigned long int wc_l(const char* dbfile){
+	int unsigned long mno = 0;
+	struct stat sb;
+	unsigned char *addr, *next;
+	int fd;
+	if ((fd = open(dbfile, O_RDONLY | O_NOATIME)) == -1) goto err_open;
+	if (fstat(fd, &sb) == -1) goto err_mmap;
+	if ((addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0))
+		== MAP_FAILED) goto err_mmap;
+
+	for(next = addr; next < addr + sb.st_size; next++){
+		if (*next == '\n') mno++;
+	}
+
+	munmap(addr, sb.st_size);
+	close(fd);
+	return mno;
+
+	err_mmap:
+		close(fd);
+	err_open:
+		return 0;
+}
+
 // setup memory pools and hash tables
-STATIC void setup_globals(unsigned long int mno, unsigned int fnlen){
+STATIC void setup_globals(
+		const char *dbfile, unsigned long int mno, unsigned int fnlen){
+	// we try to guess a reasonable number of email, to avoid asking the
+	// allocator an unnnecessarily big chunk whose allocation may fail if there
+	// is too few memory. We compute the number of entries in the db-file and
+	// we add 1000 speculating not more than 1000 mails will be received.
+	if (mno == 0){
+		if ((mno = wc_l(dbfile)) == 0) mno = DEFAULT_MAIL_NUMBER;
+		else mno += 1000;
+		VERBOSE(setup_globals, "guessing we need space for %lu mails\n", mno);
+	}
+
 	// allocate space for mail metadata
 	mails = malloc(sizeof(struct mail) * mno);
 	if (mails == NULL) ERROR(malloc,"allocation failed for %lu mails\n",mno);
@@ -663,12 +699,16 @@ STATIC struct option long_options[] = {
 
 // command line options documentation
 STATIC const char* long_options_doc[] = {
-	"Estimation of max mail message number (default " 
-		tostring(DEFAULT_MAIL_NUMBER) ")"
+	"Estimation of max mail message number (defaults to the" 
 		"\n                        " 
-		"Decrease for small systems, it is increased"
+		"number of messages in the db-file + 1000 or "
+		tostring(DEFAULT_MAIL_NUMBER) 
 		"\n                        " 
-		"automatically if needed", 
+		"if there is no db-file). You may want to decrease it"
+		"\n                        " 
+		"for the first run on small systems. It is anyway"
+		"\n                        " 
+		"increased automatically when needed", 
 	"Name of the cache for the endpoint (default db.txt)",
 	"Increase program verbosity (printed on stderr, short -v)", 
 	"Do not generate a new db file (short -d)",
@@ -708,7 +748,7 @@ no waranties\n\n",tostring(VERSION));
 int main(int argc, char *argv[]) {
 	char *data;
 	char *dbfile="db.txt";
-	unsigned long int mailno = DEFAULT_MAIL_NUMBER;
+	unsigned long int mailno = 0;
 	unsigned int filenamelen = DEFAULT_FILENAME_LEN;
 	struct stat sb;
 	int c = 0;
@@ -783,7 +823,7 @@ int main(int argc, char *argv[]) {
 	ASSERT_ALL_ARE(directory, &argv[optind], argc - optind);
 
 	// allocate memory
-	setup_globals(mailno,filenamelen);
+	setup_globals(dbfile, mailno, filenamelen);
 
 	load_db(dbfile);
 
