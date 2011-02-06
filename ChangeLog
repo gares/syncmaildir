@@ -5,6 +5,12 @@
 	* mddiff.c:
 	  - compile with additional -Wcast-align flag
 	  - use %zc to print size_t, if available
+	  - compute the default for --max-mailno using the number of lines
+	    in the db-file (if available) and adding 1000 (as the max amount
+	    of new mails). Overestimating the amount of memory needed can
+	    make malloc fail if the system is under heavy loads. --max-mailno
+	    still makes sense for the first run, since there is no db-file to
+	    look at.
 
 14/10/2010 - minor fix - version 1.1.1
 	* syncmaildir.lua:
