@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.1.1
+VERSION=1.1.2
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
@@ -55,7 +55,7 @@ all: check-build $(BINARIES)
 
 %: %.c
 	pkg-config --atleast-version=2.19.1 glib-2.0
-	gcc $(CFLAGS) $< -o $@ -DVERSION="$(VERSION)" \
+	$(CC) $(CFLAGS) $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
 
 check-build: check-w-gcc check-w-valac
