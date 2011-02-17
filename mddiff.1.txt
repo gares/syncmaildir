@@ -40,7 +40,7 @@ DESCRIPTION
   in case the other endpoint successfully applied the diff.
 
 OPTIONS
-  --max-mailno          Estimation of max mail message number (defaults to the
+  --max-mailno mno      Estimation of max mail message number (defaults to the
                         number of messages in the db-file + 1000 or 500000
                         if there is no db-file). You may want to decrease it
                         for the first run on small systems. It is anyway
