@@ -2,6 +2,8 @@
 	* smd-applet.vala:
 	  - ported to valac 0.10
 	  - ported to GDbus (package gio-2.0)
+	  - build dependency over vala removed: config.c and smd-applet.c
+	    are now included in the tarball
 	* mddiff.c:
 	  - compile with additional -Wcast-align flag
 	  - use %zc to print size_t, if available

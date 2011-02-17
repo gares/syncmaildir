@@ -18,6 +18,7 @@ TEST_SUITES=mddiff client-server pull-push
 BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
+PKGS_VALA=glib-2.0 gtk+-2.0 libnotify gconf-2.0 gee-1.0 gio-2.0
 
 # ----------------------------------------------------------------------------
 # These variables affect the programs behaviour and their installation;
@@ -34,6 +35,7 @@ SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
 CFLAGS=-O2 -Wall -Wextra -Wcast-align -g
+CFLAGS_VALA=-O2 -w -g
 PKG_FLAGS=
 
 # ----------------------------------------------------------------------------
@@ -41,22 +43,36 @@ PKG_FLAGS=
 
 all: check-build $(BINARIES) 
 
-%: %.vala Makefile 
+config.vala: Makefile
 	echo "class SMDConf { \
 		public static const string PREFIX = \"/$(PREFIX)\"; \
 		public static const string VERSION = \"$(VERSION)\"; \
 		}" \
 		> config.vala
-	valac -o $@ $< config.vala --thread \
-		--pkg glib-2.0 --pkg gtk+-2.0 \
-		--pkg libnotify --pkg gconf-2.0 \
-		--pkg posix --pkg gee-1.0 \
-		--pkg gio-2.0
 
-%: %.c
+smd-applet.c: smd-applet.vala config.vala
+	if which valac >/dev/null; then \
+		valac -C $^ --thread \
+			--pkg posix $(patsubst %,--pkg %,$(PKGS_VALA)); \
+	elif [ -e smd-applet.c -a -e smd-applet.c ]; then \
+		@echo "No valac, reusing precompiled .c files"; \
+		touch smd-applet.c config.c; \
+	else \
+		@echo "No valac and no precompiled .c files"; \
+		@echo "To compile smd-applet you need a vala compiler"; \
+		@echo "or the precompiled .c files"; \
+		false; \
+	fi
+	touch $@
+
+mddiff: mddiff.c
 	pkg-config --atleast-version=2.19.1 glib-2.0
 	$(CC) $(CFLAGS) $< -o $@ -DVERSION="$(VERSION)" \
 		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
+
+smd-applet: smd-applet.c config.c
+	$(CC) $(CFLAGS_VALA) $^ -o $@ -DVERSION="$(VERSION)" \
+		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)`
 
 check-build: check-w-gcc check-w-valac
 check-run: check-w-$(LUA) check-w-bash 
@@ -154,11 +170,18 @@ clean:
 	rm -rf tests.d/run
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(HTML)
-	rm -f config.vala
 
-dist $(PROJECTNAME)-$(VERSION).tar.gz:
-	git archive --format=tar --prefix=$(PROJECTNAME)-$(VERSION)/ HEAD |\
-		gzip -9 > $(PROJECTNAME)-$(VERSION).tar.gz
+dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c config.c
+	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
+	rm -f $(PROJECTNAME)-$(VERSION).tar
+	git archive --format=tar \
+		--prefix=$(PROJECTNAME)-$(VERSION)/ HEAD \
+		> $(PROJECTNAME)-$(VERSION).tar
+	tar --transform=s?^?$(PROJECTNAME)-$(VERSION)/? \
+		-r smd-applet.c -r config.c \
+		--owner root --group root \
+		-f $(PROJECTNAME)-$(VERSION).tar
+	gzip -9 -f $(PROJECTNAME)-$(VERSION).tar
 
 $(HTML): check-w-markdown
 	cat misc/head.html > index.html
