@@ -53,6 +53,7 @@ update-smd-config:
 	$H if diff -q smd-config.h smd-config.h.new > /dev/null 2>&1; then \
 		rm smd-config.h.new; \
 	else \
+		echo CONFIGURE smd-config.h; \
 		mv smd-config.h.new smd-config.h; \
 	fi
 
