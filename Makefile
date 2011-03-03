@@ -50,7 +50,7 @@ all: check-build update-smd-config $(BINARIES)
 update-smd-config:
 	$H echo "#define SMD_CONF_PREFIX \"$(PREFIX)\"" > smd-config.h.new
 	$H echo "#define SMD_CONF_VERSION \"$(VERSION)\"" >> smd-config.h.new
-	$H if diff -q smd-config.h smd-config.h.new > /dev/null; then \
+	$H if diff -q smd-config.h smd-config.h.new > /dev/null 2>&1; then \
 		rm smd-config.h.new; \
 	else \
 		mv smd-config.h.new smd-config.h; \
@@ -186,14 +186,14 @@ clean:
 	$H rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	$H rm -f $(HTML)
 
-dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c config.c
+dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	rm -f $(PROJECTNAME)-$(VERSION).tar
 	git archive --format=tar \
 		--prefix=$(PROJECTNAME)-$(VERSION)/ HEAD \
 		> $(PROJECTNAME)-$(VERSION).tar
 	tar --transform=s?^?$(PROJECTNAME)-$(VERSION)/? \
-		-r smd-applet.c -r config.c \
+		-r smd-applet.c \
 		--owner root --group root \
 		-f $(PROJECTNAME)-$(VERSION).tar
 	gzip -9 -f $(PROJECTNAME)-$(VERSION).tar
