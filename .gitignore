@@ -7,5 +7,5 @@
 /syncmaildir-*.tar.gz
 /tests.d/run
 /misc/Mail.BENCH.tgz
-/*.swp
-/*.un~
+*.swp
+*.un~
