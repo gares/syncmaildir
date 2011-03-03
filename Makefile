@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.1.2
+VERSION=1.1.3
 BINARIES=mddiff smd-applet
 MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
@@ -19,6 +19,10 @@ BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
 PKGS_VALA=glib-2.0 gtk+-2.0 libnotify gconf-2.0 gee-1.0 gio-2.0
+MIN_GLIB_VERSION=2.19.1
+PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
+PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
+H=@
 
 # ----------------------------------------------------------------------------
 # These variables affect the programs behaviour and their installation;
@@ -34,61 +38,72 @@ MKDIR=mkdir -p
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
-CFLAGS=-O2 -Wall -Wextra -Wcast-align -g
-CFLAGS_VALA=-O2 -w -g
+CFLAGS=-O2 -Wall -Wextra -Wcast-align -g -I .
+CFLAGS_VALA=-O2 -w -g -I . 
 PKG_FLAGS=
 
 # ----------------------------------------------------------------------------
 # Rules follow...
 
-all: check-build $(BINARIES) 
+all: check-build update-smd-config $(BINARIES) 
 
-config.vala: Makefile
-	echo "class SMDConf { \
-		public static const string PREFIX = \"/$(PREFIX)\"; \
-		public static const string VERSION = \"$(VERSION)\"; \
-		}" \
-		> config.vala
+update-smd-config:
+	$H echo "#define SMD_CONF_PREFIX \"$(PREFIX)\"" > smd-config.h.new
+	$H echo "#define SMD_CONF_VERSION \"$(VERSION)\"" >> smd-config.h.new
+	$H if diff -q smd-config.h smd-config.h.new > /dev/null; then \
+		rm smd-config.h.new; \
+	else \
+		mv smd-config.h.new smd-config.h; \
+	fi
 
-smd-applet.c: smd-applet.vala config.vala
-	if which valac >/dev/null; then \
+smd-applet.c: smd-applet.vala smd-config.vapi
+	$H if which valac >/dev/null; then \
+		echo "VALAC $^"; \
 		valac -C $^ --thread \
 			--pkg posix $(patsubst %,--pkg %,$(PKGS_VALA)); \
-	elif [ -e smd-applet.c -a -e smd-applet.c ]; then \
-		@echo "No valac, reusing precompiled .c files"; \
-		touch smd-applet.c config.c; \
+	elif [ -e smd-applet.c ]; then \
+		echo "** No valac, reusing precompiled .c files"; \
+		echo "** Changes to the following files will not be"; \
+		echo "** taken into account: $^"; \
 	else \
-		@echo "No valac and no precompiled .c files"; \
-		@echo "To compile smd-applet you need a vala compiler"; \
-		@echo "or the precompiled .c files"; \
+		echo "** No valac and no precompiled .c files"; \
+		echo "** To compile smd-applet you need a vala compiler"; \
+		echo "** or the precompiled $@ file"; \
 		false; \
 	fi
-	touch $@
+	$H touch $@
 
-mddiff: mddiff.c
-	pkg-config --atleast-version=2.19.1 glib-2.0
-	$(CC) $(CFLAGS) $< -o $@ -DVERSION="$(VERSION)" \
+mddiff: mddiff.c smd-config.h
+	@echo CC $<
+	$H $(CC) $(CFLAGS) $< -o $@ \
 		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
 
-smd-applet: smd-applet.c config.c
-	$(CC) $(CFLAGS_VALA) $^ -o $@ -DVERSION="$(VERSION)" \
+smd-applet: smd-applet.c smd-config.h
+	@echo CC $<
+	$H $(CC) $(CFLAGS_VALA) $< -o $@ \
 		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)`
 
 check-build: check-w-gcc check-w-valac
+	$H pkg-config $(PKGCONFIG_CHECK_GLIB_VERSION) || \
+		(echo glib version too old: \
+			`pkg-config $(PKGCONFIG_GLIB_VERSION)`; \
+		 echo required version: $(MIN_GLIB_VERSION); \
+		 false)
+
 check-run: check-w-$(LUA) check-w-bash 
 
 check-w-%:
-	@which $* > /dev/null || echo $* not found
+	$H which $* > /dev/null || echo $* not found
 
 test/%: text/all check-run $(TEST_MAILBOX)
-	@SUITES="$*" tests.d/test.sh $(TEST_MAILBOX) 
+	$H SUITES="$*" tests.d/test.sh $(TEST_MAILBOX) 
 
 test: text/all check-run $(TEST_MAILBOX)
-	@SUITES="$(TEST_SUITES)" tests.d/test.sh \
+	$H SUITES="$(TEST_SUITES)" tests.d/test.sh \
 		$(TEST_MAILBOX) $(addprefix $(shell pwd)/,$T)
 
 bench: text/all check-run $(BENCH_MAILBOX)
-	@SUITES="$(BENCH_SUITES)" tests.d/test.sh \
+	$H SUITES="$(BENCH_SUITES)" tests.d/test.sh \
 		$(BENCH_MAILBOX) $(addprefix $(shell pwd)/,$T)
 
 misc/Mail.%.tgz:
@@ -166,10 +181,10 @@ install-misc: $(MANPAGES)
 	$(call install,README,share/doc/syncmaildir)
 
 clean: 
-	rm -f $(BINARIES) $(MANPAGES)
-	rm -rf tests.d/run
-	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
-	rm -f $(HTML)
+	$H rm -f $(BINARIES) $(MANPAGES)
+	$H rm -rf tests.d/run
+	$H rm -f $(PROJECTNAME)-$(VERSION).tar.gz
+	$H rm -f $(HTML)
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c config.c
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
@@ -200,7 +215,7 @@ upload-website: $(HTML)
 upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $(PROJECTNAME)-$(VERSION).tar.gz \
 	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
-	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/ChangeLog
+	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/README
 
 
 # ----------------------------------------------------------------------------
@@ -229,4 +244,5 @@ abspath/%:
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
 		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p'
 
+.PHONY : update-smd-config
 # eof

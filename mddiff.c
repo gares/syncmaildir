@@ -25,6 +25,8 @@
 #include <getopt.h>
 #include <glib.h>
 
+#include "smd-config.h"
+
 #ifndef O_NOATIME
 # define O_NOATIME 0
 #endif
@@ -742,7 +744,7 @@ set is safe, while removing them may not do what you want (delete actions\n\
 are generated).\n", bname, bname);
 	fprintf(stdout,
 		"\nVersion %s, © 2009 Enrico Tassi, released under GPLv3, \
-no waranties\n\n",tostring(VERSION));
+no waranties\n\n",SMD_CONF_VERSION);
 }
 
 int main(int argc, char *argv[]) {

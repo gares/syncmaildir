@@ -1,7 +1,6 @@
 /mddiff
 /smd-applet
-/config.vala
-/config.c
+/smd-config.h
 /smd-applet.c
 /*.1
 /*.html
