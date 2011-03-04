@@ -48,7 +48,7 @@ PKG_FLAGS=
 all: check-build update-smd-config $(BINARIES) 
 
 update-smd-config:
-	$H echo "#define SMD_CONF_PREFIX \"$(PREFIX)\"" > smd-config.h.new
+	$H echo "#define SMD_CONF_PREFIX \"/$(PREFIX)\"" > smd-config.h.new
 	$H echo "#define SMD_CONF_VERSION \"$(VERSION)\"" >> smd-config.h.new
 	$H if diff -q smd-config.h smd-config.h.new > /dev/null 2>&1; then \
 		rm smd-config.h.new; \
