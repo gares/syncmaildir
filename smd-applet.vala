@@ -16,9 +16,17 @@ interface NetworkManager : Object {
         public signal void state_changed(uint state); // throws IOErrror;
         public abstract uint state { owned get; }
 }
-const uint NM_CONNECTED = 3;
 const string NM_SERVICE = "org.freedesktop.NetworkManager";
 const string NM_PATH = "/org/freedesktop/NetworkManager";
+
+// Checks if there is a connection 
+//   70 is NM_STATE_CONNECTED_GLOBAL in NetworkManager >= 0.9
+//   3  is NM_STATE_CONNECTED in NetworkManager < 0.9
+// We may want to check for >= 50 or 60, since the are respectively LOCAL
+// and SITE connections.
+static bool is_nm_connected(uint code) {
+	return code == 3 || code == 70;
+}
 
 
 // a simple class to pass data from the child process to the
@@ -181,7 +189,7 @@ class smdApplet {
 		try {
 			net_manager=Bus.get_proxy_sync(BusType.SYSTEM,NM_SERVICE,NM_PATH);
 	        net_manager.state_changed.connect((s) => {
-				if (s == NM_CONNECTED) miPause.set_active(false);
+				if (is_nm_connected(s)) miPause.set_active(false);
 				else miPause.set_active(true);
 			});
 		} catch (GLib.Error e) {
@@ -352,7 +360,7 @@ class smdApplet {
 	private void start_smdThread() {
 		// if no network, we do not start the thread and enter pause mode
 		// immediately
-		if (net_manager != null && net_manager.state != NM_CONNECTED) {
+		if (net_manager != null && !is_nm_connected(net_manager.state)) {
 			miPause.set_active(true);
 		} else {
 			// the thread fills the event queue
