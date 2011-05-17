@@ -601,8 +601,8 @@ class smdApplet {
 				// we avoid notifying the network problem more than once
 			} else if (e.is_error_event() || notify_on_newail){
 				var not = new Notify.Notification(
-					"Syncmaildir",e.message,e.message_icon,null);
-				not.attach_to_status_icon(si);
+					"Syncmaildir",e.message,e.message_icon);
+				not.set_hint_byte("transient",1);
 
 				try { not.show(); }
 				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
@@ -898,8 +898,8 @@ class smdApplet {
 			// we do the notification
 			var not = new Notify.Notification(
 				"Syncmaildir","Syncmaildir is not configured properly, "+
-				"click on the icon to configure it.","dialog-warning",null);
-			not.attach_to_status_icon(si);
+				"click on the icon to configure it.","dialog-warning");
+			not.set_hint_byte("transient",1);
 			try { not.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		} else {
