@@ -357,10 +357,11 @@ class smdApplet {
 		return null;
 	}
 
-	private void start_smdThread() {
+    // force starts the thread even if there is no connection
+	private void start_smdThread(bool force = false) {
 		// if no network, we do not start the thread and enter pause mode
 		// immediately
-		if (net_manager != null && !is_nm_connected(net_manager.state)) {
+		if (!force && net_manager != null && !is_nm_connected(net_manager.state)) {
 			miPause.set_active(true);
 		} else {
 			// the thread fills the event queue
@@ -802,7 +803,7 @@ class smdApplet {
 
 	private void unpause() {
 		debug("exit pause mode");
-		reset_to_regular_run();
+		reset_to_regular_run(true);
 	}
 
 	// ======================== config check ===========================
