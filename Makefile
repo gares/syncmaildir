@@ -18,10 +18,12 @@ TEST_SUITES=mddiff client-server pull-push
 BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
-PKGS_VALA=glib-2.0 gtk+-2.0 libnotify gconf-2.0 gee-1.0 gio-2.0
+PKG_GTK=gtk+-2.0 
+PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
 MIN_GLIB_VERSION=2.19.1
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
+VALAC=valac
 H=@
 
 # ----------------------------------------------------------------------------
@@ -58,16 +60,16 @@ update-smd-config:
 	fi
 
 smd-applet.c: smd-applet.vala smd-config.vapi
-	$H if which valac >/dev/null; then \
+	$H if which $(VALAC) >/dev/null; then \
 		echo "VALAC $^"; \
-		valac -C $^ --thread \
+		$(VALAC) -C $^ --thread \
 			--pkg posix $(patsubst %,--pkg %,$(PKGS_VALA)); \
 	elif [ -e smd-applet.c ]; then \
-		echo "** No valac, reusing precompiled .c files"; \
+		echo "** No $(VALAC), reusing precompiled .c files"; \
 		echo "** Changes to the following files will not be"; \
 		echo "** taken into account: $^"; \
 	else \
-		echo "** No valac and no precompiled .c files"; \
+		echo "** No $(VALAC) and no precompiled .c files"; \
 		echo "** To compile smd-applet you need a vala compiler"; \
 		echo "** or the precompiled $@ file"; \
 		false; \
@@ -84,7 +86,7 @@ smd-applet: smd-applet.c smd-config.h
 	$H $(CC) $(CFLAGS_VALA) $< -o $@ \
 		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)`
 
-check-build: check-w-gcc check-w-valac
+check-build: check-w-gcc check-w-$(VALAC)
 	$H pkg-config $(PKGCONFIG_CHECK_GLIB_VERSION) || \
 		(echo glib version too old: \
 			`pkg-config $(PKGCONFIG_GLIB_VERSION)`; \
