@@ -99,8 +99,8 @@ prepare(){
 	cd $BASE
 	rm -rf $ROOT/$TESTSUITE/$N
 	mkdir -p $ROOT/$TESTSUITE/$N/target
-	make --quiet text/all
-	make --quiet text/install-bin \
+	make --no-print-directory --quiet text/all
+	make --no-print-directory --quiet text/install-bin \
 		SSH=$ROOT/$TESTSUITE/$N/bin/fakessh \
 		PREFIX=$ROOT/$TESTSUITE/$N
 
