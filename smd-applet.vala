@@ -22,7 +22,7 @@ const string NM_PATH = "/org/freedesktop/NetworkManager";
 // Checks if there is a connection 
 //   70 is NM_STATE_CONNECTED_GLOBAL in NetworkManager >= 0.9
 //   3  is NM_STATE_CONNECTED in NetworkManager < 0.9
-// We may want to check for >= 50 or 60, since the are respectively LOCAL
+// We may want to check for >= 50 or 60, since they are respectively LOCAL
 // and SITE connections.
 static bool is_nm_connected(uint code) {
 	return code == 3 || code == 70;
