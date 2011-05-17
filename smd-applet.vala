@@ -147,7 +147,7 @@ class smdApplet {
 	GConf.Client gconf = null;
 
 	// the thread to manage the child smd-loop instance
-	weak GLib.Thread thread = null;
+	weak GLib.Thread<void *> thread = null;
 	bool thread_die = false;
 	GLib.Pid pid; // smd-loop pid, initially set to 0
 	
@@ -364,7 +364,7 @@ class smdApplet {
 			miPause.set_active(true);
 		} else {
 			// the thread fills the event queue
-			try { thread = GLib.Thread.create(smdThread,true); }
+			try { thread = GLib.Thread.create<void *>(smdThread,true); }
 			catch (GLib.ThreadError e) {
 				stderr.printf("Unable to start a thread\n");
 				Gtk.main_quit();
@@ -501,9 +501,9 @@ class smdApplet {
 				var has_del = r_del.match(args,0,out i_del);
 
 				int new_mails = 0;
-				if (has_new) { new_mails = i_new.fetch(1).to_int();	}
+				if (has_new) { new_mails = int.parse(i_new.fetch(1)); }
 				int del_mails = 0;
-				if (has_del) { del_mails = i_del.fetch(1).to_int();	}
+				if (has_del) { del_mails = int.parse(i_del.fetch(1)); }
 
 				if (host == "localhost" && (new_mails > 0 || del_mails > 0)) {
 					events_lock.lock();
@@ -730,17 +730,17 @@ class smdApplet {
 		return true;
 	}
 
-	private void reset_to_regular_run() {
+	private void reset_to_regular_run(bool force = false) {
 		err_win.hide();	
 		error_mode = false;
 		si.set_tooltip_text("smd-applet is running");
 		si.set_from_icon_name("mail-send-receive");
 		si.set_blinking(false);
 		debug("joining smdThread");
-		thread.join();
+		thread.join<void *>();
 		thread_die = false;
 		debug("starting smdThread");
-		start_smdThread();
+		start_smdThread(force);
 	}
 	
 	// these are just wrappers for close_prefs
