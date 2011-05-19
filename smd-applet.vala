@@ -140,7 +140,7 @@ class smdApplet {
 	Gtk.CheckMenuItem miPause = null;
 
 	// Stuff for logs display
-	Gtk.ComboBox cblogs = null;
+	Gtk.ComboBoxText cblogs = null;
 	Gee.ArrayList<string> lognames = null;
 
 	// the gconf client handler
@@ -164,6 +164,11 @@ class smdApplet {
 
 	// dbus connection to NetworkManager
 	NetworkManager net_manager = null;
+
+	// last persistent notification, to avoid its garbage collection
+	// so that the callback is called when the button is clicked
+	Notify.Notification notification = null;
+	bool notification_server_has_persistence = false;
 
 
 	// ======================= constructor ================================
@@ -203,7 +208,7 @@ class smdApplet {
 		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
 		log_win = builder.get_object("wLog") as Gtk.Window;
 		var logs_vb = builder.get_object("vbLog") as Gtk.VBox;
-		cblogs = new Gtk.ComboBox.text();
+		cblogs = new Gtk.ComboBoxText();
 		lognames = new Gee.ArrayList<string>();
 		logs_vb.pack_start(cblogs,false,true,0);
 		logs_vb.reorder_child(cblogs,0);
@@ -320,6 +325,7 @@ class smdApplet {
 			log_win.show(); 
 		});
 
+		// status icon
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
 		si.set_visible(!hide_status_icon);
 		si.set_tooltip_text("smd-applet is running");
@@ -336,6 +342,10 @@ class smdApplet {
 				menuL.popup(null,null,si.position_menu,0,
 					Gtk.get_current_event_time());
 		});
+
+		// notification system
+		unowned List<string> l = Notify.get_server_caps();
+		notification_server_has_persistence = (0 <= l.index("persistence")); 
 
 		// error mode data
 		command_hash = new GLib.HashTable<Gtk.Widget,string>(
@@ -593,19 +603,28 @@ class smdApplet {
 		}
 		events_lock.unlock();
 
-		// regular notification
+		// notification
 		if ( e != null && e.message != null) {
 			bool notify_on_newail = false;
 			try { notify_on_newail = gconf.get_bool(key_newmail); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			if (e.enter_network_error_mode && network_error_mode) {
 				// we avoid notifying the network problem more than once
-			} else if (e.is_error_event() || notify_on_newail){
+			} else if ((!e.is_error_event() && notify_on_newail) ||
+					   (e.is_error_event() && e.enter_network_error_mode)) {
 				var not = new Notify.Notification(
 					"Syncmaildir",e.message,e.message_icon);
 				not.set_hint_byte("transient",1);
+				try { notification.show(); }
+				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			} else if (e.is_error_event()) {
+				notification = new Notify.Notification(
+					"Syncmaildir",e.message,e.message_icon);
+				notification.set_timeout(0);
+				notification.add_action("clicked","Handle error",
+					(not, action) => { err_win.reshow_with_initial_size(); });
 
-				try { not.show(); }
+				try { notification.show(); }
 				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			}
 		}
@@ -614,9 +633,10 @@ class smdApplet {
 		if ( e != null && e.enter_error_mode ) {
 			// {{{ error notification and widget setup
 			si.set_from_icon_name("error");
-			si.set_blinking(true);
 			si.set_tooltip_text("smd-applet encountered an error");
 			error_mode = true;
+			if (!notification_server_has_persistence) si.set_visible(true);
+
 			var l_ctx = builder.get_object("lContext") as Gtk.Label;
 			var l_cause = builder.get_object("lCause") as Gtk.Label;
 			l_ctx.set_text(e.context);
@@ -736,7 +756,8 @@ class smdApplet {
 		error_mode = false;
 		si.set_tooltip_text("smd-applet is running");
 		si.set_from_icon_name("mail-send-receive");
-		si.set_blinking(false);
+		try { si.set_visible(!gconf.get_bool(key_icon)); }
+		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		debug("joining smdThread");
 		thread.join<void *>();
 		thread_die = false;
