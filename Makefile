@@ -18,12 +18,12 @@ TEST_SUITES=mddiff client-server pull-push
 BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
-PKG_GTK=gtk+-2.0 
+PKG_GTK=gtk+-3.0 
 PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
 MIN_GLIB_VERSION=2.19.1
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
-VALAC=valac
+VALAC=valac-0.12
 H=@
 
 # ----------------------------------------------------------------------------
