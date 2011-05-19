@@ -612,9 +612,9 @@ class smdApplet {
 				// we avoid notifying the network problem more than once
 			} else if ((!e.is_error_event() && notify_on_newail) ||
 					   (e.is_error_event() && e.enter_network_error_mode)) {
-				var not = new Notify.Notification(
+				notification = new Notify.Notification(
 					"Syncmaildir",e.message,e.message_icon);
-				not.set_hint_byte("transient",1);
+				notification.set_hint_byte("transient",1);
 				try { notification.show(); }
 				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			} else if (e.is_error_event()) {
@@ -918,11 +918,11 @@ class smdApplet {
 			// we process events to have the icon before the notification baloon
 			while ( Gtk.events_pending() ) Gtk.main_iteration();
 			// we do the notification
-			var not = new Notify.Notification(
+			notification = new Notify.Notification(
 				"Syncmaildir","Syncmaildir is not configured properly, "+
 				"click on the icon to configure it.","dialog-warning");
-			not.set_hint_byte("transient",1);
-			try { not.show(); }
+			notification.set_hint_byte("transient",1);
+			try { notification.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		} else {
 			try { si.set_visible(!gconf.get_bool(key_icon)); }
