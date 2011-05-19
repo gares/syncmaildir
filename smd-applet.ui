@@ -28,9 +28,10 @@
     </columns>
   </object>
   <object class="GtkWindow" id="wPrefs">
+    <property name="border_width">12</property>
     <property name="title" translatable="yes">smd-applet configuration</property>
     <property name="modal">True</property>
-    <property name="window_position">center</property>
+    <property name="window_position">center-always</property>
     <property name="icon_name">mail-send-receive</property>
     <child>
       <object class="GtkVBox" id="vbox1">
@@ -344,6 +345,7 @@ This interface allows you to edit only the default endpoint.</property>
     <property name="page_size">10</property>
   </object>
   <object class="GtkWindow" id="wError">
+    <property name="border_width">12</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="icon_name">dialog-error</property>
@@ -655,13 +657,13 @@ This interface allows you to edit only the default endpoint.</property>
     </child>
   </object>
   <object class="GtkAboutDialog" id="wAbout">
-    <property name="border_width">5</property>
+    <property name="border_width">12</property>
     <property name="title" translatable="yes">About: Sync Maild Dir applet</property>
+    <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="icon_name">mail-send-receive</property>
     <property name="type_hint">normal</property>
-    <property name="has_separator">False</property>
     <property name="program_name">Sync Mail Dir</property>
     <property name="copyright" translatable="yes">Copyright 2008-2010 Enrico Tassi &lt;gares@fettunta.org&gt;</property>
     <property name="comments" translatable="yes">GNOME applet for syncmaildir</property>
@@ -1368,6 +1370,7 @@ Public License instead of this License.  But first, please read
     </child>
   </object>
   <object class="GtkWindow" id="wLog">
+    <property name="border_width">12</property>
     <property name="window_position">center</property>
     <property name="icon_name">emblem-documents</property>
     <child>
