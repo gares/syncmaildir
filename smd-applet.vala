@@ -983,13 +983,13 @@ static int main(string[] args){
 	GLib.OptionEntry[] oe = {
       GLib.OptionEntry () { 
 		long_name = "configure", short_name = 'c', 
-		flags = GLib.OptionFlags.NO_ARG, arg = GLib.OptionArg.NONE,
+		flags = 0, arg = GLib.OptionArg.NONE,
 		arg_data = &config_only,
 		description = "show config window, don't really run the applet",
 		arg_description = null },
       GLib.OptionEntry () { 
 		long_name = "verbose", short_name = 'v',
-		flags = GLib.OptionFlags.NO_ARG, arg = GLib.OptionArg.NONE,
+		flags = 0, arg = GLib.OptionArg.NONE,
 		arg_data = &verbose,
 		description = "verbose output, for debugging only",
 		arg_description = null },
