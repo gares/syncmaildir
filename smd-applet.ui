@@ -1370,6 +1370,8 @@ Public License instead of this License.  But first, please read
     </child>
   </object>
   <object class="GtkWindow" id="wLog">
+    <property name="width_request">500</property>
+    <property name="height_request">400</property>
     <property name="border_width">12</property>
     <property name="window_position">center</property>
     <property name="icon_name">emblem-documents</property>
@@ -1378,7 +1380,7 @@ Public License instead of this License.  But first, please read
         <property name="visible">True</property>
         <property name="border_width">4</property>
         <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
+        <property name="spacing">12</property>
         <child>
           <placeholder/>
         </child>
@@ -1403,13 +1405,7 @@ Public License instead of this License.  But first, please read
           </packing>
         </child>
         <child>
-          <object class="GtkHSeparator" id="hseparator1">
-            <property name="visible">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="position">2</property>
-          </packing>
+          <placeholder/>
         </child>
         <child>
           <object class="GtkHButtonBox" id="hbuttonbox5">
