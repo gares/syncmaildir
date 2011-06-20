@@ -128,7 +128,7 @@ transmission.
    changes were applied successfully.
 
 4. In response to a `COMMIT` message, se server will transmit an `xdelta`
-   patch the client has to apply to its db file.
+   patch the client has to apply to its db-file.
 
 5. The client replies with `DONE` to complete the synchronization
 
@@ -155,7 +155,7 @@ MAILDIR DIFF
 ============
 
 Maildir diff (`mddiff`) computes the delta from an old status of a maildir
-(previously recorded in the db file) and the current status, generating a
+(previously recorded in the db-file) and the current status, generating a
 set of commands (a diff) that a third party software can apply to
 synchronize a (remote) copy of the maildir.
 
@@ -174,7 +174,7 @@ substitute the old one if generated actions are committed to the other
 maildir. Cache files are specific to the twin maildir, if you have more
 than one, you must use a different cache file for each of them.
 
-The db file (say db.txt) is paired with a timestamp (db.txt.mtime) that
+The db-file (say db.txt) is paired with a timestamp (db.txt.mtime) that
 is used to store the timestamp of the last run and files whose mtime
 does not exceed this timestamp will not be (re)processed next time
 mddiff is run.
@@ -182,10 +182,10 @@ mddiff is run.
 The .mtime companion file is updated only server side, since the mtime
 concept is local to the host running mddiff.
 
-The db file format
+The db-file format
 ------------------
 
-The db file is composed by two files, a real database file (extension .txt)
+The db-file is composed by two files, a real database file (extension .txt)
 and a timestamp (extension .txt.mtime). The latter contains just a number
 (date +%s). The former is line oriented, every line has 3, space separated,
 fields:
