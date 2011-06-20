@@ -45,7 +45,7 @@ flexibility).
   actions (a diff) a client should perform to synchronize its local mailbox
   copy. It is a low level tool, not meant to be used directly by the user.
 - `smd-server` a simple script that calls `mddiff` to compute the diff,
-  sends it to the client and then listen for client requests like getting a
+  sends it to the client and then listens for client requests like getting a
   mail body or header. Even if this tool is simple to run, redirecting its
   input and output to `smd-client` over a network may not be straightforward,
   thus users should not call it directly.
@@ -70,7 +70,7 @@ flexibility).
   a graphical one not based on GNOME.
 - `smd-applet` is an applet for the GNOME notification area, that runs 
   `smd-loop`, eventually notifying the user for critical events and allowing
-  him to solve them clicking on buttons instead of running commands from
+  him to solve them by clicking on buttons instead of running commands from
   the shell.
 
 HOW-TO
@@ -146,7 +146,7 @@ Hooks receive four arguments in the following order:
 3. endpoint: the endpoint name, usually `default`
 4. status: the current status, `0` for OK, `1` for error. 
    pre-hooks always receive `0`, post hooks receive the value 
-   `smd-push/pull` will return after hooks terminate
+   `smd-push/pull` will return after the hooks terminate
 
 Hooks should not fail, if they do so then `smd-push/pull` will fail too. 
 Sample hooks are available in the source tarball under the `sample-hooks/`.
