@@ -219,7 +219,7 @@ packages with your favourite package manager.
 
 If you want to install it from source you need a C compiler, the development
 files for GLib, GNU make and sed. For `smd-applet` you also need the Vala
-compiler, libgee, GTK+ 2, GConf, libnotify and dbus-glib.  You may also want to
+compiler, libgee, GTK+ 3, GConf, libnotify and dbus-glib.  You may also want to
 customize few variables in the `Makefile`.  Then typing `make && make install`
 should be enough to have syncmaildir installed.  Some known platforms are
 supported by templates defined at the end of `Makefile`, for example you may
