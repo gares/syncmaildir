@@ -62,7 +62,7 @@ update-smd-config:
 smd-applet.c: smd-applet.vala smd-config.vapi
 	$H if which $(VALAC) >/dev/null; then \
 		echo "VALAC $^"; \
-		$(VALAC) -C $^ --thread \
+		$(VALAC) -C $^ --thread --vapidir=./ \
 			--pkg posix $(patsubst %,--pkg %,$(PKGS_VALA)); \
 	elif [ -e smd-applet.c ]; then \
 		echo "** No $(VALAC), reusing precompiled .c files"; \
