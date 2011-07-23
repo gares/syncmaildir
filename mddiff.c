@@ -460,7 +460,7 @@ STATIC void load_db(const char* dbname){
 		txtsha(mail(n)->hsha,tmpbuff_3))
 
 // the heart
-STATIC void analize_file(const char* dir,const char* file) {    
+STATIC void analyze_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -582,7 +582,7 @@ err_alloc_cleanup:
 }
 	
 // recursively analyze a directory and its sub-directories
-STATIC void analize_dir(const char* path){
+STATIC void analyze_dir(const char* path){
 	DIR* dir = opendir(path);
 	struct dirent *dir_entry;
 
@@ -597,10 +597,10 @@ STATIC void analize_dir(const char* path){
 #endif
 			if ( !strcmp(bname,"cur") || !strcmp(bname,"new")) {
 				if (strchr(path,' ') != NULL)
-					ERROR(analize_dir, "Path '%s' contains a space\n", path);
-				analize_file(path,dir_entry->d_name);
+					ERROR(analyze_dir, "Path '%s' contains a space\n", path);
+				analyze_file(path,dir_entry->d_name);
 			} else
-				VERBOSE(analize_dir,"skipping '%s/%s', outside maildir\n",
+				VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
 					path,dir_entry->d_name);
 #ifndef __GLIBC__ 
 			g_free(bname);
@@ -612,19 +612,19 @@ STATIC void analize_dir(const char* path){
 			int len = strlen(path) + 1 + strlen(dir_entry->d_name) + 1;
 			char * newdir = malloc(len);
 			snprintf(newdir,len,"%s/%s",path,dir_entry->d_name);
-			analize_dir(newdir);
+			analyze_dir(newdir);
 			free(newdir);
 		}
 	}
 }
 
-STATIC void analize_dirs(char* paths[], int no){
+STATIC void analyze_dirs(char* paths[], int no){
 	int i;
 	for(i=0; i<no; i++){
 		// we remove a trailing '/' if any 
 		char *data = paths[i];
 		if (data[strlen(data)-1] == '/') data[strlen(data)-1] = '\0';
-		analize_dir(data);
+		analyze_dir(data);
 	}
 }
 
@@ -832,7 +832,7 @@ int main(int argc, char *argv[]) {
 	load_db(dbfile);
 
 	bigbang = time(NULL);
-	analize_dirs(&argv[optind],argc - optind);
+	analyze_dirs(&argv[optind],argc - optind);
 
 	generate_deletions();
 
