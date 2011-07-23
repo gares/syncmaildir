@@ -1,3 +1,12 @@
+../../.... - minor fix - version ...
+	* smd-pull, smd-push:
+	  - mention -d option in manpage
+	* test.d:
+	  - new test for file names with spaces
+	* mddiff:
+	  - meaningful error message if a patch contains spaces (thanks Faidon 
+	    for testing it)
+
 03/07/2011 - monor fix - version 1.1.5
 	* smd-applet:
 	  - Ported to NetworkManager 0.9 APIs (GNOME 3)
