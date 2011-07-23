@@ -123,7 +123,10 @@ other endpoint by hand (for example zipping it with a slow but space efficient
 compressor like `bzip2` and `lzma`) to save some bandwidth. `smd` is not
 optimized for such a (uncommon) situation: it uses regular ssh stream
 compression to transfer mails, that can be way less space efficient than
-running a compression utility over the whole mailbox.
+running a compression utility over the whole mailbox. Moreover, you should
+not edit your mailboxes during the first synchronization, since edits may
+force the software to bail out without saving the db-file, and thus making
+the following run as slow as the first one.
 
 From version 0.9.14, the tools `smd-push` and `smd-push` can be run with `-d`
 or `--dry-run` flags, that do not modify in any way your maildir, but,
