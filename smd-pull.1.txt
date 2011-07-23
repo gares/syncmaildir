@@ -2,7 +2,7 @@ NAME
   smd-pull - syncs the local mail dir letting the remote one untouched
 
 SYNOPSIS
-  smd-pull [-v|--verbose] [-t|--template-only] [endpoint]
+  smd-pull [-d|--dry-run] [-v|--verbose] [-t|--template-only] [endpoint]
 
 DESCRIPTION
   smd-pull performs in the local maildir all the changes that
@@ -39,6 +39,7 @@ DESCRIPTION
 
 OPTIONS
   -v --verbose        Verbose, machine readable, output
+  -d --dry-run        Do not perform any action for real
   -t --template-only  Just create a template configuration file if none
   endpoint            Is the suffix for the name of the configuration file to 
 		      use. If it is omitted, the configuration file
