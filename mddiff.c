@@ -595,9 +595,11 @@ STATIC void analize_dir(const char* path){
 #else
 			gchar* bname = g_path_get_basename(path);	
 #endif
-			if ( !strcmp(bname,"cur") || !strcmp(bname,"new"))
+			if ( !strcmp(bname,"cur") || !strcmp(bname,"new")) {
+				if (strchr(path,' ') != NULL)
+					ERROR(analize_dir, "Path '%s' contains a space\n", path);
 				analize_file(path,dir_entry->d_name);
-			else
+			} else
 				VERBOSE(analize_dir,"skipping '%s/%s', outside maildir\n",
 					path,dir_entry->d_name);
 #ifndef __GLIBC__ 

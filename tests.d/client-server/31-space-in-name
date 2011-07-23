@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+msync 1
+
+test_eq Mail target/Mail 
+
+mkdir "very bad"
+cp -r Mail/* "very bad"
+mv "very bad" Mail/
+
+msync 2 || true
+
+X=`grep "ERROR.*very bad" "log.s2c" | wc -l`
+assert $X 1 "mddiff didn't detect a space in file name"
