@@ -134,7 +134,7 @@ transmission.
 
 6. After point 2. and before point 3. the client can send the following
    commands to the server, that can reply transmitting data or with
-   `ABORT`
+   `ABORT`. NAME is not URL encoded.
 
         GET NAME
         GETHEADER NAME
@@ -191,7 +191,7 @@ and a timestamp (extension .txt.mtime). The latter contains just a number
 fields:
 - the sha1 sum of the header
 - the sha1 sum of the body
-- the name of the file
+- the name of the file, not URL encoded
 
 The commands
 ------------
@@ -227,6 +227,8 @@ safely postponed. In particular `DELETE` messages are always sent last, and
 can always ask the servevr for the message) but clearly suboptimal, since
 a local copy does not involve any network traffic.
 
+File names are URL encoded escaping only `' '` (`%20`) and `'%'` (`%25`).
+
 `mddiff` as an hashing server
 -----------------------------
 
@@ -234,8 +236,9 @@ a local copy does not involve any network traffic.
 and body of local mails, for example to check that the source of a copy
 command holds the intended content. Since this operation may be really
 frequent, `mddiff` can operate in server mode. If the argument is a single
-file name and that file is a fifo, then `mddiff` reads file names, separated
-by `\n` from that fifo and outputs the sha1 sums of their header and body.
+file name and that file is a fifo, then `mddiff` reads file names not URL
+encoded, separated by `\n` from that fifo and outputs the sha1 sums of
+their header and body.
 
 Easy to parse output messages
 =============================

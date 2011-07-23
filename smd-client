@@ -208,6 +208,7 @@ end
 function execute_copy(cmd)
 	local name_src, hsha, bsha, name_tgt = 
 		parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
+	name_src, name_tgt = url_decode(name_src), url_decode(name_tgt)
 	local ex_src, hsha_src, bsha_src = exists_and_sha(name_src)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
 	if ex_src and ex_tgt then
@@ -234,18 +235,17 @@ function execute_copy(cmd)
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
 				mkdir_p(name_tgt)
-				local ok
+				local ok, err
 				if not dry_run() then
-					ok = cp(name_src,name_tgt)
+					ok, err = cp(name_src,name_tgt)
 				else
 					ok = 0 -- we do not copy for real (--dry-run)
 				end
 				if ok == 0 then 
 					return (trace(true)) -- copy successful
 				else 
-					log_error('Failed to copy '..name_src..' to '..name_tgt)
-					log_error('It may be caused by bad directory permissions, '
-						..  'please check.')
+					log_error('Failed to copy '..name_src..' to '..name_tgt..
+						' : '..(err or 'unknown error'))
 
 					log_tags("delete-message","bad-directory-permission",true,
 						"display-permissions("..quote(homefy(name_tgt))..")")
@@ -287,6 +287,7 @@ end
 function execute_replaceheader(cmd)
 	local name, hsha, bsha, hsha_new = 
 		parse(cmd, '^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
+	name = url_decode(name)
 	if exists(name) then
 		local hsha_l, bsha_l = sha_file(name)
 		if hsha == hsha_l and bsha == bsha_l then
@@ -312,14 +313,15 @@ end
 function execute_copybody(cmd)
 	local name, bsha, newname, hsha = 
 		parse(cmd, '^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
+	name, newname = url_decode(name), url_decode(newname)
 	local exn, hsha_ln, bsha_ln = exists_and_sha(newname)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
 			mkdir_p(newname)
-			local ok
+			local ok, err
 			if not dry_run() then
-				ok = cp(name,newname)
+				ok, err = cp(name,newname)
 			else
 				ok = 0 -- we do not copy the body for merging (--dry-run)
 			end
@@ -332,9 +334,8 @@ function execute_copybody(cmd)
 					return (trace(false)) -- copybody failed, bad new header
 				end
 			else 
-				log_error('Failed to copy '..name..' to '..newname)
-				log_error('It may be caused by bad directory permissions, '..
-					'please check.')
+				log_error('Failed to copy '..name..' to '..newname..' : '..
+					(err or 'unknown error'))
 					
 				log_tags("copy-message","bad-directory-permission",true,
 					"display-permissions("..quote(homefy(newname))..")")
@@ -363,6 +364,7 @@ end
 function execute_replace(cmd)
 	local name1, hsha1, bsha1, hsha2, bsha2 = 
 	   parse(cmd, '^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
+	name1 = url_decode(name1)
 	local exn, hsha_ln, bsha_ln = exists_and_sha(name1)
 	if not exn then
 		return(get_full_email(name1,hsha2,bsha2))

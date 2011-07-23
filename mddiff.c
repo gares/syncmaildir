@@ -62,6 +62,7 @@
 // default numbers for static memory allocation
 #define DEFAULT_FILENAME_LEN 100
 #define DEFAULT_MAIL_NUMBER 500000
+#define MAX_EMAIL_NAME_LEN 1024
 
 // int -> hex
 STATIC char hexalphabet[] = 
@@ -83,6 +84,10 @@ STATIC char tmpbuff_2[SHA_DIGEST_LENGTH * 2 + 1];
 STATIC char tmpbuff_3[SHA_DIGEST_LENGTH * 2 + 1];
 STATIC char tmpbuff_4[SHA_DIGEST_LENGTH * 2 + 1];
 
+// temporary buffers used to URL encode mail names
+STATIC char tmpbuff_5[MAX_EMAIL_NAME_LEN];
+STATIC char tmpbuff_6[MAX_EMAIL_NAME_LEN];
+
 STATIC char* txtsha(unsigned char *sha1, char* outbuff){
 	int fd;
 
@@ -99,6 +104,38 @@ STATIC void shatxt(const char string[41], unsigned char outbuff[]) {
 	for(i=0; i < SHA_DIGEST_LENGTH; i++){
 		outbuff[i] = hex2int(string[2*i]) * 16 + hex2int(string[2*i+1]);
 	}
+}
+
+STATIC char* URLtxt(const char string[], char outbuff[]) {
+	size_t i,j;
+	size_t len = strlen(string);
+	for(i=0, j=0; i < len && j + 4 < MAX_EMAIL_NAME_LEN; i++, j++) {
+		if (string[i] == ' ' || string[i] == '%') {
+			snprintf(&outbuff[j], 4, "%%%X", string[i]);
+			j+=2;
+		} else {
+			outbuff[j] = string[i];
+		}
+	}
+	outbuff[j] = '\0';
+	return outbuff;
+}
+
+STATIC char* txtURL(const char* string, char* outbuff) {
+	size_t i,j;
+	size_t len = strlen(string);
+	for(i=0, j=0; i < len && j + 4 < MAX_EMAIL_NAME_LEN; i++, j++) {
+		if (string[i] == '%' && i + 2 < len) {
+			unsigned int k;
+			sscanf(&string[i+1],"%2x",&k);
+			snprintf(&outbuff[j], 2, "%c", k);
+			i+=2;
+		} else {
+			outbuff[j] = string[i];
+		}
+	}
+	outbuff[j] = '\0';
+	return outbuff;
 }
 
 // flags used to mark struct mail so that at the end of the scanning 
@@ -202,8 +239,6 @@ STATIC mail_t alloc_mail(){
 STATIC void dealloc_mail(){
 	mailno--;
 }
-
-#define MAX_EMAIL_NAME_LEN 1024
 
 STATIC char *next_name(){
 	return &names[curname];
@@ -393,7 +428,7 @@ STATIC void load_db(const char* dbname){
 
 		// read one entry
 		fields = fscanf(fd,
-			"%1$40s %2$40s %3$" tostring(MAX_EMAIL_NAME_LEN) "s\n",
+			"%1$40s %2$40s %3$" tostring(MAX_EMAIL_NAME_LEN) "[^\n]\n",
 			tmpbuff_1, tmpbuff_2, next_name());
 
 		if (fields == EOF) {
@@ -430,26 +465,28 @@ STATIC void load_db(const char* dbname){
 	VERBOSE(skip,"%s\n",mail_name(m))
 
 #define COMMAND_ADD(m) \
-	fprintf(stdout,"ADD %s %s %s\n",mail_name(m), \
-		txtsha(mail(m)->hsha,tmpbuff_1), txtsha(mail(m)->bsha, tmpbuff_2))
+	fprintf(stdout,"ADD %s %s %s\n", URLtxt(mail_name(m),tmpbuff_5),\
+		txtsha(mail(m)->hsha,tmpbuff_1),\
+		txtsha(mail(m)->bsha, tmpbuff_2))
 
 #define COMMAND_COPY(m,n) \
-	fprintf(stdout, "COPY %s %s %s TO %s\n",\
-		mail_name(m),txtsha(mail(m)->hsha, tmpbuff_1),\
-		txtsha(mail(m)->bsha, tmpbuff_2),mail_name(n))
+	fprintf(stdout, "COPY %s %s %s TO %s\n", URLtxt(mail_name(m),tmpbuff_5),\
+		txtsha(mail(m)->hsha, tmpbuff_1),\
+		txtsha(mail(m)->bsha, tmpbuff_2),\
+		URLtxt(mail_name(n),tmpbuff_6))
 
 #define COMMAND_COPYBODY(m,n) \
 	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
-		mail_name(m),txtsha(mail(m)->bsha, tmpbuff_1),\
-		mail_name(n),txtsha(mail(n)->hsha, tmpbuff_2))
+		URLtxt(mail_name(m),tmpbuff_5),txtsha(mail(m)->bsha, tmpbuff_1),\
+		URLtxt(mail_name(n),tmpbuff_6),txtsha(mail(n)->hsha, tmpbuff_2))
 
 #define COMMAND_DELETE(m) \
-	fprintf(stdout,"DELETE %s %s %s\n",mail_name(m), \
+	fprintf(stdout,"DELETE %s %s %s\n", URLtxt(mail_name(m),tmpbuff_5), \
 		txtsha(mail(m)->hsha, tmpbuff_1), txtsha(mail(m)->bsha, tmpbuff_2))
 	
 #define COMMAND_REPLACE(m,n) \
 	fprintf(stdout, "REPLACE %s %s %s WITH %s %s\n",\
-		mail_name(m),txtsha(mail(m)->hsha,tmpbuff_1),\
+		URLtxt(mail_name(m),tmpbuff_5),txtsha(mail(m)->hsha,tmpbuff_1),\
 		txtsha(mail(m)->bsha,tmpbuff_2),\
 		txtsha(mail(n)->hsha,tmpbuff_3),txtsha(mail(n)->bsha,tmpbuff_4))
 
@@ -474,8 +511,17 @@ STATIC void analyze_file(const char* dir,const char* file) {
 
 	fd = open(mail_name(m), O_RDONLY | O_NOATIME);
 	if (fd == -1) {
-		WARNING(open,"unable to open file '%s'\n",mail_name(m));
-		goto err_alloc_cleanup;
+		if (errno == EPERM) {
+			// if the file is not owned by the euid of the process, then
+			// it cannot be opened using the O_NOATIME flag (man 2 open)
+			fd = open(mail_name(m), O_RDONLY);
+		}
+		if (fd == -1) {
+			WARNING(open,"unable to open file '%s': %s\n", mail_name(m),
+				strerror(errno));
+			WARNING(open,"ignoring '%s'\n", mail_name(m));
+			goto err_alloc_cleanup;
+		}
 	}
 
 	if (fstat(fd, &sb) == -1) {
@@ -596,8 +642,6 @@ STATIC void analyze_dir(const char* path){
 			gchar* bname = g_path_get_basename(path);	
 #endif
 			if ( !strcmp(bname,"cur") || !strcmp(bname,"new")) {
-				if (strchr(path,' ') != NULL)
-					ERROR(analyze_dir, "Path '%s' contains a space\n", path);
 				analyze_file(path,dir_entry->d_name);
 			} else
 				VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
@@ -814,7 +858,7 @@ int main(int argc, char *argv[]) {
 			if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
 				size_t len = strlen(name);
 				if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
-				extra_sha_file(name,1);	
+				extra_sha_file(txtURL(name,tmpbuff_5),1);
 			}
 		}
 		exit(EXIT_SUCCESS);

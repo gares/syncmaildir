@@ -4,7 +4,7 @@
 --
 -- common code for smd-client/server
 
-local PROTOCOL_VERSION="1.0"
+local PROTOCOL_VERSION="1.1"
 
 local verbose = false
 local dryrun = false
@@ -276,7 +276,7 @@ function make_dir_aux(absolute, pieces)
 	if absolute then root = '/' end
 	local dir = root .. table.concat(pieces,'/')
 	if not mkdir_p_cache[dir] then
-		local rc = os.execute(MKDIR..' '..dir)
+		local rc = os.execute(MKDIR..' '..quote(dir))
 		if rc ~= 0 then
 			log_error("Unable to create directory "..dir)
 			log_error('It may be caused by bad directory permissions, '..
@@ -458,9 +458,9 @@ end
 
 function cp(src,tgt)
 	local s,err = io.open(src,'r')
-	if not s then return 1 end
+	if not s then return 1, err end
 	local t,err = io.open(tgt,'w+')
-	if not t then return 1 end
+	if not t then return 1, err end
 	local data
 	repeat
 		data = s:read(4096)
@@ -510,6 +510,17 @@ end
 function url_quote(txt)
 	return string.gsub(txt,'.',
 		function(x) return string.format("%%%02X",string.byte(x)) end)
+end
+
+-- the one used by mddiff
+function url_decode(s)
+	return string.gsub(s,'%%([0-9A-Za-z][0-9A-Za-z])',
+		function(x) return string.char(tonumber(x,16)) end)
+end
+
+function url_encode(s)
+	return string.gsub(s,'[%% ]',
+		function(x) return string.format("%%%2X",string.byte(x)) end)
 end
 
 function log_internal_error_tags(msg,ctx)
