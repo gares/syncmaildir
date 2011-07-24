@@ -1,10 +1,17 @@
-../../.... - minor fix - version ...
+../07/2011 - minor fix 4 Faidon - version 1.1.6
 	* smd-pull, smd-push:
 	  - mention --dry-run option in manpage
 	* mddiff,syncmaildir,smd-client,smd-server:
-	  - properly handle file names with spaces to make Faidon happy
+	  - properly handle file names with spaces
 	* test.d:
 	  - new test for file names with spaces
+	* mddiff:
+	  - if we get EPERM opening a mail we retry without O_NOATIME since
+	    that option is allowed only on files owned by the euid of the
+	    process (unless you have CAP_FOWNER). These files were previously
+	    skipped, but it may be the case one has old crap owned by a
+	    different user in his mailbox, like an old broken uid. Thanks
+	    Faidon for debugging this issue
 
 03/07/2011 - monor fix - version 1.1.5
 	* smd-applet:
