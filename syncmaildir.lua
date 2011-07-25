@@ -195,6 +195,12 @@ function receive(inf,outfile)
 		local next_chunk = 16384
 		if len < next_chunk then next_chunk = len end
 		local data = inf:read(next_chunk)
+		if data == nil then
+			log_error("Data transmission failed.")
+			log_error("This problem is transient, please retry.")
+			log_tags_and_fail('connection died',
+				"receive","network",false,"retry")
+		end
 		len = len - data:len()
 		outf:write(data)
 	end

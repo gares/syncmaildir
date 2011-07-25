@@ -1,3 +1,7 @@
+../../.... - 
+	* syncmaildir.lua:
+	  - better report a network error
+
 24/07/2011 - minor fix 4 Faidon - version 1.1.6
 	* smd-pull, smd-push:
 	  - mention --dry-run option in manpage
