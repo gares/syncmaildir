@@ -1,0 +1,12 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+cd target
+mkdir MailDir
+ln -s MailDir Mail
+cd ..
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail target/Mail 
