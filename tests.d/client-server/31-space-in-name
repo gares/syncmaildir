@@ -9,6 +9,8 @@ mkdir -p "Mail/very bad/cur"
 mkdir "Mail/very bad/new"
 mkdir "Mail/very bad/tmp"
 cp Mail/cur/`basename $(ls Mail/cur|head -1)` 'Mail/very bad/cur/foo %'
+cp Mail/cur/`basename $(ls Mail/cur|head -2)` 'Mail/very bad/cur/foo %11'
+sed -i 's/a/z/' 'Mail/very bad/cur/foo %11'
 mv Mail/cur/`basename $(ls Mail/cur|head -1)` 'Mail/cur/foo %'
 
 msync 2
