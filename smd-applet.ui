@@ -666,7 +666,7 @@ This interface allows you to edit only the default endpoint.</property>
     <property name="icon_name">mail-send-receive</property>
     <property name="type_hint">normal</property>
     <property name="program_name">Sync Mail Dir</property>
-    <property name="copyright" translatable="yes">Copyright 2008-2010 Enrico Tassi &lt;gares@fettunta.org&gt;</property>
+    <property name="copyright" translatable="yes">Copyright 2008-2011 Enrico Tassi &lt;gares@fettunta.org&gt;</property>
     <property name="comments" translatable="yes">GNOME applet for syncmaildir</property>
     <property name="website">http://syncmaildir.sourceforge.net</property>
     <property name="website_label" translatable="yes">syncmaildir website</property>
