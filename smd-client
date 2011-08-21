@@ -140,8 +140,7 @@ end
 
 -- ============================= actions =====================================
 
-function execute_add(cmd)
-	local name, hsha, bsha = parse(cmd, '^ADD (%S+) (%S+) (%S+)$')
+function execute_add(name, hsha, bsha)
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
@@ -163,8 +162,7 @@ function execute_add(cmd)
 	return (get_full_email(name,hsha,bsha))
 end
 
-function execute_delete(cmd)
-	local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
+function execute_delete(name, hsha, bsha)
 	local ex, hsha_l, bsha_l = exists_and_sha(name)
 	if ex then
 		if hsha == hsha_l and bsha == bsha_l then
@@ -205,10 +203,7 @@ function execute_delete(cmd)
 	return (trace(true)) -- already removed
 end
 
-function execute_copy(cmd)
-	local name_src, hsha, bsha, name_tgt = 
-		parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
-	name_src, name_tgt = url_decode(name_src), url_decode(name_tgt)
+function execute_copy(name_src, hsha, bsha, name_tgt)
 	local ex_src, hsha_src, bsha_src = exists_and_sha(name_src)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
 	if ex_src and ex_tgt then
@@ -284,10 +279,7 @@ function execute_copy(cmd)
 	end
 end
 
-function execute_replaceheader(cmd)
-	local name, hsha, bsha, hsha_new = 
-		parse(cmd, '^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
-	name = url_decode(name)
+function execute_replaceheader(name, hsha, bsha, hsha_new)
 	if exists(name) then
 		local hsha_l, bsha_l = sha_file(name)
 		if hsha == hsha_l and bsha == bsha_l then
@@ -310,10 +302,7 @@ function execute_replaceheader(cmd)
 	end
 end
 
-function execute_copybody(cmd)
-	local name, bsha, newname, hsha = 
-		parse(cmd, '^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
-	name, newname = url_decode(name), url_decode(newname)
+function execute_copybody(name, bsha, newname, hsha)
 	local exn, hsha_ln, bsha_ln = exists_and_sha(newname)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
@@ -361,10 +350,7 @@ function execute_copybody(cmd)
 	end
 end
 
-function execute_replace(cmd)
-	local name1, hsha1, bsha1, hsha2, bsha2 = 
-	   parse(cmd, '^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
-	name1 = url_decode(name1)
+function execute_replace(name1, hsha1, bsha1, hsha2, bsha2)
 	local exn, hsha_ln, bsha_ln = exists_and_sha(name1)
 	if not exn then
 		return(get_full_email(name1,hsha2,bsha2))
@@ -387,8 +373,7 @@ function execute_replace(cmd)
 	end
 end
 
-function execute_error(cmd)
-	local msg = parse(cmd, '^ERROR (.*)$')
+function execute_error(msg)
 	
 	log_error('mddiff failed: '..msg)
 	log_tags("mddiff","unknown",true)
@@ -402,16 +387,54 @@ end
 function execute(cmd)
 	local opcode = parse(cmd, '^(%S+)')
 
-	    if opcode == "ADD"           then return (execute_add(cmd))
-	elseif opcode == "DELETE"        then return (execute_delete(cmd))
-	elseif opcode == "COPY"          then return (execute_copy(cmd))
-	elseif opcode == "REPLACEHEADER" then return (execute_replaceheader(cmd))
-	elseif opcode == "COPYBODY"      then return (execute_copybody(cmd))
-	elseif opcode == "REPLACE"       then return (execute_replace(cmd))
-	elseif opcode == "ERROR"         then return (execute_error(cmd))
-	else
-		log_internal_error_and_fail('Unknown opcode '..opcode, "protocol")
+	if opcode == "ADD" then 
+		local name, hsha, bsha = parse(cmd, '^ADD (%S+) (%S+) (%S+)$')
+		name = url_decode(name)
+		return (execute_add(name, hsha, bsha))
 	end
+
+	if opcode == "DELETE" then 
+		local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
+		name = url_decode(name)
+		return (execute_delete(name, hsha, bsha))
+	end
+
+	if opcode == "COPY" then 
+		local name_src, hsha, bsha, name_tgt = 
+			parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
+		name_src = url_decode(name_src)
+		name_tgt = url_decode(name_tgt)
+		return (execute_copy(name_src, hsha, bsha, name_tgt))
+	end
+	
+	if opcode == "REPLACEHEADER" then
+		local name, hsha, bsha, hsha_new = 
+			parse(cmd, '^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
+		name = url_decode(name)
+		return (execute_replaceheader(name, hsha, bsha, hsha_new))
+	end
+
+	if opcode == "COPYBODY" then
+		local name, bsha, newname, hsha = 
+			parse(cmd, '^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
+		name = url_decode(name)
+		newname = url_decode(newname)
+		return (execute_copybody(name, bsha, newname, hsha))
+	end
+
+	if opcode == "REPLACE" then
+		local name1, hsha1, bsha1, hsha2, bsha2 = 
+			parse(cmd, '^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
+		name1 = url_decode(name1)
+		return (execute_replace(name1, hsha1, bsha1, hsha2, bsha2))
+	end
+
+	if opcode == "ERROR" then
+		local msg = parse(cmd, '^ERROR (.*)$')
+		return (execute_error(msg))
+	end
+	
+	log_internal_error_and_fail('Unknown opcode '..opcode, "protocol")
 end
 
 -- ============================= MAIN =====================================

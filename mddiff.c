@@ -121,6 +121,7 @@ STATIC char* URLtxt(const char string[], char outbuff[]) {
 	return outbuff;
 }
 
+/* unused
 STATIC char* txtURL(const char* string, char* outbuff) {
 	size_t i,j;
 	size_t len = strlen(string);
@@ -137,6 +138,7 @@ STATIC char* txtURL(const char* string, char* outbuff) {
 	outbuff[j] = '\0';
 	return outbuff;
 }
+*/
 
 // flags used to mark struct mail so that at the end of the scanning 
 // we output commands lookig that flag
@@ -858,7 +860,7 @@ int main(int argc, char *argv[]) {
 			if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
 				size_t len = strlen(name);
 				if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
-				extra_sha_file(txtURL(name,tmpbuff_5),1);
+				extra_sha_file(name,1);
 			}
 		}
 		exit(EXIT_SUCCESS);
