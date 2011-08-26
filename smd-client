@@ -41,7 +41,6 @@ function process_get_full_email_queue()
 	for _,v in ipairs(get_full_email_queue) do
 		local hsha_l, bsha_l = sha_file(v.tmp)
 		if hsha_l == v.hsha and bsha_l == v.bsha then
-			mkdir_p(v.name)
 			local rc = os.rename(v.tmp, v.name) 
 			if rc then
 				statistics.added = statistics.added + 1
@@ -229,7 +228,6 @@ function execute_copy(name_src, hsha, bsha, name_tgt)
 		end
 	elseif ex_src and not ex_tgt then
 		if hsha_src == hsha and bsha_src == bsha then
-				mkdir_p(name_tgt)
 				local ok, err
 				if not dry_run() then
 					ok, err = cp(name_src,name_tgt)
@@ -307,7 +305,6 @@ function execute_copybody(name, bsha, newname, hsha)
 	if not exn then
 		local ex, _, bsha_l = exists_and_sha(name)
 		if ex and bsha_l == bsha then
-			mkdir_p(newname)
 			local ok, err
 			if not dry_run() then
 				ok, err = cp(name,newname)
@@ -390,12 +387,14 @@ function execute(cmd)
 	if opcode == "ADD" then 
 		local name, hsha, bsha = parse(cmd, '^ADD (%S+) (%S+) (%S+)$')
 		name = url_decode(name)
+		mkdir_p(name)
 		return (execute_add(name, hsha, bsha))
 	end
 
 	if opcode == "DELETE" then 
 		local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
 		name = url_decode(name)
+		mkdir_p(name)
 		return (execute_delete(name, hsha, bsha))
 	end
 
@@ -404,6 +403,8 @@ function execute(cmd)
 			parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
 		name_src = url_decode(name_src)
 		name_tgt = url_decode(name_tgt)
+		mkdir_p(name_src)
+		mkdir_p(name_tgt)
 		return (execute_copy(name_src, hsha, bsha, name_tgt))
 	end
 	
@@ -411,6 +412,7 @@ function execute(cmd)
 		local name, hsha, bsha, hsha_new = 
 			parse(cmd, '^REPLACEHEADER (%S+) (%S+) (%S+) WITH (%S+)$')
 		name = url_decode(name)
+		mkdir_p(name)
 		return (execute_replaceheader(name, hsha, bsha, hsha_new))
 	end
 
@@ -419,6 +421,8 @@ function execute(cmd)
 			parse(cmd, '^COPYBODY (%S+) (%S+) TO (%S+) (%S+)$')
 		name = url_decode(name)
 		newname = url_decode(newname)
+		mkdir_p(name)
+		mkdir_p(newname)
 		return (execute_copybody(name, bsha, newname, hsha))
 	end
 
@@ -426,6 +430,7 @@ function execute(cmd)
 		local name1, hsha1, bsha1, hsha2, bsha2 = 
 			parse(cmd, '^REPLACE (%S+) (%S+) (%S+) WITH (%S+) (%S+)$')
 		name1 = url_decode(name1)
+		mkdir_p(name1)
 		return (execute_replace(name1, hsha1, bsha1, hsha2, bsha2))
 	end
 

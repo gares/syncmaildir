@@ -282,7 +282,12 @@ function make_dir_aux(absolute, pieces)
 	if absolute then root = '/' end
 	local dir = root .. table.concat(pieces,'/')
 	if not mkdir_p_cache[dir] then
-		local rc = os.execute(MKDIR..' '..quote(dir))
+		local rc
+		if not dry_run() then
+			rc = os.execute(MKDIR..' '..quote(dir))
+		else
+			rc = 0
+		end
 		if rc ~= 0 then
 			log_error("Unable to create directory "..dir)
 			log_error('It may be caused by bad directory permissions, '..
