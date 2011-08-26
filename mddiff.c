@@ -631,26 +631,29 @@ err_alloc_cleanup:
 	
 // recursively analyze a directory and its sub-directories
 STATIC void analyze_dir(const char* path){
-	DIR* dir = opendir(path);
+	DIR* dir;
 	struct dirent *dir_entry;
+	int inside_cur_or_new = 0;
 
+	// detect if inside cur/ or new/
+#ifdef __GLIBC__
+	const char* bname = basename(path);
+#else
+	gchar* bname = g_path_get_basename(path);
+#endif
+	if ( !strcmp(bname,"cur") || !strcmp(bname,"new") ) inside_cur_or_new = 1;
+#ifndef __GLIBC__
+	g_free(bname);
+#endif
+
+	dir = opendir(path);
 	if (dir == NULL) ERROR(opendir, "Unable to open directory '%s'\n", path);
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
 		if (DT_REG == dir_entry->d_type){
-#ifdef __GLIBC__ 
-			const char* bname = basename(path);	
-#else
-			gchar* bname = g_path_get_basename(path);	
-#endif
-			if ( !strcmp(bname,"cur") || !strcmp(bname,"new")) {
-				analyze_file(path,dir_entry->d_name);
-			} else
-				VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
+			if ( inside_cur_or_new ) analyze_file(path,dir_entry->d_name);
+			else VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
 					path,dir_entry->d_name);
-#ifndef __GLIBC__ 
-			g_free(bname);
-#endif
 		} else if (DT_DIR == dir_entry->d_type && 
 				strcmp(dir_entry->d_name,"tmp") &&
 				strcmp(dir_entry->d_name,".") &&
