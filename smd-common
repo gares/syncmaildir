@@ -241,7 +241,6 @@ read_conffile() {
 		#
 		SERVERNAME=smd-server-$REPNAME
 	
-	
 		# Host name to be used as the client. 
 		# smd-pull will use this just as an id for the client. If you
 		# plan to sync with multiple endpoints, you must use a different
@@ -250,13 +249,28 @@ read_conffile() {
 		#
 		CLIENTNAME=`hostname`-$REPNAME
 	
-		# The mailbox to sync, the path is the same on both hosts, and
-		# is relative to the home directory.
+		# The mailbox to sync, in case the path is the same on both hosts.
+		# The path MUST be relative to the home directory, use a symlink if
+		# the mailbox is not rooted there.
+		#
 		MAILBOX="Mail/"
+
+		# Local and remote mailbox may differ in name, as well as their
+		# sub directory/folder structure. In that case a translator must be
+		# provided. A translator is a program that takes in input, as it
+		# first and only argument, a directory name (ending in /cur or /new
+		# or /tmp) and prints on stdout its translation. Refer to the
+		# smd-config (5) manpage for more infos.
+		#
+		# MAILBOX_LOCAL="Mail/"
+		# MAILBOX_REMOTE="OtherMail/"
+		# TRANSLATOR_RL=path
+		# TRANSLATOR_LR=path
 	
 		# Log client to server and server to client communication.
 		# This is useful only for debugging, since all network traffic
 		# is dumped, including transmitted mails.
+		#
 		# DEBUG=true
 		EOT
 		echo No config file found: created a default one
