@@ -373,7 +373,11 @@ end
 function execute_error(msg)
 	
 	log_error('mddiff failed: '..msg)
-	log_tags("mddiff","unknown",true)
+	if msg:match('^Unable to open directory') then
+		log_tags("mddiff","directory-disappeared",false)
+	else
+		log_tags("mddiff","unknown",true)
+	end
 
 	return (trace(false)) -- mddiff error
 end
