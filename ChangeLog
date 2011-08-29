@@ -1,6 +1,27 @@
-../../.... - 
+../../.... - major feature improvement - version 1.2.0
+	* all tools:
+	  - support for renaming mailboxes thanks to translator programs;
+	    useful to switch from offlineimap to smd.
+	  - -d option now implies -v
+	* smd-translate:
+	  - common translator utility to handle renaming typical imap servers
+	  - support dovecot imap server (removal of leading dots)
+	* mddiff:
+	  - accept -l to list all mailboxes rooted in the given paths
+	  - minor improvement: basename/g_path_basename now called
+	    only once per mail folder
+	* smd-common:
+	  - accept -s to show tags, while -v is used for more verbose output
+	* smd-client:
+	  - reworked to fix once and for all (hopefully ;-) the problems with
+	    names containing spaces
 	* syncmaildir.lua:
 	  - better report a network error
+	* Makefile:
+	  - minor improvements w.r.t. test running
+	* tests.d:
+	  - support tests for smd-push
+	  - test for renaming
 
 24/07/2011 - minor fix 4 Faidon - version 1.1.6
 	* smd-pull, smd-push:
@@ -17,7 +38,7 @@
 	    different user in his mailbox, like an old broken uid. Thanks
 	    Faidon for debugging this issue
 
-03/07/2011 - monor fix - version 1.1.5
+03/07/2011 - minor fix - version 1.1.5
 	* smd-applet:
 	  - Ported to NetworkManager 0.9 APIs (GNOME 3)
 	  - Ported to libnotify 0.7
