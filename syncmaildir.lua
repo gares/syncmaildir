@@ -8,6 +8,7 @@ local PROTOCOL_VERSION="1.1"
 
 local verbose = false
 local dryrun = false
+local translator = false
 
 local PREFIX = '@PREFIX@'
 local BUGREPORT_ADDRESS = 'syncmaildir-users@lists.sourceforge.net'
@@ -83,6 +84,25 @@ function set_dry_run(v)
 end
 
 function dry_run() return dryrun end
+
+function set_translator(p)
+	if p == 'echo' then translator = function(x) return x end
+	else translator = function(x)
+		local f = io.popen(p..' '..quote(x))
+		local rc = f:read('*l')
+		if rc == nil then
+			--- XXX
+		end
+		f:close()
+		return rc end
+	end
+end
+
+function is_translator_set() return translator ~= false end
+
+function translate(x)
+	if is_translator_set() then return translator(x) else return x end
+end
 
 function log(msg)
 	if verbose then

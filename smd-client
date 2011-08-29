@@ -469,13 +469,18 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
-	local usage = "Usage: "..arg[0].." [-vd] endpointname mailboxes...\n"
+	local usage = "Usage: "..arg[0]:match('[^/]+$')..
+		" [-vd] [-t translatorRL] endpointname mailboxes...\n"
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
 			table.remove(arg,1)
 		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
 			set_dry_run(true)
+			table.remove(arg,1)
+		elseif arg[1] == '-t' or arg[1] == '--translator' then
+			set_translator(arg[2])
+			table.remove(arg,1)
 			table.remove(arg,1)
 		else
 			break
