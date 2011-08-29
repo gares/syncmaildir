@@ -875,13 +875,18 @@ int main(int argc, char *argv[]) {
 	// list of directories specified at command line
 	ASSERT_ALL_ARE(directory, &argv[optind], argc - optind);
 
+	if ( only_list_subfolders ) {
+		analyze_dirs(&argv[optind], argc - optind);
+		exit(EXIT_SUCCESS);
+	}
+
 	// allocate memory
 	setup_globals(dbfile, mailno, filenamelen);
 
 	load_db(dbfile);
 
 	bigbang = time(NULL);
-	analyze_dirs(&argv[optind],argc - optind);
+	analyze_dirs(&argv[optind], argc - optind);
 
 	generate_deletions();
 
