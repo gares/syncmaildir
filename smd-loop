@@ -119,7 +119,7 @@ perform() {
 	local cmd=$1
 	local endpoint=$2
 
-	local cmd_line="$cmd -v $endpoint"
+	local cmd_line="$cmd -s $endpoint"
 	if [ "$VERBOSE" = 1 ]; then
 		echo smd-loop: $cmd_line 1>&2
 	fi
