@@ -120,6 +120,8 @@ end
 
 -- this function shoud be used only by smd-client leaves
 function log_tags(context, cause, human, ...)
+	cause = cause or 'unknown'
+	context = context or 'unknown'
 	if human then human = "necessary" else human = "avoidable" end
 	local suggestions = {}
 	local suggestions_string = ""
