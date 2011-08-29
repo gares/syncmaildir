@@ -39,7 +39,6 @@ __cleanup() {
 
 trap __cleanup "EXIT" 
 
-
 ### Variables setup and sanity checks ###
 
 assert_executable() {
