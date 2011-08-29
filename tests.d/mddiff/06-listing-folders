@@ -1,0 +1,5 @@
+#!/bin/sh
+
+mdiff -l Mail
+assert $? 0 "mdiff failed"
+assert `cat log.mddiff` "Mail/cur" "mddiff listed non existing dirs"
