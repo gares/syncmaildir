@@ -103,7 +103,7 @@ test/%: text/all check-run $(TEST_MAILBOX)
 
 test: text/all check-run $(TEST_MAILBOX)
 	$H SUITES="$(TEST_SUITES)" tests.d/test.sh \
-		$(TEST_MAILBOX) $(addprefix $(shell pwd)/,$T)
+		$(TEST_MAILBOX) $(if $(T),$(addprefix $(shell pwd)/,tests.d/$T))
 
 bench: text/all check-run $(BENCH_MAILBOX)
 	$H SUITES="$(BENCH_SUITES)" tests.d/test.sh \
