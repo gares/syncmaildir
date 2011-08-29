@@ -77,6 +77,13 @@ mpull(){
 		$ROOT/$TESTSUITE/$N/bin/smd-pull $@ > log.pull 2>&1
 }
 
+mpush(){
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$N/target \
+	HOMES=$ROOT/$TESTSUITE/$N/ \
+		$ROOT/$TESTSUITE/$N/bin/smd-push $@ > log.push 2>&1
+}
+
 mdiff(){
 	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
 	HOME=$ROOT/$TESTSUITE/$N/ \
