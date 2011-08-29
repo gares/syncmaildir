@@ -81,6 +81,7 @@ end
 
 function set_dry_run(v)
 	dryrun = v
+	if v then set_verbose(v) end
 end
 
 function dry_run() return dryrun end
@@ -90,8 +91,8 @@ function set_translator(p)
 	else translator = function(x)
 		local f = io.popen(p..' '..quote(x))
 		local rc = f:read('*l')
-		if rc == nil then
-			--- XXX
+		if rc == nil or rc == 'ERROR' then
+			--- XXX handle error while translating
 		end
 		f:close()
 		return rc end
@@ -106,7 +107,7 @@ end
 
 function log(msg)
 	if verbose then
-		io.stderr:write(msg,'\n')
+		io.stderr:write('INFO: ',msg,'\n')
 	end
 end
 
@@ -305,25 +306,24 @@ function make_dir_aux(absolute, pieces)
 	local dir = root .. table.concat(pieces,'/')
 	local last = table.remove(pieces, #pieces)
 	if not mkdir_p_cache[dir] then
-		local rc
-		if not dry_run() then
-			if is_translator_set() and
-			   (last == 'cur' or last == 'new' or last == 'tmp')
-			then
-				local foldername = table.concat(pieces,'/')
-				local local_foldername = translate(foldername)
-				local qlfn = quote(homefy(local_foldername..'/'..last))
-				local rc1 = os.execute(MKDIR..' '..qlfn)
-				local rc2 = os.execute(MKDIR..' '..quote(foldername))
-				local LN = "/bin/ln -sf"
-				local rc3 = os.execute(LN..' '..qlfn..' '..
-					quote(foldername))
-				rc = rc1 + rc2 + rc3
-			else
-				rc = os.execute(MKDIR..' '..quote(dir))
-			end
+		local rc = 0
+		if is_translator_set() and
+		   (last == 'cur' or last == 'new' or last == 'tmp')
+		then
+			local foldername = table.concat(pieces,'/')
+			local local_foldername = translate(foldername..'/'..last)
+			local qlfn = quote(homefy(local_foldername))
+			local rc1 = 0
+			if not dry_run() then rc1 = os.execute(MKDIR..' '..qlfn) end
+			local rc2 = os.execute(MKDIR..' '..quote(foldername))
+			-- XXX LN is now an external utility, add to conf
+			local LN = "/bin/ln -sf"
+			local rc3 = os.execute(LN..' '..qlfn..' '..quote(foldername))
+			log('translating: '..foldername..'/'..last..
+				' -> '..local_foldername)
+			rc = rc1 + rc2 + rc3
 		else
-			rc = 0
+			if not dry_run() then rc = os.execute(MKDIR..' '..quote(dir)) end
 		end
 		if rc ~= 0 then
 			log_error("Unable to create directory "..dir)
@@ -540,6 +540,7 @@ function quote(s)
 	return '"' .. s:gsub('"','\\"'):gsub("%)","\\)").. '"'
 end
 
+-- XXX to understand how this interacts with the path in errmsgs
 function homefy(s)
 	if string.byte(s,1) == string.byte('/',1) then
 		return s

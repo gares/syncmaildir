@@ -375,6 +375,10 @@ report() {
 	local inversecmd="$3"
 	local localprog="$4"
 	local remoteprog="$5"
+	if [ $VERBOSE = 1 ]; then
+		grep ^INFO: $SL | sed 's/^INFO: //'
+		grep ^INFO: $CL | sed 's/^INFO: //'
+	fi
 	if [ $exitcode = 1 ]; then
 		grep ^ERROR $SL \
 			| $SED "s/^/$remoteprog: /" \
