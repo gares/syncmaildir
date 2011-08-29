@@ -230,25 +230,25 @@ upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 #   make osx/text/all && make osx/text/install
 
 text/%:
-	$(MAKE) $* \
+	$H $(MAKE) $* \
 		BINARIES="$(subst smd-applet,,$(BINARIES))" \
 		MANPAGES="$(subst smd-applet.1,,$(MANPAGES))" \
-		PREFIX="$(PREFIX)"
+		PREFIX="$(PREFIX)" H=$H
 
 static/%:
-	$(MAKE) $* \
+	$H $(MAKE) $* \
 		CFLAGS="$(CFLAGS) -static " \
 		PKG_FLAGS="$(PKG_FLAGS) --static " \
-		PREFIX="$(PREFIX)"
+		PREFIX="$(PREFIX)" H=$H
 
 osx/%:
-	$(MAKE) $* SED=sed PREFIX="$(PREFIX)"
+	$H $(MAKE) $* SED=sed PREFIX="$(PREFIX)" H=$H
 
 abspath/%:
-	$(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
+	$H $(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
 		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p' \
-		PREFIX="$(PREFIX)"
+		PREFIX="$(PREFIX)" H=$H
 
 .PHONY : update-smd-config
 # eof
