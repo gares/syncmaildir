@@ -1,0 +1,6 @@
+#!/bin/bash
+
+bin/smd-client test /Foo > log 2>&1
+if [ $? -eq 0 ]; then
+	assert 0 1 "Accepting absolute path"
+fi

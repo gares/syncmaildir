@@ -503,6 +503,15 @@ function main()
 	local xdelta = dbfile .. '.xdelta'
 	local newdb = dbfile .. '.new'
 	
+	-- sanity check, translator and absolute paths cannot work
+	for _, v in ipairs(arg) do
+		if v:byte(1) == string.byte('/',1) then
+			log_error("Absolute paths are not supported: "..v)
+			log_tags_and_fail("Absolute path detected",
+				"main","misconfiguration",true)
+		end
+	end
+
 	-- we check the protocol version and dbfile fingerprint
 	handshake(dbfile)
 	
