@@ -177,13 +177,20 @@ parse_args() {
 	for arg in "$@"; do
 		case $arg in
 			-v|--verbose)
+				VERBOSE=1
+				SHOWTAGS=1
+			;;
+			-s|--show-tags)
 				SHOWTAGS=1
 			;;
 			-t|--template-only)
 				TEMPLATE_ONLY=1
 			;;
 			-d|--dry-run)
+				DRYRUN=1
 				CHILDSARGS=-d
+				VERBOSE=1
+				SHOWTAGS=1
 			;;
 			-*)
 				cat <<-EOT
