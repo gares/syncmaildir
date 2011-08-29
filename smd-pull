@@ -29,6 +29,7 @@ read_conffile
 check_lockfile
 setup_plumbing
 setup_logging
+setup_mailboxnames
 
 # we move to the home, since Mail paths are relative
 # to the home
@@ -45,11 +46,11 @@ LOGGER1=$!
 ($MITM $StC > $LtC) < $StL &
 LOGGER2=$!
 
-($SMDCLIENT $CHILDSARGS $CLIENTNAME $MAILBOX < $LtC 2>> $CL) > $CtL &
+(cd $WORKAREA; $SMDCLIENT $CHILDSARGS -t "$TRANSLATOR_RL" $CLIENTNAME $MAILBOX_REMOTE < $LtC 2>> $CL) > $CtL &
 CLIENT=$!
 
 EXITCODE=0
-($SSH $SERVERNAME $REMOTESMDSERVER $CHILDSARGS $CLIENTNAME $MAILBOX < $LtS 2> $SL) > $StL  || EXITCODE=1
+($SSH $SERVERNAME $REMOTESMDSERVER $CHILDSARGS $CLIENTNAME $MAILBOX_REMOTE < $LtS 2> $SL) > $StL  || EXITCODE=1
 
 wait $CLIENT || EXITCODE=1 
 

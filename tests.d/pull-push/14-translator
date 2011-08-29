@@ -1,0 +1,72 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX_LOCAL=MyMail >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo TRANSLATOR_RL=../trl >> target/.smd/config.default
+echo TRANSLATOR_LR=../tlr >> target/.smd/config.default
+
+cat > tlr <<EOT
+#!/bin/sh
+if [ "\$1" = MyMail/cur -o "\$1" = MyMail/tmp -o "\$1" = MyMail/new ]; then
+	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/\1?'
+else
+	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/.\1?'
+fi
+EOT
+chmod a+x tlr
+cat > trl <<EOT
+#!/bin/sh
+echo \$1 | sed 's/^Mail\(.*\)$/MyMail\1/' \
+	 | sed 's?/\.?/?'
+EOT
+chmod a+x trl
+
+mkdir -p Mail/.foo.bar
+cp -r Mail/cur Mail/.foo.bar/
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/cur/ target/MyMail/cur/
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+
+cp Mail/.foo.bar/cur/`ls Mail/.foo.bar/cur/|head -n 1` Mail/.foo.bar/cur/here
+sed -i s/a/z/ Mail/.foo.bar/cur/here
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+mkdir -p Mail/.foo.baz/cur
+cp Mail/.foo.bar/cur/here Mail/.foo.baz/cur/here
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+touch target/.smd/workarea/cruft
+mpull 2> /dev/null
+assert $? 1 "smd-pull did not detect cruft in workarea/"
+rm target/.smd/workarea/cruft
+
+mpush
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+test_eq Mail/cur target/MyMail/cur
+
+chmod a-rx target/MyMail/foo.bar/
+mpush
+R=$?
+chmod a+rx target/MyMail/foo.bar/
+assert $R 1 "smd-push did not detect a scanning error"
+
+mpush
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+test_eq Mail/cur target/MyMail/cur
+
+

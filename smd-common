@@ -110,6 +110,63 @@ init() {
 	mkdir -p $CONFDIR/hooks/pre-push.d
 	mkdir -p $CONFDIR/hooks/post-pull.d
 	mkdir -p $CONFDIR/hooks/post-push.d
+	CRUFT=`find $CONFDIR/workarea ! -type d -a ! -type l 2> /dev/null || true`
+	if [ ! -z "$CRUFT" ]; then
+		echo "Some files are left in $CONFDIR/workarea"
+		echo "This is an internal error. Please report this inconvenience"
+		echo "and examine the content of these files, they may be of value."
+		echo
+		echo $CRUFT
+		exit 1
+	fi
+	rm -rf $CONFDIR/workarea
+	mkdir -p $CONFDIR/workarea
+}
+
+is_absolute() {
+	case "$1" in
+		/*) return 0 ;;
+		*)	return 1 ;;
+	esac
+}
+
+resolve_translator(){
+if [ ! -z "$1" ]; then
+	if is_absolute "$1"; then
+		RC="$1"
+	elif `type "$HOME/$1" >/dev/null 2>&1`; then
+		RC="$HOME/$1"
+	elif `type "$1" >/dev/null 2>&1`; then
+		RC="$1"
+	else
+		echo "Unable to find the given translator: $1"
+		echo "It is not an absolute path"
+		echo "It is not in $HOME"
+		echo "It is not in \$PATH"
+		exit 1
+	fi
+else
+	RC="echo"
+fi
+}
+
+setup_workarea(){
+	TMP_FIND=`gc_mktemp`
+	TMP_FIND_ERR=`gc_mktemp`
+	$MDDIFF -l $MAILBOX_LOCAL >$TMP_FIND 2>$TMP_FIND_ERR
+	if [ ! $? -eq 0 ]; then
+		echo "$MDDIFF gave an error while scanning $MAILBOX_LOCAL:"
+		cat $TMP_FIND_ERR
+		exit 1
+	fi
+	for M in `cat $TMP_FIND`; do
+		TM=`$TRANSLATOR_LR "$M"`
+		if [ $VERBOSE -eq 1 ]; then
+			echo "translating:" $M "->" $TM
+		fi
+		mkdir -p .smd/workarea/`dirname "$TM"`
+		ln -s "$HOME/$M" .smd/workarea/"$TM"
+	done
 }
 
 ### Command line argument parsing ###
@@ -264,6 +321,29 @@ setup_logging() {
 		MITM=tee
 		CHILDSARGS="$CHILDSARGS -v"
 	fi
+}
+
+setup_mailboxnames() {
+	if [ -z "$MAILBOX" ]; then
+		if [ -z "$MAILBOX_LOCAL" -o \
+			 -z "$MAILBOX_REMOTE" -o \
+			 -z "$TRANSLATOR_RL" -o \
+			 -z "$TRANSLATOR_LR" ]; then
+			echo "The config file must define MAILBOX xor MAILBOX_LOCAL, MAILBOX_REMOTE, TRANSLATOR_LR and TRANSLATOR_RL"
+			exit 1
+		fi
+	else
+		if [ ! -z "$MAILBOX_LOCAL" -o ! -z "$MAILBOX_REMOTE" ]; then
+			echo "The config file must define MAILBOX xor MAILBOX_LOCAL, MAILBOX_REMOTE, TRANSLATOR_LR and TRANSLATOR_RL"
+			exit 1
+		fi
+		MAILBOX_LOCAL="$MAILBOX"
+		MAILBOX_REMOTE="$MAILBOX"
+	fi
+	resolve_translator "$TRANSLATOR_RL"
+	TRANSLATOR_RL="$RC"
+	resolve_translator "$TRANSLATOR_LR"
+	TRANSLATOR_LR="$RC"
 }
 
 # this could be a system wide post-* hook

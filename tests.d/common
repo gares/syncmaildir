@@ -49,15 +49,18 @@ run_server(){
 }
 
 run_client(){
-	cd target 
+	mkdir -p target/.smd/workarea/
+	cd target/.smd/workarea/
+	local DD=../../../
 	HOME=$ROOT/$TESTSUITE/$N/target \
 	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
 	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
-		smd-client -v test Mail < ../s2c 2> ../log.client.$1 \
-		| tee ../log.c2s > ../c2s &
+		smd-client -t 'echo' -v \
+		test Mail < $DD/s2c 2> $DD/log.client.$1 \
+		| tee $DD/log.c2s > $DD/c2s &
 	RC=$!
 	TOKILL="$TOKILL $RC"
-	cd ..
+	cd $DD
 }
 
 msync(){

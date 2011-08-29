@@ -301,10 +301,25 @@ function make_dir_aux(absolute, pieces)
 	local root = ""
 	if absolute then root = '/' end
 	local dir = root .. table.concat(pieces,'/')
+	local last = table.remove(pieces, #pieces)
 	if not mkdir_p_cache[dir] then
 		local rc
 		if not dry_run() then
-			rc = os.execute(MKDIR..' '..quote(dir))
+			if is_translator_set() and
+			   (last == 'cur' or last == 'new' or last == 'tmp')
+			then
+				local foldername = table.concat(pieces,'/')
+				local local_foldername = translate(foldername)
+				local qlfn = quote(homefy(local_foldername..'/'..last))
+				local rc1 = os.execute(MKDIR..' '..qlfn)
+				local rc2 = os.execute(MKDIR..' '..quote(foldername))
+				local LN = "/bin/ln -sf"
+				local rc3 = os.execute(LN..' '..qlfn..' '..
+					quote(foldername))
+				rc = rc1 + rc2 + rc3
+			else
+				rc = os.execute(MKDIR..' '..quote(dir))
+			end
 		else
 			rc = 0
 		end
