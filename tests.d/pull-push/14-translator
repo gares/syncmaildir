@@ -2,7 +2,7 @@
 
 mpull -t
 assert $? 0 "failed mpull -t"
-echo DEBUG=true >> target/.smd/config.default
+
 sed -i 's/MAILBOX=.*//' target/.smd/config.default
 echo MAILBOX_LOCAL=MyMail >> target/.smd/config.default
 echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
@@ -68,5 +68,15 @@ mpush
 test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
 test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
 test_eq Mail/cur target/MyMail/cur
+
+rm -rf target/MyMail target/.smd/*.db.txt* .smd/*.db.txt*
+mpull -d
+W=`grep translating log.pull | wc -l`
+assert $W 3 "smd-pull -d not printing 'translating' lines"
+mpull
+rm -rf Mail target/.smd/*.db.txt* .smd/*.db.txt*
+mpush -d
+W=`grep translating log.push | wc -l`
+assert $W 3 "smd-push -d not printing 'translating' lines"
 
 
