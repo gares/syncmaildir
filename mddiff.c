@@ -183,6 +183,7 @@ STATIC time_t lastcheck;
 // program options
 STATIC int verbose;
 STATIC int dry_run;
+STATIC int only_list_subfolders;
 
 // ============================ helpers =====================================
 
@@ -641,7 +642,10 @@ STATIC void analyze_dir(const char* path){
 #else
 	gchar* bname = g_path_get_basename(path);
 #endif
-	if ( !strcmp(bname,"cur") || !strcmp(bname,"new") ) inside_cur_or_new = 1;
+	if ( !strcmp(bname,"cur") || !strcmp(bname,"new") ) {
+		inside_cur_or_new = 1;
+		if ( only_list_subfolders ) fprintf(stdout, "%s\n", path);
+	}
 #ifndef __GLIBC__
 	g_free(bname);
 #endif
@@ -650,11 +654,15 @@ STATIC void analyze_dir(const char* path){
 	if (dir == NULL) ERROR(opendir, "Unable to open directory '%s'\n", path);
 
 	while ( (dir_entry = readdir(dir)) != NULL) {
-		if (DT_REG == dir_entry->d_type){
-			if ( inside_cur_or_new ) analyze_file(path,dir_entry->d_name);
-			else VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
+		if (DT_REG == dir_entry->d_type) {
+			if ( inside_cur_or_new && !only_list_subfolders ) {
+				analyze_file(path,dir_entry->d_name);
+			} else {
+				VERBOSE(analyze_dir,"skipping '%s/%s', outside maildir\n",
 					path,dir_entry->d_name);
-		} else if (DT_DIR == dir_entry->d_type && 
+			}
+		} else if ((DT_DIR == dir_entry->d_type ||
+					DT_LNK == dir_entry->d_type) &&
 				strcmp(dir_entry->d_name,"tmp") &&
 				strcmp(dir_entry->d_name,".") &&
 				strcmp(dir_entry->d_name,"..")){
@@ -743,7 +751,8 @@ STATIC void extra_sha_file(const char* file, int suddenly_flush) {
 // command line options
 STATIC struct option long_options[] = {
 	{"max-mailno", 1, NULL, OPT_MAX_MAILNO},
-	{"db-file"   , 1, NULL, OPT_DB_FILE}, 
+	{"db-file"   , 1, NULL, OPT_DB_FILE},
+	{"list"      , 0, NULL, 'l'},
 	{"verbose"   , 0, NULL, 'v'},
 	{"dry-run"   , 0, NULL, 'd'},
 	{"help"      , 0, NULL, 'h'},
@@ -763,6 +772,7 @@ STATIC const char* long_options_doc[] = {
 		"\n                        " 
 		"increased automatically when needed", 
 	"Name of the cache for the endpoint (default db.txt)",
+	"Only list subfolders (short -l)",
 	"Increase program verbosity (printed on stderr, short -v)", 
 	"Do not generate a new db file (short -d)",
 	"This help screen", 
@@ -814,7 +824,7 @@ int main(int argc, char *argv[]) {
 	g_assert(MAIL(GPTR(1)) == 1);
 
 	for(;;) {
-		c = getopt_long(argc, argv, "vhd", long_options, &option_index);
+		c = getopt_long(argc, argv, "vhdl", long_options, &option_index);
 		if (c == -1) break; // no more args
 		switch (c) {
 			case OPT_MAX_MAILNO:
@@ -828,6 +838,9 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'd':
 				dry_run = 1;
+			break;
+			case 'l':
+				only_list_subfolders = 1;
 			break;
 			case 'h':
 				help(argv[0]);

@@ -1,7 +1,7 @@
 NAME
   mddiff - computes diff for maildirs
 SYNOPSIS
-  mddiff [--max-mailno mno] [--db-file dbf] 
+  mddiff [--max-mailno mno] [--db-file dbf] [-l|--list]
          [-v|--verbose] [-d|--dry-run] [--help] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
@@ -46,6 +46,7 @@ OPTIONS
                         for the first run on small systems. It is anyway
                         increased automatically when needed
   --db-file dbf         Name of the cache for the endpoint (default db.txt)
+  -l --list             Only list the mailboxes recursively contained in paths
   -v --verbose          Increase program verbosity (printed on stderr)
   -d --dry-run          Do not generate a new db-file
   --help                This help screen
