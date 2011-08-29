@@ -18,7 +18,8 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
-	local usage = "Usage: "..arg[0].." [-vd] endpointname mailboxes...\n"
+	local usage = "Usage: "..arg[0]:match('[^/]+$')..
+		" [-vd] endpointname mailboxes...\n"
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
