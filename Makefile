@@ -39,6 +39,7 @@ XDELTA=xdelta
 MKFIFO=mkfifo
 MKDIR=mkdir -p
 SSH=ssh
+LN=ln -s
 LUAV=5.1
 LUA=lua$(LUAV)
 CFLAGS=-O2 -Wall -Wextra -Wcast-align -g -I .
@@ -143,6 +144,7 @@ define install-replacing
 		$(SED) 's?@MKFIFO@?$(MKFIFO)?' |\
 		$(SED) 's?@MKDIR@?$(MKDIR)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
+		$(SED) 's?@LN@?$(LN)?' |\
 		$(SED) 's?@SMDVERSION@?$(VERSION)?' |\
 		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
 		cat > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
@@ -253,7 +255,7 @@ abspath/%:
 	$H $(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
 		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p' \
-		PREFIX="$(PREFIX)" H=$H
+		LN='/bin/ln -s' PREFIX="$(PREFIX)" H=$H
 
 .PHONY : update-smd-config
 # eof

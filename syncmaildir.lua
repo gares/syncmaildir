@@ -52,6 +52,12 @@ if string.sub(MKDIR,1,1) == '@' then
 		MKDIR = 'mkdir -p'
 end
 
+-- set ln executable name
+LN = '@LN@'
+if string.sub(LN,1,1) == '@' then
+		LN = 'ln -s'
+end
+
 -- set smd version 
 SMDVERSION = '@SMDVERSION@'
 if string.sub(SMDVERSION,1,1) == '@' then
@@ -316,8 +322,6 @@ function make_dir_aux(absolute, pieces)
 			local rc1 = 0
 			if not dry_run() then rc1 = os.execute(MKDIR..' '..qlfn) end
 			local rc2 = os.execute(MKDIR..' '..quote(foldername))
-			-- XXX LN is now an external utility, add to conf
-			local LN = "/bin/ln -sf"
 			local rc3 = os.execute(LN..' '..qlfn..' '..quote(foldername))
 			log('translating: '..foldername..'/'..last..
 				' -> '..local_foldername)
