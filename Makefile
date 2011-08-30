@@ -5,8 +5,9 @@
 PROJECTNAME=syncmaildir
 VERSION=1.2.0
 BINARIES=mddiff smd-applet
-MANPAGES=mddiff.1 smd-server.1 smd-client.1 \
+MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1
+MANPAGES5=smd-config.5
 HTML=index.html design.html hooks.html
 DESTDIR=
 SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
@@ -130,6 +131,8 @@ misc/Mail.%.tgz:
 
 %.1:%.1.txt check-w-txt2man
 	txt2man -t $* -v "Sync Mail Dir (smd) documentation" -s 1 $< > $@
+%.5:%.5.txt check-w-txt2man
+	txt2man -t $* -v "Sync Mail Dir (smd) documentation" -s 5 $< > $@
 
 define install-replacing
 	cat $(1) |\
@@ -171,20 +174,22 @@ install-bin: $(BINARIES)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))
 	$(call install-replacing,syncmaildir.lua,share/lua/$(LUAV))
 
-install-misc: $(MANPAGES)
+install-misc: $(MANPAGES1) $(MANPAGES5)
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	cp smd-applet.desktop $(DESTDIR)/etc/xdg/autostart
 	$(call mkdir-p,share/applications)
 	$(call install,smd-applet-configure.desktop,share/applications)
 	$(call install,smd-applet.ui,share/$(PROJECTNAME)-applet)
 	$(call mkdir-p,share/man/man1)
-	cp $(MANPAGES) $(DESTDIR)/$(PREFIX)/share/man/man1
+	$(call mkdir-p,share/man/man5)
+	cp $(MANPAGES1) $(DESTDIR)/$(PREFIX)/share/man/man1
+	cp $(MANPAGES5) $(DESTDIR)/$(PREFIX)/share/man/man5
 	$(call mkdir-p,share/doc/syncmaildir)
 	cp -r sample-hooks/ $(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
 	$(call install,README,share/doc/syncmaildir)
 
 clean: 
-	$H rm -f $(BINARIES) $(MANPAGES)
+	$H rm -f $(BINARIES) $(MANPAGES1)
 	$H rm -rf tests.d/run
 	$H rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	$H rm -f $(HTML)
@@ -232,7 +237,7 @@ upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 text/%:
 	$H $(MAKE) $* \
 		BINARIES="$(subst smd-applet,,$(BINARIES))" \
-		MANPAGES="$(subst smd-applet.1,,$(MANPAGES))" \
+		MANPAGES1="$(subst smd-applet.1,,$(MANPAGES1))" \
 		PREFIX="$(PREFIX)" H=$H
 
 static/%:
