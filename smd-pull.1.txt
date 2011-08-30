@@ -10,32 +10,7 @@ DESCRIPTION
 
   No changes are made on the remote maildir. Use smd-push(1) for that.
 
-  The first time this program is run a new config file is created and
-  the user is asked to edit it. If no endpoint is specified, the configuration
-  file is named ~/.smd/config.default, otherwise it is named 
-  ~/.smd/config.endpoint. That file is composed by the following fields
-
-  CLIENTNAME  name of the client host
-  SERVERNAME  name of the server host
-  MAILBOX     list of directories, separated by space
-
-  The field SERVERNAME must be a valid name for ssh, thus can be an alias like
-  smd-server-foo.  The default config file contains an example of how to set up
-  an alias for ssh.
-
-  The field CLIENTNAME is just an ID for the local host. If you plan to sync
-  the same host with multiple remote hosts, you MUST use different values
-  for CLIENTNAME for every configuration file.
-
-  The config file is a regular shell script, refer to bash(1) for 
-  its syntax.
-
-  The content of the directories ~/.smd/hooks/{pre,post}-pull.d/ is executed
-  respectively before and after smd-pull does it's job. They receive
-  four arguments: "pre" or "post", "pull", the endpoint name and the status.
-  The status is always 0 (meaning success) for pre hooks, while can be 1 (for
-  failure) for post hooks. Hooks should not fail, if they do so then
-  smd-pull will fail too. 
+  Refer to smd-config(5) for the configuration file format.
 
 OPTIONS
   -v --verbose        Verbose output
@@ -51,7 +26,7 @@ FILES
   ~/.smd/hooks/post-pull.d/
 
 SEE ALSO
-  mddiff(1), smd-server(1), smd-client(1), smd-push(1), smd-loop(1)
+  mddiff(1), smd-server(1), smd-client(1), smd-push(1), smd-loop(1), smd-config(5)
 
 AUTHOR
   Enrico Tassi <gares@fettunta.org>
