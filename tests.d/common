@@ -49,6 +49,7 @@ run_server(){
 }
 
 run_client(){
+	rm -rf target/.smd/workarea/
 	mkdir -p target/.smd/workarea/
 	cd target/.smd/workarea/
 	local DD=../../../
