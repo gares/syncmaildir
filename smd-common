@@ -25,7 +25,7 @@ atexit_kill() {
 }
 
 gc_mktemp() {
-	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`	
+	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`
 	atexit_rm $tmp
 	echo "$tmp"
 }
@@ -37,7 +37,7 @@ __cleanup() {
 	done
 }
 
-trap __cleanup "EXIT" 
+trap __cleanup "EXIT"
 
 ### Variables setup and sanity checks ###
 
@@ -54,21 +54,21 @@ assert_executable() {
 
 init() {
 	if [ `echo $PREFIX | cut -c -1` = "@" ]; then
-		SMDSERVER=./smd-server 
-		SMDCLIENT=./smd-client 
+		SMDSERVER=./smd-server
+		SMDCLIENT=./smd-client
 		MDDIFF=./mddiff
 		# in development mode we assume that on the remote host
 		# the software is installed such that binaries are in $PATH
 		REMOTESMDSERVER=smd-server
 		REMOTESMDCLIENT=smd-client
 	else
-		SMDSERVER=$PREFIX/bin/smd-server 
-		SMDCLIENT=$PREFIX/bin/smd-client 
+		SMDSERVER=$PREFIX/bin/smd-server
+		SMDCLIENT=$PREFIX/bin/smd-client
 		MDDIFF=$PREFIX/bin/mddiff
 		REMOTESMDSERVER="$SMDSERVER"
 		REMOTESMDCLIENT="$SMDCLIENT"
 	fi
-	
+
 	H=$HOME
 	CONFDIR=$H/.smd
 	LOCKFILE=$CONFDIR/lock
@@ -82,7 +82,7 @@ init() {
 	# default values for the configuration file
 	DEBUG=false
 
-	# external programs	
+	# external programs
 	SSH="@SSH@"
 	if [ `echo "$SSH" | cut -c -1` = "@" ]; then
 		SSH=ssh
@@ -200,12 +200,12 @@ parse_args() {
 				exit 1
 			;;
 			*)
-				REPNAME="$arg"		
+				REPNAME="$arg"
 			;;
 
 		esac
 	done
-	
+
 	CONFFILE=$CONFDIR/config.$REPNAME
 }
 
@@ -223,32 +223,32 @@ read_conffile() {
 		echo "I'm renaming $CONFDIR/config to $CONFFILE."
 		mv $CONFDIR/config $CONFFILE
 	fi
-	
+
 	if [ ! -f $CONFFILE ]; then
 		cat > $CONFFILE <<- EOT
 		# No config file found, this is a template. You want to edit it.
-	
-		# Host name to be used with ssh as the server (use ~/.ssh/config 
+
+		# Host name to be used with ssh as the server (use ~/.ssh/config
 		# for extra options). smd-pull will pull from this host, smd-push
 		# will push to this host and use it as the id of the remote mailbox.
 		#
 		# We suggest creating an alias with your ~/.ssh/config like:
-		# 
+		#
 		#   Host smd-server-foo
 		#     Compression yes
 		#     Hostname your.real.server.name
 		#     Username you
 		#
 		SERVERNAME=smd-server-$REPNAME
-	
-		# Host name to be used as the client. 
+
+		# Host name to be used as the client.
 		# smd-pull will use this just as an id for the client. If you
 		# plan to sync with multiple endpoints, you must use a different
 		# client id for any of them, thus a pair localhostname-remotehostname
 		# should be used
 		#
 		CLIENTNAME=`hostname`-$REPNAME
-	
+
 		# The mailbox to sync, in case the path is the same on both hosts.
 		# The path MUST be relative to the home directory, use a symlink if
 		# the mailbox is not rooted there.
@@ -266,7 +266,7 @@ read_conffile() {
 		# MAILBOX_REMOTE="OtherMail/"
 		# TRANSLATOR_RL=path
 		# TRANSLATOR_LR=path
-	
+
 		# Log client to server and server to client communication.
 		# This is useful only for debugging, since all network traffic
 		# is dumped, including transmitted mails.
@@ -304,7 +304,7 @@ check_lockfile() {
 			echo Found lockfile of a dead instance. Ignored.
 		fi
 	fi
-	
+
 	echo $$ > $LOCKFILE
 	atexit_rm $LOCKFILE
 }
@@ -316,18 +316,18 @@ setup_plumbing() {
 	LtC=$CONFDIR/fifo/l2c.$REPNAME
 	LtS=$CONFDIR/fifo/l2s.$REPNAME
 	StL=$CONFDIR/fifo/s2l.$REPNAME
-	
-	[ -p $CtL ] || mkfifo $CtL 
+
+	[ -p $CtL ] || mkfifo $CtL
 	[ -p $LtC ] || mkfifo $LtC
-	[ -p $LtS ] || mkfifo $LtS 
+	[ -p $LtS ] || mkfifo $LtS
 	[ -p $StL ] || mkfifo $StL
 }
 
 ### Logging ###
 
-__mycat() { 
+__mycat() {
 	# like cat, but ignores arguments
-	cat 
+	cat
 }
 
 setup_logging() {
@@ -335,9 +335,9 @@ setup_logging() {
 	StC=$CONFDIR/log/s2c.$REPNAME.log
 	CL=$CONFDIR/log/client.$REPNAME.log
 	SL=$CONFDIR/log/server.$REPNAME.log
-	
+
 	MITM=__mycat
-	
+
 	if [ "$DEBUG" = "true" ]; then
 		MITM=tee
 		CHILDSARGS="$CHILDSARGS -v"
@@ -419,7 +419,7 @@ run_hooks() {
 	local what="$3"
 	local status="$4"
 	for h in $dir/hooks/$when-$what.d/*; do
-		if [ -x $h ]; then 
+		if [ -x $h ]; then
 			$h $when $what $REPNAME $status >> $CL 2>&1
 		fi
 	done
