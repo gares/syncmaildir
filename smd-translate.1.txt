@@ -9,7 +9,7 @@ DESCRIPTION
   It is designed to be used in the configuration file of smd-push(1) and
   smd-pull(1).
 
-  Refer to smd-config(5) for a longher discussion on translators.
+  Refer to smd-config(5) for a longer discussion on translators.
 
   Supported modes follow.
 
