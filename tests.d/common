@@ -30,7 +30,7 @@ out(){
 trap out EXIT
 
 test_eq(){
-	if diff -ruN $1 $2 >/dev/null; then
+	if diff -ruN "$1" "$2" >/dev/null; then
 		echo -n .
 	else
 		echo ERROR: diff
