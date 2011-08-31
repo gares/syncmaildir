@@ -78,6 +78,8 @@ init() {
 	TEMPLATE_ONLY=0
 	CONFFILE=""
 	WORKAREA=$CONFDIR/workarea
+	REPNAME=default
+	CHILDSARGS=
 
 	# default values for the configuration file
 	DEBUG=false
@@ -172,8 +174,6 @@ setup_workarea(){
 ### Command line argument parsing ###
 
 parse_args() {
-	REPNAME=default
-	CHILDSARGS=
 	for arg in "$@"; do
 		case $arg in
 			-v|--verbose)
