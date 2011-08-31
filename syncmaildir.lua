@@ -98,7 +98,10 @@ function set_translator(p)
 		local f = io.popen(p..' '..quote(x))
 		local rc = f:read('*l')
 		if rc == nil or rc == 'ERROR' then
-			--- XXX handle error while translating
+			log_error("Translator "..p.." on input "..x.." gave an error")
+			for l in f:lines() do log_error(l) end
+			log_tags_and_fail('Unable to translate mailbox',
+				'translate','bad-translator',true)
 		end
 		f:close()
 		return rc end
