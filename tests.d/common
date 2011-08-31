@@ -97,6 +97,13 @@ mdiff(){
 		$VALGRIND $ROOT/$TESTSUITE/$N/bin/mddiff $@ > log.mddiff 2>&1
 }
 
+mcheck(){
+	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
+	HOME=$ROOT/$TESTSUITE/$N/target/ \
+	HOMES=$ROOT/$TESTSUITE/$N/ \
+		$ROOT/$TESTSUITE/$N/bin/smd-check-translators $@ > log.check 2>&1
+}
+
 assert(){
 	if [ "$1" = "$2" ]; then
 		echo -n '.'

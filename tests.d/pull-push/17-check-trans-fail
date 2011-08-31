@@ -1,0 +1,38 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo 'TRANSLATOR_RL="../mytr1"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="../mytr2"' >> target/.smd/config.default
+
+mkdir -p Mail/.foo.bar
+cp -r Mail/cur Mail/.foo.bar/
+
+cat > mytr1 <<EOT
+#!/bin/sh
+echo \$@
+EOT
+cat > mytr2 <<EOT
+#!/bin/sh
+echo ERROR
+echo "I'm designed to fail"
+exit 1
+EOT
+chmod a+x mytr1 mytr2
+
+mcheck
+W=`grep 'Error while listing the content of Mail' log.check | wc -l`
+assert $W 1 "listing the content of a non existing dir"
+W=`grep 'Mail/.foo.bar/cur -> Mail/.foo.bar/cur -> ERROR' log.check | wc -l`
+assert $W 1 "Not translating Mail/.foo.bar/cur"
+
+mpull
+assert $? 0 "mpull failed"
+
+mcheck
+W=`grep 'Mail/.foo.bar/cur -> ERROR -> ERROR' log.check | wc -l`
+assert $W 1 "Not translating Mail/cur"

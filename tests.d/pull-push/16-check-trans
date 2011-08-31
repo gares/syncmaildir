@@ -1,0 +1,35 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX_LOCAL=MyMail >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo 'TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL default"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR default"' >> target/.smd/config.default
+
+mkdir -p Mail/.foo.bar
+cp -r Mail/cur Mail/.foo.bar/
+
+mcheck
+W=`grep 'Error while listing the content of MyMail' log.check | wc -l`
+assert $W 1 "listing the content of a non existing dir"
+W=`grep 'Mail/cur -> MyMail/cur -> Mail/cur' log.check | wc -l`
+assert $W 1 "Not translating Mail/cur"
+W=`grep 'Mail/.foo.bar/cur -> MyMail/foo.bar/cur -> Mail/.foo.bar/cur' log.check | wc -l`
+assert $W 1 "Not translating Mail/.foo.bar/cur"
+
+
+mpull
+assert $? 0 "mpull failed"
+
+mcheck
+W=`grep 'MyMail/foo.bar/cur -> Mail/.foo.bar/cur -> MyMail/foo.bar/cur' log.check| wc -l`
+assert $W 1 "Not translating MyMail/foo.bar/cur"
+W=`grep 'MyMail/cur -> Mail/cur -> MyMail/cur' log.check| wc -l`
+assert $W 1 "Not translating MyMail/cur"
+W=`grep 'Mail/cur -> MyMail/cur -> Mail/cur' log.check | wc -l`
+assert $W 1 "Not translating Mail/cur"
+W=`grep 'Mail/.foo.bar/cur -> MyMail/foo.bar/cur -> Mail/.foo.bar/cur' log.check | wc -l`
+assert $W 1 "Not translating Mail/.foo.bar/cur"

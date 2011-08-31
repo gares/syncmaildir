@@ -4,8 +4,20 @@
 # No warranties.
 # Copyright 2011 Enrico Tassi <gares@fettunta.org>
 
-set -e
 #set -x
+
+SSH="@SSH@"
+if [ `echo "$SSH" | cut -c -1` = "@" ]; then
+	SSH=ssh
+	echo "`basename $0` not installed, assuming secure shell client is $SSH"
+fi
+
+PREFIX="@PREFIX@"
+MDDIFF=$PREFIX/bin/mddiff
+if [ `echo "$PREFIX" | cut -c -1` = "@" ]; then
+	MDDIFF=./mddiff
+	echo "`basename $0` not installed, assuming mddiff is $MDDIFF"
+fi
 
 REPNAME=default
 
@@ -28,32 +40,40 @@ TL=`mktemp`
 TR=`mktemp`
 
 echo Local mailboxes translated to remote and back:
-mddiff -l $MAILBOX_LOCAL > $TL
-for M in read; do
-	MM="`$TRANSLATOR_LR "$M" | head -n 1`"
-	MMM="`$TRANSLATOR_RL "$MM" | head -n 1`"
-	echo $M "->" $MM "->" $MMM
-	if [ "$M" != "$MMM" ]; then
-		echo Failed round trip check
-		echo $MM = $TRANSLATOR_LR "$M"
-		echo $MMM = $TRANSLATOR_RL "$MM"
-		exit 1
-	fi
-done < $TL
-
+$MDDIFF -l $MAILBOX_LOCAL > $TL
+if [ ! $? -eq 0 ]; then
+	echo Error while listing the content of $MAILBOX_LOCAL, skipping
+else
+	while read M; do
+		MM="`$TRANSLATOR_LR "$M" | head -n 1`"
+		MMM="`$TRANSLATOR_RL "$MM" | head -n 1`"
+		echo "  " $M "->" $MM "->" $MMM
+		if [ "$M" != "$MMM" ]; then
+			echo Failed round trip check: $M "->" $MMM
+			echo "  " $TRANSLATOR_LR "$M" "->" $MM
+			echo "  " $TRANSLATOR_RL "$MM" "->" $MMM
+			exit 1
+		fi
+	done < $TL
+fi
+echo
 echo Remote mailboxes translated to local and back:
-ssh $SERVERNAME -- mddiff -l $MAILBOX_REMOTE > $TR
-for M in read; do
-	MM="`$TRANSLATOR_RL "$M" | head -n 1`"
-	MMM="`$TRANSLATOR_LR "$MM" | head -n 1`"
-	echo $M "->" $MM "->" $MMM
-	if [ "$M" != "$MMM" ]; then
-		echo Failed round trip check
-		echo $MM = $TRANSLATOR_RL "$M"
-		echo $MMM = $TRANSLATOR_LR "$MM"
-		exit 1
-	fi
-done < $TR
+$SSH $SERVERNAME $MDDIFF -l $MAILBOX_REMOTE > $TR
+if [ ! $? -eq 0 ]; then
+	echo Error while listing the content of $MAILBOX_REMOTE, skipping
+else
+	while read M; do
+		MM="`$TRANSLATOR_RL "$M" | head -n 1`"
+		MMM="`$TRANSLATOR_LR "$MM" | head -n 1`"
+		echo "  " $M "->" $MM "->" $MMM
+		if [ "$M" != "$MMM" ]; then
+			echo Failed round trip check: $M "->" $MMM
+			echo "  " $TRANSLATOR_RL "$M" "->" $MM
+			echo "  " $TRANSLATOR_LR "$MM" "->" $MMM
+			exit 1
+		fi
+	done < $TR
+fi
 
 rm $TL $TR
 
