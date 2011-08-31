@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright 2011 Enrico Tassi <gares@fettunta.org>
+
+set -e
+#set -x
+
+REPNAME=default
+
+if [ ! -z "$1" ]; then
+	REPNAME="$1"
+fi
+
+. ~/.smd/config.$REPNAME
+
+if [ -z "$MAILBOX_LOCAL" ]; then
+	MAILBOX_LOCAL="$MAILBOX"
+fi
+if [ -z "$MAILBOX_REMOTE" ]; then
+	MAILBOX_REMOTE="$MAILBOX"
+fi
+
+cd
+
+TL=`mktemp`
+TR=`mktemp`
+
+echo Local mailboxes translated to remote and back:
+mddiff -l $MAILBOX_LOCAL > $TL
+for M in read; do
+	MM="`$TRANSLATOR_LR "$M" | head -n 1`"
+	MMM="`$TRANSLATOR_RL "$MM" | head -n 1`"
+	echo $M "->" $MM "->" $MMM
+	if [ "$M" != "$MMM" ]; then
+		echo Failed round trip check
+		echo $MM = $TRANSLATOR_LR "$M"
+		echo $MMM = $TRANSLATOR_RL "$MM"
+		exit 1
+	fi
+done < $TL
+
+echo Remote mailboxes translated to local and back:
+ssh $SERVERNAME -- mddiff -l $MAILBOX_REMOTE > $TR
+for M in read; do
+	MM="`$TRANSLATOR_RL "$M" | head -n 1`"
+	MMM="`$TRANSLATOR_LR "$MM" | head -n 1`"
+	echo $M "->" $MM "->" $MMM
+	if [ "$M" != "$MMM" ]; then
+		echo Failed round trip check
+		echo $MM = $TRANSLATOR_RL "$M"
+		echo $MMM = $TRANSLATOR_LR "$MM"
+		exit 1
+	fi
+done < $TR
+
+rm $TL $TR
+
+exit 0
+
+# vim:ts=4:

@@ -1,0 +1,26 @@
+NAME
+  smd-check-translators - checks translators round trip
+
+SYNOPSIS
+  smd-check-translators [endpoint]
+
+DESCRIPTION
+  smd-check-translators tests the translators for a configured endpoint.
+  The test consists in listing local and remote mailboxes, calling
+  the translators, displaying the result to the user and checking for
+  round trip (i.e. that the translators programs behave as inverse
+  functions on the current input).
+
+  Refer to smd-config(5) for a longer discussion on translators.
+
+OPTIONS
+  endpoint      Is the suffix for the name of the configuration file to use
+
+FILES
+  ~/.smd/config.*
+
+SEE ALSO
+  smd-translate(1), smd-config(5), smd-check-translators(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
