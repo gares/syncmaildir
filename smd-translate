@@ -59,6 +59,13 @@ fi
 
 . ~/.smd/config.$REPNAME
 
+if [ -z "$MAILBOX_LOCAL" ]; then
+	MAILBOX_LOCAL="$MAILBOX"
+fi
+if [ -z "$MAILBOX_REMOTE" ]; then
+	MAILBOX_REMOTE="$MAILBOX"
+fi
+
 case $MODE in
 	default|oimap-dovecot)
 		if [ `echo $MAILBOX_LOCAL  | wc -w` -gt 1 -o \
