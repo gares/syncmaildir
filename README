@@ -41,41 +41,50 @@ implemented in low level languages (to achieve decent performances) and
 high level tools are written in scripting languages (to achieve better
 flexibility).
 
-- `mddiff` is a small and hopefully efficient C program that given a
+- [`mddiff`](mddiff.1.html) 
+  is a small and hopefully efficient C program that given a
   db-file (a snapshot of a previous mailbox status) generates a set of
   actions (a diff) a client should perform to synchronize its local mailbox
   copy.  It is a low level tool, not meant to be used directly by the user.
-- `smd-server` a simple script that calls `mddiff` to compute the diff,
+- [`smd-server`](smd-server.1.html)
+  a simple script that calls `mddiff` to compute the diff,
   sends it to the client and then listens for client requests like getting a
   mail body or header.  Even if this tool is simple to run, redirecting its
   input and output to `smd-client` over a network may not be straightforward,
   thus users should not call it directly.
-- `smd-client` a quite complex script applying a diff locally, eventually
+- [`smd-client`](smd-client.1.html) 
+  a quite complex script applying a diff locally, eventually
   requesting data to the server.  In case the diff cannot be applied
   cleanly, it outputs an error message that higher level tools should display
   to the user.  As `smd-server` it is a quite high level tool, but should not
   be called directly by the average user.
-- `smd-pull` thanks to ssh, it executes `smd-server` on the server host and
+- [`smd-pull`](smd-pull.1.html) 
+  thanks to ssh, it executes `smd-server` on the server host and
   `smd-client` on the client host.  This allows to pull remote changes and
   apply them locally.  The remote mailbox is left untouched.  This tool is
   meant to be called by the user.
-- `smd-push` thanks to ssh, it executes `smd-client` on the server host and
+- [`smd-push`](smd-push.1.html) 
+  thanks to ssh, it executes `smd-client` on the server host and
   `smd-serer` on the client host.  This allows to push local changes and to
   apply them on the remote host.  The local mailbox is left untouched.  This
   tool is meant to be called by the user.
-- `smd-translate` handles common folder renaming scenarios. The tool 
+- [`smd-translate`](smd-translate.1.html) 
+  handles common folder renaming scenarios. The tool 
   is meant to be used as a translator program in the configuration file 
   of `smd-pull` and `smd-push`.
-- `smd-check-translators` performs a quick check that a setup involving
+- [`smd-check-translators`](smd-check-translators.1.html) 
+  performs a quick check that a setup involving
   some folders renaming actually works as expected. This tool is meant to
   be manually called by the user to check a given configuration file.
-- `smd-loop` runs runs smd-push and smd-pull at regular intervals as defined
+- [`smd-loop`](smd-loop.1.html) 
+  runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
   catches recoverable errors (like a, non recurrent, network problem),
   bailing out only in cases where human intervention is needed.  This is
   the utility you may want to run if you are using a textual environment or
   a graphical one not based on GNOME.
-- `smd-applet` is an applet for the GNOME notification area, that runs
+- [`smd-applet`](smd-applet.1.html) 
+  is an applet for the GNOME notification area, that runs
   `smd-loop`, eventually notifying the user for critical events and allowing
   him to solve them by clicking on buttons instead of running commands from
   the shell.
@@ -96,8 +105,8 @@ higher level tools like `smd-loop` or `smd-applet`.
 
 Both tools read a configuration file in `~/.smd/config.name`, that is a simple
 shell script sourced by both when called with argument `name`.  If no argument
-is given, they source `~/.smd/config.default`.
-This file defines the following variables:
+is given, they source `~/.smd/config.default`. 
+This file defines the following variables (see the [`smd-config`](smd-config.5.html) manpage for a complete documentation):
 
 - `SERVERNAME` is a valid alias for ssh.  It should be defined in
   your `~/.ssh/config`, with compression enabled.  For example:

@@ -222,8 +222,16 @@ $(HTML): check-w-markdown
 	grep -h '^##' sample-hooks/* | sed 's/^## \?//' | markdown >> hooks.html
 	cat misc/tail.html >> hooks.html
 
-upload-website: $(HTML)
-	scp $(HTML) misc/style.css $(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)
+%.html:%.txt
+	cat misc/head.html > $@
+	echo '<pre>' >> $@
+	cat $< | sed -e '/^AUTHOR/,$$d' >> $@
+	echo '</pre>' >> $@
+	cat misc/tail.html >> $@
+
+upload-website: $(HTML) $(MANPAGES1:%=%.html) $(MANPAGES5:%=%.html)
+	scp $? misc/style.css \
+		$(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)
 
 upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $(PROJECTNAME)-$(VERSION).tar.gz \
