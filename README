@@ -63,6 +63,12 @@ flexibility).
   `smd-serer` on the client host.  This allows to push local changes and to
   apply them on the remote host.  The local mailbox is left untouched.  This
   tool is meant to be called by the user.
+- `smd-translate` handles common folder renaming scenarios. The tool 
+  is meant to be used as a translator program in the configuration file 
+  of `smd-pull` and `smd-push`.
+- `smd-check-translators` performs a quick check that a setup involving
+  some folders renaming actually works as expected. This tool is meant to
+  be manually called by the user to check a given configuration file.
 - `smd-loop` runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
   catches recoverable errors (like a, non recurrent, network problem),
@@ -207,28 +213,25 @@ Last, translators are executed as external programs, thus they must be
 present in your path (for example in `~/bin/`) and have the executable
 bit set (`chmod +x`).
 
-Remember that to test your setup you can use the dry-run mode with 
-`smd-push -d` and `smd-pull -d` and examine their output. This anyway should
-be tried before the first pull/push, and thus may take a long time depending
-on the size of your mailboxes.
-Alternatively, for a quicker check, you may want to try the following one liner:
+To check your setup you can run the `smd-check-translators` utility.
+The test consists in listing local and remote mailboxes, calling
+the translators, displaying the result to the user and checking for
+round trip (i.e. that the translators programs behave as inverse
+functions on the current input).
 
-    for M in `mddiff -l Mail`; do loc_to_remote.sh $M; done
+You can also test your setup using the dry-run mode with 
+`smd-push -d` and `smd-pull -d` and examine their output. 
+This anyway should be tried before the first pull/push, and thus 
+may take a long time depending on the size of your mailboxes.
 
-And if you want to test the round trip:
-
-    for M in `mddiff -l Mail`; do remote_to_loc.sh `loc_to_remote.sh $M`; done
-
-You may also want to try the same snippets on the remote host:
-
-    for M in `mddiff -l Maildir`; do remote_to_loc.sh $M; done
-    for M in `mddiff -l Maildir`; do loc_to_remote.sh `remote_to_loc.sh $M`; done
-
-To avoid common mistakes, some recurrent renaming scenarios are handled by the
-`smd-translate` utility: XXX still to be written
-
-    TRANSLATOR_LR="smd-translate -d LR -i courier -l Mail -r Maildir"
-    TRANSLATOR_RL="smd-translate -d RL -i courier -l Mail -r Maildir"
+To avoid common mistakes in writing translators, some recurrent renaming
+scenarios are handled by the `smd-translate` utility. 
+Assuming the `MAILBOX_LOCAL` configuration variable is set to `Mail`
+and the `MAILBOX_REMOTE` is set to `Maildir`, one can use the following
+configuration file snippet in `~/.smd/config.endpoint`:
+  
+    TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL endpoint"
+    TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR endpoint"
 
 ### smd-loop
 
