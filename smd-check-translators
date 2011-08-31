@@ -33,6 +33,10 @@ fi
 if [ -z "$MAILBOX_REMOTE" ]; then
 	MAILBOX_REMOTE="$MAILBOX"
 fi
+if [ -z "$TRANSLATOR_LR" -o -z "$TRANSLATOR_RL" ]; then
+	echo Endpoint $REPNAME is not configured to use translators	
+	exit 1
+fi
 
 cd
 
