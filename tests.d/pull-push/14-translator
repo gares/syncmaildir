@@ -79,4 +79,22 @@ mpush -d
 W=`grep translating log.push | wc -l`
 assert $W 3 "smd-push -d not printing 'translating' lines"
 
+mpush
+assert $? 0 "mpush failed"
+mkdir -p "target/MyMail/bad name/"
+mv target/MyMail/cur "target/MyMail/bad name/cur"
+mpush
+assert $? 0 "mpush failed with space in dirname"
+test_eq "Mail/.bad name" "target/MyMail/bad name"
+mpull
+assert $? 0 "mpull failed with space in dirname"
+test_eq "Mail/.bad name" "target/MyMail/bad name"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+mv "Mail/.bad name" "Mail/. very bad name"
+mpull
+assert $? 0 "mpull failed with space in dirname"
+test_eq "Mail/. very bad name" "target/MyMail/ very bad name"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
 
