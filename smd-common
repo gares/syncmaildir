@@ -133,18 +133,20 @@ is_absolute() {
 }
 
 resolve_translator(){
-if [ ! -z "$1" ]; then
+local T=${1%% *}
+if [ ! -z "$T" ]; then
 	if is_absolute "$1"; then
 		RC="$1"
-	elif `type "$HOME/$1" >/dev/null 2>&1`; then
+	elif `type "$HOME/$T" >/dev/null 2>&1`; then
 		RC="$HOME/$1"
-	elif `type "$1" >/dev/null 2>&1`; then
+	elif `type "$T" >/dev/null 2>&1`; then
 		RC="$1"
 	else
-		echo "Unable to find the given translator: $1"
+		echo "Unable to find the given translator: $T"
 		echo "It is not an absolute path"
-		echo "It is not in $HOME"
-		echo "It is not in \$PATH"
+		echo "It is not in \$HOME=$HOME"
+		echo "It is not in \$PATH=$PATH"
+		# XXX tags?
 		exit 1
 	fi
 else
@@ -153,22 +155,30 @@ fi
 }
 
 setup_workarea(){
-	TMP_FIND=`gc_mktemp`
-	TMP_FIND_ERR=`gc_mktemp`
+	local TMP_FIND=`gc_mktemp`
+	local TMP_FIND_ERR=`gc_mktemp`
 	$MDDIFF -l $MAILBOX_LOCAL >$TMP_FIND 2>$TMP_FIND_ERR
 	if [ ! $? -eq 0 ]; then
 		echo "$MDDIFF gave an error while scanning $MAILBOX_LOCAL:"
 		cat $TMP_FIND_ERR
 		exit 1
 	fi
-	for M in `cat $TMP_FIND`; do
-		TM=`$TRANSLATOR_LR "$M"`
+	local TMP_T=`gc_mktemp`
+	local ERR=0
+	while read M; do
+		$TRANSLATOR_LR "$M" > $TMP_T || ERR=$?
+		if [ $ERR -eq 1 -o "`head -n 1 $TMP_T`" = "ERROR" ]; then
+			# XXX nice message + tags
+			cat $TMP_T
+			exit 1
+		fi
+		local TM="`cat $TMP_T`"
 		if [ $VERBOSE -eq 1 ]; then
 			echo "translating:" $M "->" $TM
 		fi
-		mkdir -p .smd/workarea/`dirname "$TM"`
-		ln -s "$HOME/$M" .smd/workarea/"$TM"
-	done
+		mkdir -p ".smd/workarea/`dirname "$TM"`"
+		ln -s "$HOME/$M" ".smd/workarea/$TM"
+	done < $TMP_FIND
 }
 
 ### Command line argument parsing ###
