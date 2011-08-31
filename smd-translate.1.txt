@@ -1,1 +1,53 @@
-XXX write this manpage
+NAME
+  smd-translate - translates mailbox names according to predefined patterns
+
+SYNOPSIS
+  smd-translate [-m mode] [-d direction] endpoint mailbox
+
+DESCRIPTION
+  smd-translate translates mailbox names according to predefined patterns.
+  It is designed to be used in the configuration file of smd-push(1) and
+  smd-pull(1).
+
+  Refer to smd-config(5) for a longher discussion on translators.
+
+  Supported modes follow.
+
+  oimap-dovecot  
+
+  This mode is designed to make the transition of offlineimap users to
+  smd simpler. It assumes remote mailboxes are named like in the 
+  following:
+    
+    Maildir/cur
+    Maildir/.sub.folder/new
+    
+  The corresponding local mailboxes are named like in the following:
+    
+    Mail/cur
+    Mail/sub.folder/new
+    
+USAGE IN CONFIGURATION FILE
+  Assuming the MAILBOX_LOCAL configuration variable is set to Mail
+  and the MAILBOX_REMOTE is set to Maildir, one can use the following
+  configuration file snippet in ~/.smd/config.endpoint:
+  
+    TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL endpoint"
+    TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR endpoint"
+    
+  To test your setup use the smd-check-translators(1) utility.
+
+OPTIONS
+  -m mode       One of the supported modes listed above
+  -d direction  One of RL or LR
+  endpoint      Is the suffix for the name of the configuration file to use
+  mailbox       The mailbox name to translate
+
+FILES
+  ~/.smd/config.*
+
+SEE ALSO
+  smd-push(1), smd-pull(1), smd-config(5), smd-check-translators(1)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>
