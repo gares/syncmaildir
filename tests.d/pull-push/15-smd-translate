@@ -1,0 +1,94 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX_LOCAL=MyMail >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo 'TRANSLATOR_RL="smd-translate -m default -d RL default"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m default -d LR default"' >> target/.smd/config.default
+
+mkdir -p Mail/.foo.bar
+cp -r Mail/cur Mail/.foo.bar/
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/cur/ target/MyMail/cur/
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+
+cp Mail/.foo.bar/cur/`ls Mail/.foo.bar/cur/|head -n 1` Mail/.foo.bar/cur/here
+sed -i s/a/z/ Mail/.foo.bar/cur/here
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+mkdir -p Mail/.foo.baz/cur
+cp Mail/.foo.bar/cur/here Mail/.foo.baz/cur/here
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+
+touch target/.smd/workarea/cruft
+mpull 2> /dev/null
+assert $? 1 "smd-pull did not detect cruft in workarea/"
+rm target/.smd/workarea/cruft
+
+mpush
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+test_eq Mail/cur target/MyMail/cur
+
+chmod a-rx target/MyMail/foo.bar/
+mpush
+R=$?
+chmod a+rx target/MyMail/foo.bar/
+assert $R 1 "smd-push did not detect a scanning error"
+
+mpush
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+test_eq Mail/cur target/MyMail/cur
+
+rm -rf target/MyMail target/.smd/*.db.txt* .smd/*.db.txt*
+mpull -d
+W=`grep translating log.pull | wc -l`
+assert $W 3 "smd-pull -d not printing 'translating' lines"
+mpull
+rm -rf Mail target/.smd/*.db.txt* .smd/*.db.txt*
+mpush -d
+W=`grep translating log.push | wc -l`
+assert $W 3 "smd-push -d not printing 'translating' lines"
+
+mpush
+assert $? 0 "mpush failed"
+mkdir -p "target/MyMail/bad name/"
+mv target/MyMail/cur "target/MyMail/bad name/cur"
+mpush
+assert $? 0 "mpush failed with space in dirname"
+test_eq "Mail/.bad name" "target/MyMail/bad name"
+mpull
+assert $? 0 "mpull failed with space in dirname"
+test_eq "Mail/.bad name" "target/MyMail/bad name"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+mv "Mail/.bad name" "Mail/. very bad name"
+mpull
+assert $? 0 "mpull failed with space in dirname"
+test_eq "Mail/. very bad name" "target/MyMail/ very bad name"
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+test_eq Mail/.foo.baz/ target/MyMail/foo.baz/
+
+rm Mail/.foo.bar/cur/`ls Mail/.foo.bar/cur|head -n 1`
+rm target/MyMail/foo.baz/cur/`ls target/MyMail/foo.baz/cur|head -n 1`
+
+echo 'TRANSLATOR_RL="smd-translate -m default -d XX default"' >> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m default -d XX default"' >> target/.smd/config.default
+mpull
+assert $? 1 "mpull suceeded with a bad tanslator"
+mpush
+assert $? 1 "mpush suceeded with a bad tanslator"
+

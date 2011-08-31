@@ -1,1 +1,98 @@
-XXX write this tool
+#!/bin/sh
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright 2011 Enrico Tassi <gares@fettunta.org>
+
+set -e
+#set -x
+
+MODE=default
+REPNAME=
+INPUT=
+ARGS="$@"
+
+# arg parsing
+while [ "$#" -gt 0 ]; do
+	case $1 in
+		-m)
+			MODE="$2"
+			shift
+			shift
+		;;
+		-d)
+			DIRECTION="$2"
+			shift
+			shift
+		;;
+		*)
+			REPNAME="$1"
+			INPUT="$2"
+			break
+		;;
+	esac
+done
+
+if [ -z "$REPNAME" ]; then
+	echo ERROR
+	echo smd-translate: No endpoint specified
+	exit 1
+fi
+
+if [ ! -e ~/.smd/config.$REPNAME ]; then
+	echo ERROR
+	echo smd-translate: No configuration file for endpoint $REPNAME
+	exit 1
+fi
+
+if [ -z "$INPUT" ]; then
+	echo ERROR
+	echo smd-translate: No input in $ARGS
+	exit 1
+fi
+
+if [ "$DIRECTION" != LR -a "$DIRECTION" != RL ]; then
+	echo ERROR
+	echo smd-translate: Direction $DIRECTION passed with -d is not LR nor RL
+	exit 1
+fi
+
+. ~/.smd/config.$REPNAME
+
+case $MODE in
+	default|oimap-dovecot)
+		if [ `echo $MAILBOX_LOCAL  | wc -w` -gt 1 -o \
+			 `echo $MAILBOX_REMOTE | wc -w` -gt 1 ]; then
+			echo ERROR
+			echo smd-translate: $MODE mode supports only a single mailbox root
+			exit 1
+		fi
+		case $DIRECTION in
+			RL)
+				echo "$INPUT" | \
+					sed -e "s?^$MAILBOX_REMOTE\(.*\)\$?$MAILBOX_LOCAL\1?" \
+						-e "s?/\.?/?"
+			;;
+			LR)
+				if [ "$INPUT" = "$MAILBOX_LOCAL/cur" -o \
+					 "$INPUT" = "$MAILBOX_LOCAL/tmp" -o \
+					 "$INPUT" = "$MAILBOX_LOCAL/new" ]; then
+					echo "$INPUT" | \
+						sed "s?^$MAILBOX_LOCAL/\(.*\)?$MAILBOX_REMOTE/\1?"
+				else
+					echo "$INPUT" | \
+						sed "s?^$MAILBOX_LOCAL/\(.*\)?$MAILBOX_REMOTE/.\1?"
+				fi
+			;;
+		esac
+	;;
+	*)
+		echo ERROR
+		echo smd-translate: Mode $MODE not supported
+		exit 1
+	;;
+esac
+
+exit 0
+
+# vim:ts=4:
