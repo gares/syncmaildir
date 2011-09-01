@@ -42,14 +42,17 @@ run_hooks $CONFDIR pre push 0
 
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
+atexit_kill $LOGGER1
 
 ($MITM $StC > $LtC) < $StL &
 LOGGER2=$!
+atexit_kill $LOGGER2
 
 setup_workarea
 
 (cd $WORKAREA; $SMDSERVER $CHILDSARGS $CLIENTNAME $MAILBOX_REMOTE < $LtC 2>> $CL) > $CtL &
 CLIENT=$!
+atexit_kill $CLIENT
 
 EXITCODE=0
 ($SSH $SERVERNAME $REMOTESMDCLIENT $CHILDSARGS $CLIENTNAME $MAILBOX_REMOTE < $LtS 2> $SL) > $StL || EXITCODE=1
