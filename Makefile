@@ -21,6 +21,7 @@ BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
 PKG_GTK=gtk+-3.0 
+SMD_APPLET_C=smd-applet.c 
 PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
 MIN_GLIB_VERSION=2.19.1
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
@@ -84,7 +85,7 @@ mddiff: mddiff.c smd-config.h
 	$H $(CC) $(CFLAGS) $< -o $@ \
 		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
 
-smd-applet: smd-applet.c smd-config.h
+smd-applet: $(SMD_APPLET_C) smd-config.h
 	@echo CC $<
 	$H $(CC) $(CFLAGS_VALA) $< -o $@ \
 		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)`
@@ -258,6 +259,11 @@ static/%:
 		CFLAGS="$(CFLAGS) -static " \
 		PKG_FLAGS="$(PKG_FLAGS) --static " \
 		PREFIX="$(PREFIX)" H=$H
+
+gnome2/%:
+	$H $(MAKE) $* \
+		SMD_APPLET_C=misc/smd-applet-1.0.0.c PKG_GTK=gtk+-2.0
+
 
 osx/%:
 	$H $(MAKE) $* SED=sed PREFIX="$(PREFIX)" H=$H
