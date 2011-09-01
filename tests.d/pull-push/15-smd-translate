@@ -55,12 +55,12 @@ test_eq Mail/cur target/MyMail/cur
 
 rm -rf target/MyMail target/.smd/*.db.txt* .smd/*.db.txt*
 mpull -d
-W=`grep translating log.pull | wc -l`
+W=`grep translating log.pull | grep -v ^+ | wc -l`
 assert $W 3 "smd-pull -d not printing 'translating' lines"
 mpull
 rm -rf Mail target/.smd/*.db.txt* .smd/*.db.txt*
 mpush -d
-W=`grep translating log.push | wc -l`
+W=`grep translating log.push | grep -v ^+ | wc -l`
 assert $W 3 "smd-push -d not printing 'translating' lines"
 
 mpush
