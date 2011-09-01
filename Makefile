@@ -251,7 +251,7 @@ text/%:
 	$H $(MAKE) $* \
 		BINARIES="$(subst smd-applet,,$(BINARIES))" \
 		MANPAGES1="$(subst smd-applet.1,,$(MANPAGES1))" \
-		PREFIX="$(PREFIX)" H=$H
+		PREFIX="$(PREFIX)" VALAC=ls H=$H
 
 static/%:
 	$H $(MAKE) $* \
