@@ -1,8 +1,8 @@
 NAME
-  smd-check-translators - checks translators round trip
+  smd-check-conf - checks translators round trip
 
 SYNOPSIS
-  smd-check-translators [endpoint]
+  smd-check-conf [endpoint]
 
 DESCRIPTION
   smd-check-translators tests the translators for a configured endpoint.
