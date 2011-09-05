@@ -673,6 +673,7 @@ STATIC void analyze_dir(const char* path){
 			free(newdir);
 		}
 	}
+	closedir(dir);
 }
 
 STATIC void analyze_dirs(char* paths[], int no){
