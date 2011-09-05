@@ -317,6 +317,11 @@ read_conffile() {
 	fi
 
 	. $CONFFILE
+
+	# sanityze
+	MAILBOX="${MAILBOX%%/}"
+	MAILBOX_LOCAL="${MAILBOX_LOCAL%%/}"
+	MAILBOX_REMOTE="${MAILBOX_REMOTE%%/}"
 }
 
 ### Only one instance at a time please ###
