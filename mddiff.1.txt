@@ -1,7 +1,7 @@
 NAME
   mddiff - computes diff for maildirs
 SYNOPSIS
-  mddiff [--max-mailno mno] [--db-file dbf] [-l|--list]
+  mddiff [--max-mailno mno] [--db-file dbf] [-l|--list] [-s|--symlink]
          [-v|--verbose] [-d|--dry-run] [--help] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
@@ -17,6 +17,12 @@ DESCRIPTION
       806a0ffe4f29766effd764... 463e543da9dac8e298...
       582cbb6a5cd3ce13965c8c... 8fa60a7458b1157193...
       ...
+
+  If paths is a single file name, and that file is a fifo, and the -s option
+  is passed, mddiff reads from that fifo two lines at a time, respectively
+  a source name and a target name. It then creates a symlink named as
+  as the target name pointing to the source name. If fome dictories need to be
+  created in order to create the symlink, this is also done.
   
   If paths is a list of directories, mddiff outputs a list of actions a client
   has to perform to synchronize a copy of the same maildirs. This set of actions
@@ -47,6 +53,7 @@ OPTIONS
                         increased automatically when needed
   --db-file dbf         Name of the cache for the endpoint (default db.txt)
   -l --list             Only list the mailboxes recursively contained in paths
+  -s --symlink          Create symlinks for paths reand on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)
   -d --dry-run          Do not generate a new db-file
   --help                This help screen

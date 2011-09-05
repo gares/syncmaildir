@@ -1,0 +1,16 @@
+#!/bin/sh
+
+rm -rf Mail
+mkdir -p a/b/c
+mkdir -p a/b/d
+mkfifo f
+mdiff -s f &
+MD=$!
+echo -e "$PWD/a/b/c\nd/e/f/g\n$PWD/a/b/d\nd/e/f/h" > f
+wait $MD 
+assert $? 0 "mdiff failed making dirs"
+test -L d/e/f/g
+assert $? 0 "no d/e/f/g"
+test -L d/e/f/h
+assert $? 0 "no d/e/f/h"
+

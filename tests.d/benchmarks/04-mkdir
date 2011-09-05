@@ -1,0 +1,30 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo 'TRANSLATOR_RL="cat"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="cat"' >> target/.smd/config.default
+AMOUNT=3000
+rm -rf Mail
+mkdir target/Mail/
+TM=`mktemp`
+for i in `seq 1 $AMOUNT`; do
+	echo target/Mail/$i/cur >> $TM
+done
+D=`date +%s`
+mkdir -p `cat $TM`
+D1=`date +%s`
+OT=`expr $D1 - $D`
+sync
+echo -n .
+D=`date +%s`
+mpush
+D1=`date +%s`
+echo -n "(`expr $D1 - $D`s, mkdir takes ${OT}s)."
+
+W=`ls target/.smd/workarea/Mail | wc -l`
+assert $W $AMOUNT "workarea not set up properly"

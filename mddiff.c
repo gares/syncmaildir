@@ -184,6 +184,7 @@ STATIC time_t lastcheck;
 STATIC int verbose;
 STATIC int dry_run;
 STATIC int only_list_subfolders;
+STATIC int only_generate_symlinks;
 
 // ============================ helpers =====================================
 
@@ -754,6 +755,7 @@ STATIC struct option long_options[] = {
 	{"max-mailno", 1, NULL, OPT_MAX_MAILNO},
 	{"db-file"   , 1, NULL, OPT_DB_FILE},
 	{"list"      , 0, NULL, 'l'},
+	{"symlink"   , 0, NULL, 's'},
 	{"verbose"   , 0, NULL, 'v'},
 	{"dry-run"   , 0, NULL, 'd'},
 	{"help"      , 0, NULL, 'h'},
@@ -774,6 +776,7 @@ STATIC const char* long_options_doc[] = {
 		"increased automatically when needed", 
 	"Name of the cache for the endpoint (default db.txt)",
 	"Only list subfolders (short -l)",
+	"Symbolic Link generation mode (short -s)",
 	"Increase program verbosity (printed on stderr, short -v)", 
 	"Do not generate a new db file (short -d)",
 	"This help screen", 
@@ -825,7 +828,7 @@ int main(int argc, char *argv[]) {
 	g_assert(MAIL(GPTR(1)) == 1);
 
 	for(;;) {
-		c = getopt_long(argc, argv, "vhdl", long_options, &option_index);
+		c = getopt_long(argc, argv, "vhdls", long_options, &option_index);
 		if (c == -1) break; // no more args
 		switch (c) {
 			case OPT_MAX_MAILNO:
@@ -842,6 +845,9 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'l':
 				only_list_subfolders = 1;
+			break;
+			case 's':
+				only_generate_symlinks = 1;
 			break;
 			case 'h':
 				help(argv[0]);
@@ -872,12 +878,38 @@ int main(int argc, char *argv[]) {
 			ERROR(fopen,"unable to open fifo %s\n",data);
 			exit(EXIT_FAILURE);
 		}
-		while (!feof(in)) {
-			char name[MAX_EMAIL_NAME_LEN];	
-			if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
-				size_t len = strlen(name);
-				if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
-				extra_sha_file(name,1);
+		if ( only_generate_symlinks ) {
+			/* symlink */
+			char src_name[MAX_EMAIL_NAME_LEN];
+			char tgt_name[MAX_EMAIL_NAME_LEN];
+			while (!feof(in)) {
+				if(fgets(src_name,MAX_EMAIL_NAME_LEN,in) != NULL &&
+				   fgets(tgt_name,MAX_EMAIL_NAME_LEN,in) != NULL) {
+					size_t src_len = strlen(src_name);
+					size_t tgt_len = strlen(tgt_name);
+					if (src_len > 0 && src_name[src_len-1] == '\n')
+						src_name[src_len-1]='\0';
+					if (tgt_len > 0 && tgt_name[tgt_len-1] == '\n')
+						tgt_name[tgt_len-1]='\0';
+					gchar* dir_tgt = g_path_get_dirname(tgt_name);
+					g_mkdir_with_parents(dir_tgt, 0770);
+					if ( symlink(src_name, tgt_name) != 0 ){
+						ERROR(symlink,"unable to symlink %s to %s: %s\n",
+							src_name, tgt_name, strerror(errno));
+						exit(EXIT_FAILURE);
+					}
+					g_free(dir_tgt);
+				}
+			}
+		} else {
+			/* sha1 */
+			while (!feof(in)) {
+				char name[MAX_EMAIL_NAME_LEN];
+				if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
+					size_t len = strlen(name);
+					if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
+					extra_sha_file(name,1);
+				}
 			}
 		}
 		exit(EXIT_SUCCESS);
