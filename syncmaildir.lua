@@ -93,9 +93,9 @@ end
 function dry_run() return dryrun end
 
 function set_translator(p)
-	if p == 'echo' then translator = function(x) return x end
+	if p == 'cat' then translator = function(x) return x end
 	else translator = function(x)
-		local f = io.popen(p..' '..quote(x))
+		local f = io.popen('echo '..quote(x)..' | '..p)
 		local rc = f:read('*l')
 		if rc == nil or rc == 'ERROR' then
 			log_error("Translator "..p.." on input "..x.." gave an error")

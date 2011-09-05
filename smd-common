@@ -150,7 +150,7 @@ if [ ! -z "$T" ]; then
 		exit 1
 	fi
 else
-	RC="echo"
+	RC="cat"
 fi
 }
 
@@ -163,22 +163,42 @@ setup_workarea(){
 		cat $TMP_FIND_ERR
 		exit 1
 	fi
+
+	local FIFO_MKDIR="$CONFDIR/fifo/mkdir"
+	[ -p "$FIFO_MKDIR" ] || mkfifo "$FIFO_MKDIR"
+	$MDDIFF -s "$FIFO_MKDIR" &
+	local DIR_MAKER=$!
+	atexit_kill $DIR_MAKER
+	exec 9>$FIFO_MKDIR
+
 	local TMP_T=`gc_mktemp`
 	local ERR=0
-	while read M; do
-		$TRANSLATOR_LR "$M" > $TMP_T || ERR=$?
-		if [ $ERR -eq 1 -o "`head -n 1 $TMP_T`" = "ERROR" ]; then
+	$TRANSLATOR_LR <$TMP_FIND >$TMP_T || ERR=$?
+	exec 7<$TMP_FIND
+	exec 8<$TMP_T
+
+   	while read M <&7 && read TM <&8; do
+		#$TRANSLATOR_LR "$M" > $TMP_T || ERR=$?
+		if [ $ERR -eq 1 -o "$TM" = "ERROR" ]; then
 			# XXX nice message + tags
 			cat $TMP_T
 			exit 1
 		fi
-		local TM="`cat $TMP_T`"
 		if [ $VERBOSE -eq 1 ]; then
 			echo "translating:" $M "->" $TM
 		fi
-		mkdir -p ".smd/workarea/`dirname "$TM"`"
-		ln -s "$HOME/$M" ".smd/workarea/$TM"
-	done < $TMP_FIND
+		echo "$HOME/$M" 1>&9
+		echo ".smd/workarea/$TM" 1>&9
+	done
+
+	exec 9>&-
+
+	wait $DIR_MAKER || ERR=1
+	if [ $ERR -eq 1 ]; then
+		## XXX nice err
+		echo "errog making symlinks"
+		exit 1
+	fi
 }
 
 ### Command line argument parsing ###

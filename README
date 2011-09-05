@@ -72,9 +72,9 @@ flexibility).
   handles common folder renaming scenarios. The tool 
   is meant to be used as a translator program in the configuration file 
   of `smd-pull` and `smd-push`.
-- [`smd-check-translators`](smd-check-translators.1.html) 
-  performs a quick check that a setup involving
-  some folders renaming actually works as expected. This tool is meant to
+- [`smd-check-conf`](smd-check-conf.1.html) 
+  performs a quick check that a setup, especially when it involves
+  some folders renaming, actually works as expected. This tool is meant to
   be manually called by the user to check a given configuration file.
 - [`smd-loop`](smd-loop.1.html) 
   runs runs smd-push and smd-pull at regular intervals as defined
@@ -187,7 +187,8 @@ programs must be defined:
 - `TRANSLATOR_RL` to translate remote names to local ones
 - `TRANSLATOR_LR` to translate local names to remote ones
 
-A translator is a program that receives one argument, a folder name,
+A translator is a program that receives in standard input one or more
+folder names,
 and must return 0 and print on standard output a corresponding folder name
 on success, or return 1 and prints the string `ERROR` on the first line
 and an optional following error message otherwise.  Note that the folder
@@ -206,23 +207,26 @@ like `Maildir/cur` or `Maildir/.sub.folder/new` to local names like
 could be:
 
     #!/bin/sh
-    echo $1 | sed 's/^Maildir\(.*\)$/Mail\1/' | sed 's?/\.?/?'
+    sed 's/^Maildir\(.*\)$/Mail\1/' | sed 's?/\.?/?'
 
 Translating the way back is trickier, since the leading `.` must be
 added only to sub-folders:
 
     #!/bin/sh
-    if [ "$1" = Mail/cur -o "$1" = Mail/tmp -o "$1" = Mail/new ]; then
-        echo $1 | sed 's?^Mail/\(.*\)?Maildir/\1?'
-    else
-        echo $1 | sed 's?^Mail/\(.*\)?Maildir/.\1?'
-    fi
+    t() {
+        if [ "$1" = Mail/cur -o "$1" = Mail/tmp -o "$1" = Mail/new ]; then
+            echo $1 | sed 's?^Mail/\(.*\)?Maildir/\1?'
+        else
+            echo $1 | sed 's?^Mail/\(.*\)?Maildir/.\1?'
+        fi
+    }
+    while read M; do t "$M"; done
 
 Last, translators are executed as external programs, thus they must be
 present in your path (for example in `~/bin/`) and have the executable
 bit set (`chmod +x`).
 
-To check your setup you can run the `smd-check-translators` utility.
+To check your setup you can run the `smd-check-conf` utility.
 The test consists in listing local and remote mailboxes, calling
 the translators, displaying the result to the user and checking for
 round trip (i.e. that the translators programs behave as inverse

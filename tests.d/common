@@ -56,7 +56,7 @@ run_client(){
 	HOME=$ROOT/$TESTSUITE/$N/target \
 	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
 	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
-		smd-client -t 'echo' -v \
+		smd-client -t 'cat' -v \
 		test Mail < $DD/s2c 2> $DD/log.client.$1 \
 		| tee $DD/log.c2s > $DD/c2s &
 	RC=$!

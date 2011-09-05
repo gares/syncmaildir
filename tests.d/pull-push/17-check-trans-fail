@@ -14,7 +14,7 @@ cp -r Mail/cur Mail/.foo.bar/
 
 cat > mytr1 <<EOT
 #!/bin/sh
-echo \$@
+cat
 EOT
 cat > mytr2 <<EOT
 #!/bin/sh
@@ -35,4 +35,4 @@ assert $? 0 "mpull failed"
 
 mcheck
 W=`grep 'ERROR -> ERROR' log.check | wc -l`
-assert $W 2 "Not translating 2"
+assert $W 1 "Not translating 2"

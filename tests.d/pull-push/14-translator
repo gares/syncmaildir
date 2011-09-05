@@ -11,17 +11,19 @@ echo TRANSLATOR_LR=../tlr >> target/.smd/config.default
 
 cat > tlr <<EOT
 #!/bin/sh
+t() {
 if [ "\$1" = MyMail/cur -o "\$1" = MyMail/tmp -o "\$1" = MyMail/new ]; then
 	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/\1?'
 else
 	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/.\1?'
 fi
+}
+while read M; do t "\$M"; done
 EOT
 chmod a+x tlr
 cat > trl <<EOT
 #!/bin/sh
-echo \$1 | sed 's/^Mail\(.*\)$/MyMail\1/' \
-	 | sed 's?/\.?/?'
+sed 's/^Mail\(.*\)$/MyMail\1/' | sed 's?/\.?/?'
 EOT
 chmod a+x trl
 

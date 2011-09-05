@@ -75,14 +75,14 @@ MAIL FOLDER RENAMING
 
   - must be an absolute path or relative to the $HOME directory or in the
     user $PATH and must be executable
-  - receives as first and only argument a path starting with one of the
+  - receives in standard input one or more paths starting with one of the
     roots listed in MAILBOX_LOCAL (for TRANSLATOR_LR) or MAILBOX_REMOTE 
     (for TRANSLATOR_RL) and ending with cur, new or tmp
   - it can fail, returning 1 and writing on standard output the string
     ERROR followed by a new line and a human readable error message in 
     the following lines
   - it can succeed, returning 0 and printing on standard output the 
-    corresponding translated path
+    corresponding translated paths
 
 FILES
 
