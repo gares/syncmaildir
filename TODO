@@ -1,0 +1,2 @@
+- remove dependency over LN, always use mddiff -s
+- consider using lua-posix, to get rid of MKDIR, MKFIFO
