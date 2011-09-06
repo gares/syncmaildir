@@ -35,7 +35,7 @@ USAGE IN CONFIGURATION FILE
     TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL endpoint"
     TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR endpoint"
     
-  To test your setup use the smd-check-translators(1) utility.
+  To test your setup use the smd-check-conf(1) utility.
 
 OPTIONS
   -m mode       One of the supported modes listed above
@@ -47,7 +47,7 @@ FILES
   ~/.smd/config.*
 
 SEE ALSO
-  smd-push(1), smd-pull(1), smd-config(5), smd-check-translators(1)
+  smd-push(1), smd-pull(1), smd-config(5), smd-check-conf(1)
 
 AUTHOR
   Enrico Tassi <gares@fettunta.org>

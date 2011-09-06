@@ -189,12 +189,12 @@ programs must be defined:
 
 A translator is a program that receives in standard input one or more
 folder names,
-and must return 0 and print on standard output a corresponding folder name
-on success, or return 1 and prints the string `ERROR` on the first line
-and an optional following error message otherwise.  Note that the folder
-names will be complete of the `MAILBOX` part and will always terminate
-with `cur`, `new` or `tmp`.  For example, consider the following configuration
-file:
+and must print on standard output a corresponding folder name
+on success, or prints the string `ERROR` followed by a new line
+and an optional following error message otherwise end exists returning 1.
+Note that the folder names will be complete of the `MAILBOX_LOCAL` or
+`MAILBOX_REMOTE` part and will always terminate with `cur`, `new` or `tmp`.
+For example, consider the following configuration file:
 
     MAILBOX_LOCAL=Mail
     MAILBOX_REMOTE=Maildir
@@ -240,11 +240,12 @@ may take a long time depending on the size of your mailboxes.
 To avoid common mistakes in writing translators, some recurrent renaming
 scenarios are handled by the `smd-translate` utility. 
 Assuming the `MAILBOX_LOCAL` configuration variable is set to `Mail`
-and the `MAILBOX_REMOTE` is set to `Maildir`, one can use the following
-configuration file snippet in `~/.smd/config.endpoint`:
+and the `MAILBOX_REMOTE` is set to `Maildir`, 
+One can use the following configuration file snippet as a reference,
+where default must be repaced with the endpoint name:
   
-    TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL endpoint"
-    TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR endpoint"
+    TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL default"
+    TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR default"
 
 ### smd-loop
 

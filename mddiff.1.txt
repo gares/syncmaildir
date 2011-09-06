@@ -21,7 +21,7 @@ DESCRIPTION
   If paths is a single file name, and that file is a fifo, and the -s option
   is passed, mddiff reads from that fifo two lines at a time, respectively
   a source name and a target name. It then creates a symlink named as
-  as the target name pointing to the source name. If fome dictories need to be
+  as the target name pointing to the source name. If some dictories need to be
   created in order to create the symlink, this is also done.
   
   If paths is a list of directories, mddiff outputs a list of actions a client

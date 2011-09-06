@@ -1,11 +1,12 @@
 NAME
-  smd-check-conf - checks translators round trip
+  smd-check-conf - checks smd configuration file
 
 SYNOPSIS
   smd-check-conf [endpoint]
 
 DESCRIPTION
-  smd-check-translators tests the translators for a configured endpoint.
+  smd-check-conf performs some sanity check on a configuration file.
+  It mainly tests the translators for a configured endpoint.
   The test consists in listing local and remote mailboxes, calling
   the translators, displaying the result to the user and checking for
   round trip (i.e. that the translators programs behave as inverse
@@ -20,7 +21,7 @@ FILES
   ~/.smd/config.*
 
 SEE ALSO
-  smd-translate(1), smd-config(5), smd-check-translators(1)
+  smd-translate(1), smd-config(5)
 
 AUTHOR
   Enrico Tassi <gares@fettunta.org>
