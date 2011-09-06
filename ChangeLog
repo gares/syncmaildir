@@ -17,6 +17,7 @@
 	  - directory handler leak fixed
 	* smd-common:
 	  - accept -s to show tags, while -v is used for more verbose output
+	  - sanitize input of MAILBOX like variables
 	* smd-client:
 	  - reworked to fix once and for all (hopefully ;-) the problems with
 	    names containing spaces
@@ -24,6 +25,7 @@
 	  - better report a network error
 	* Makefile:
 	  - minor improvements w.r.t. test running
+	  - eye candy stats target
 	* tests.d:
 	  - support tests for smd-push
 	  - test for renaming
