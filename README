@@ -15,8 +15,8 @@ development stopped in 2004.  Other general purpose tools like rsync or
 unison may work too, but not benefit from the fact that they are
 synchronizing mail messages.  Sync Mail Dir is similar to Maildirsync in its
 design and requirements, but is more efficient, having its mechanisms
-written in C (around 700 lines), while policies are written in scripting
-languages like Lua and shell script (other 900 lines).
+written in C (around 900 lines), while policies are written in scripting
+languages like Lua and shell script (other 1300 lines).
 
 Overview
 --------
