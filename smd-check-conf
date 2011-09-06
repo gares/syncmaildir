@@ -22,29 +22,17 @@ else
 	SMDROOT=$PREFIX/share/syncmaildir
 fi
 
-REPNAME=default
-
-if [ ! -z "$1" ]; then
-	REPNAME="$1"
-fi
-
-if [ ! -e ~/.smd/config.$REPNAME ]; then
-	echo "Config file ~/.smd/config.$REPNAME not found" exit 1
-fi
-
 . $SMDROOT/smd-common
-. ~/.smd/config.$REPNAME
+init
+parse_args "$@"
+read_conffile
+check_lockfile
+setup_plumbing
+setup_logging
+setup_mailboxnames
 
 bench(){
 	echo Benchmarking push boostrap time
-	init
-	parse_args "$@"
-	read_conffile
-	# this could be a system wide pre-hook
-	check_lockfile
-	setup_plumbing
-	setup_logging
-	setup_mailboxnames
 	cd 	
 	D_PRE=`date +%s`
 	setup_workarea
