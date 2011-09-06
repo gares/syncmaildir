@@ -14,7 +14,7 @@ DESCRIPTION
 
 OPTIONS
   -t --translator  Specify a program to translate remote mailbox names to 
-                   local ones. Note that the translator 'echo' (the identity
+                   local ones. Note that the translator 'cat' (the identity
                    program) is optimized away
   -v --verbose     Increase program verbosity (printed on stderr)
   -d --dry-run     Do not perform any action for real
