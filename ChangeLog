@@ -1,4 +1,4 @@
-../../.... - major feature improvement - version 1.2.0
+../09/2011 - major feature improvement - version 1.2.0
 	* all tools:
 	  - support for renaming mailboxes thanks to translator programs:
 	    useful to switch from offlineimap to smd
@@ -6,11 +6,12 @@
 	* smd-translate:
 	  - common translator utility to handle renaming typical imap servers
 	  - support dovecot imap server (removal of leading dots)
-	* smd-check-translators:
+	* smd-check-conf:
 	  - utility to test for round trip of translators on the current
-	    list of mailboxes
+	    list of mailboxes and perform some other sanity checks
 	* mddiff:
 	  - accept -l to list all mailboxes rooted in the given paths
+	  - accept -s to create symlinks reading input on a fifo
 	  - minor improvement: basename/g_path_basename now called
 	    only once per mail folder
 	* smd-common:
