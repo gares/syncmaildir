@@ -502,7 +502,7 @@ function main()
 		if v:byte(1) == string.byte('/',1) then
 			log_error("Absolute paths are not supported: "..v)
 			log_tags_and_fail("Absolute path detected",
-				"main","misconfiguration",true)
+				"main","mailbox-has--absolute-path",true)
 		end
 	end
 
