@@ -199,6 +199,7 @@ clean:
 	$H rm -rf tests.d/run
 	$H rm -f $(PROJECTNAME)-$(VERSION).tar.gz
 	$H rm -f $(HTML)
+	$H rm -f misc/smd-applet-1.0.0.c
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c
 	rm -f $(PROJECTNAME)-$(VERSION).tar.gz
@@ -239,6 +240,13 @@ upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
 	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/README
 
+stats:
+	T=`git tag | sort -V | head -n 1`; \
+	for V in `git tag | sort -V | tail -n +2`; do \
+		echo $$V; \
+		git diff $$T $$V | diffstat -s; T=$$V; \
+	done;\
+	git diff --no-prefix $$V HEAD | diffstat -C
 
 # ----------------------------------------------------------------------------
 # These templates collect standard values for known platforms, like osx.
@@ -261,6 +269,7 @@ static/%:
 		PREFIX="$(PREFIX)" H=$H
 
 gnome2/%:
+	$H gunzip -c misc/smd-applet-1.0.0.c.gz > misc/smd-applet-1.0.0.c
 	$H $(MAKE) $* \
 		SMD_APPLET_C=misc/smd-applet-1.0.0.c PKG_GTK=gtk+-2.0
 
