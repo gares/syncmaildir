@@ -14,6 +14,7 @@
 	  - accept -s to create symlinks reading input on a fifo
 	  - minor improvement: basename/g_path_basename now called
 	    only once per mail folder
+	  - directory handler leak fixed
 	* smd-common:
 	  - accept -s to show tags, while -v is used for more verbose output
 	* smd-client:
