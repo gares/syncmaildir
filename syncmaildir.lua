@@ -548,7 +548,6 @@ function quote(s)
 	return '"' .. s:gsub('"','\\"'):gsub("%)","\\)").. '"'
 end
 
--- XXX to understand how this interacts with the path in errmsgs
 function homefy(s)
 	if string.byte(s,1) == string.byte('/',1) then
 		return s
