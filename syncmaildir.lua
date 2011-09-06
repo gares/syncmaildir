@@ -164,7 +164,7 @@ function transmit(out, path, what)
 		log_error("If it is a regular file, please report the problem.")
 		log_tags_and_fail('Unable to calculate the size of the requested file.',
 			"transmit", "non-regular-file",true,
-			"display-permissions("..quote(path)..")")
+			mk_act('permission', path))
 	end
 	f:seek("set")
 
@@ -212,7 +212,7 @@ function receive(inf,outfile)
 				'please check.')
 			log_tags_and_fail("Unable to write incoming data",
 				"receive", "non-writeable-file",true,
-				"display-permissions("..quote(outfile)..")")
+				mk_act('permission', outfile))
 	end
 
 	local line = inf:read("*l")
@@ -289,8 +289,7 @@ function handshake(dbfile)
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
 		log_tags_and_fail('Database mismatch',
-			"handshake", "db-mismatch",true,"run(rm "..
-			quote(dbfile)..")")
+			"handshake", "db-mismatch",true, mk_act('rm',dbfile))
 	end
 end
 
@@ -338,10 +337,12 @@ function make_dir_aux(absolute, pieces)
 				'please check.')
 			log_tags_and_fail("Directory creation failed",
 				"mkdir", "wrong-permissions",true,
-				"display-permissions("..quote(dir)..")")
+				mk_act('permission',dir))
 		end
 		mkdir_p_cache[dir] = true
 	end
+	-- we restore the original input (ugly)
+	pieces[#pieces+1]=last
 end
 
 -- creates a directory that can contains a path, should be equivalent
@@ -534,7 +535,7 @@ function touch(f)
 			log_error('Unable to touch '..quote(f))
 			log_tags_and_fail("Unable to touch a file",
 				"touch","bad-permissions",true,
-				"display-permissions("..quote(f)..")")
+				mk_act('permission', f))
 		else
 			h:close()
 		end
@@ -555,6 +556,28 @@ function homefy(s)
 		return os.getenv('HOME')..'/'..s
 	end
 end	
+
+function mk_act(kind, name)
+	local homefy = function(x)
+		if is_translator_set() and string.byte(x,1) ~= string.byte('/',1) then
+			return homefy(".smd/workarea/"..x)
+		else
+			return homefy(x)
+		end
+	end
+	if kind == "display" then
+		return "display-mail("..quote(homefy(name))..")"
+	elseif kind == "rm" then
+		return "run(rm "..quote(homefy(name))..")"
+	elseif kind == "mv" then
+		return "run(mv -n "..quote(homefy(name)).." "..
+			quote(tmp_for(homefy(name),true)) ..")"
+	elseif kind == "permission" then
+		return "display-permissions("..quote(homefy(name))..")"
+	else
+		return kind .. (name or '')
+	end
+end
 
 function assert_exists(name)
 	local name = name:match('^([^ ]+)')
