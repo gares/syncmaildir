@@ -1,7 +1,7 @@
 #!/usr/bin/env lua5.1
 
-local f = io.open('smd-client')
-local data = f:read("*a")
+local f,g = io.open('smd-client'),io.open('syncmaildir.lua')
+local data = f:read("*a") .. g:read("*a")
 local errs = {}
 io.stderr = {}
 setmetatable(io.stderr,{
@@ -16,12 +16,14 @@ error = function() end
 require "syncmaildir"
 for k,v in pairs(syncmaildir) do _G[k] = v end
 
+set_translator('cat')
+
 local so_far = {}
 local so_far_counter = 0
 setmetatable(_G,{
 	__index = function(_,name)
 		if so_far[name] == nil then
-			so_far[name] = "foo"..so_far_counter
+			so_far[name] = "Mail/cur/foo"..so_far_counter
 			so_far_counter = so_far_counter + 1
 		end
 		return so_far[name]
