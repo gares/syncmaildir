@@ -413,9 +413,9 @@ report() {
 	local exitcode="$1"
 	local showtags="$2"
 	local currcmd="$3"
-	local inversecmd="$3"
-	local localprog="$4"
-	local remoteprog="$5"
+	local inversecmd="$4"
+	local localprog="$5"
+	local remoteprog="$6"
 	if [ $VERBOSE = 1 ]; then
 		grep ^INFO: $SL | sed 's/^INFO: //'
 		grep ^INFO: $CL | sed 's/^INFO: //'
