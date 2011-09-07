@@ -23,6 +23,9 @@
 	    names containing spaces
 	* syncmaildir.lua:
 	  - better report a network error
+	* smd-applet:
+	  - notification.set_hint "transient" called with a boolean GVariant
+	    to avoid crashing the notification-daemon
 	* Makefile:
 	  - minor improvements w.r.t. test running
 	  - eye candy stats target

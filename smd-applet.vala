@@ -614,7 +614,7 @@ class smdApplet {
 					   (e.is_error_event() && e.enter_network_error_mode)) {
 				notification = new Notify.Notification(
 					"Syncmaildir",e.message,e.message_icon);
-				notification.set_hint_byte("transient",1);
+				notification.set_hint("transient",new Variant.boolean(true));
 				try { notification.show(); }
 				catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 			} else if (e.is_error_event()) {
@@ -921,7 +921,7 @@ class smdApplet {
 			notification = new Notify.Notification(
 				"Syncmaildir","Syncmaildir is not configured properly, "+
 				"click on the icon to configure it.","dialog-warning");
-			notification.set_hint_byte("transient",1);
+			notification.set_hint("transient",new Variant.boolean(true));
 			try { notification.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		} else {
