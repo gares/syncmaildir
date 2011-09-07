@@ -1,5 +1,5 @@
 NAME
-  configuration file for smd-pull and smd-push
+  smd - configuration file for smd-pull and smd-push
 
 GENERAL SETUP
   To generate a template config file run smd-pull(1) with the -t option. 
