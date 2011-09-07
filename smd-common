@@ -146,7 +146,9 @@ if [ ! -z "$T" ]; then
 		echo "It is not an absolute path"
 		echo "It is not in \$HOME=$HOME"
 		echo "It is not in \$PATH=$PATH"
-		# XXX tags?
+		if [ $showtags = 1 ]; then
+			echo "$REPNAME: $localprog@$localhost: TAGS: error::context(conf) probable-cause(translator-not-found) human-intervention(necessary)"
+		fi
 		exit 1
 	fi
 else
@@ -178,10 +180,12 @@ setup_workarea(){
 	exec 8<$TMP_T
 
    	while read M <&7 && read TM <&8; do
-		#$TRANSLATOR_LR "$M" > $TMP_T || ERR=$?
 		if [ $ERR -eq 1 -o "$TM" = "ERROR" ]; then
-			# XXX nice message + tags
+			echo "Error: translating $M"
 			cat $TMP_T
+			if [ $showtags = 1 ]; then
+				echo "$REPNAME: $localprog@localhost: TAGS: error::context(workarea) probable-cause(bad-translator) human-intervention(necessary)"
+			fi
 			exit 1
 		fi
 		if [ $VERBOSE -eq 1 ]; then
@@ -195,8 +199,10 @@ setup_workarea(){
 
 	wait $DIR_MAKER || ERR=1
 	if [ $ERR -eq 1 ]; then
-		## XXX nice err
-		echo "errog making symlinks"
+		echo "Error: creating symlinks"
+		if [ $showtags = 1 ]; then
+			echo "$REPNAME: $localprog@localhost: TAGS: error::context(workarea) probable-cause(fail-create-symlink) human-intervention(necessary)"
+		fi
 		exit 1
 	fi
 }
