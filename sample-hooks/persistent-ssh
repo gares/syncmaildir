@@ -40,7 +40,7 @@
 ## Note that you may want to put the first four lines also in a more
 ## generic configuration entry, so that every ssh connection to your
 ## server can benefit from connection sharing. For example, a complete
-## ssh configuration file for `your.real.server.name` may look like the 
+## ssh configuration file for `your.real.server.name` may look like
 ## the following:
 ##
 ##     Host smd-server-foo
