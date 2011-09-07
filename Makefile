@@ -195,10 +195,10 @@ install-misc: $(MANPAGES1) $(MANPAGES5)
 	$(call install,README,share/doc/syncmaildir)
 
 clean: 
-	$H rm -f $(BINARIES) $(MANPAGES1)
+	$H rm -f $(BINARIES) $(MANPAGES1) $(MANPAGES5)
 	$H rm -rf tests.d/run
 	$H rm -f $(PROJECTNAME)-$(VERSION).tar.gz
-	$H rm -f $(HTML)
+	$H rm -f $(HTML) $(MANPAGES1:=.html) $(MANPAGES5:=.html)
 	$H rm -f misc/smd-applet-1.0.0.c
 
 dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c
