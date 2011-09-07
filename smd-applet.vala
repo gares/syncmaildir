@@ -746,7 +746,7 @@ class smdApplet {
 
 	// these are just wrappers for close_err
 	private void close_err_action(Gtk.Button b){ reset_to_regular_run(); }
-	private bool close_err_event(Gdk.Event e){
+	private bool close_err_event(Gdk.EventAny e){
 		reset_to_regular_run();
 		return true;
 	}
@@ -767,7 +767,7 @@ class smdApplet {
 	
 	// these are just wrappers for close_prefs
 	private void close_prefs_action(Gtk.Button b){ close_prefs(); }
-	private bool close_prefs_event(Gdk.Event e){
+	private bool close_prefs_event(Gdk.EventAny e){
 		close_prefs();
 		return true;
 	}
@@ -797,7 +797,7 @@ class smdApplet {
 
 	// these are just wrappers for close_logs
 	private void close_logs_action(Gtk.Button b){ close_logs(); }
-	private bool close_logs_event(Gdk.Event e){
+	private bool close_logs_event(Gdk.EventAny e){
 		close_logs();
 		return true;
 	}
@@ -805,7 +805,7 @@ class smdApplet {
 	// these are names for gtk_main_quit(), they are needed
 	// in order to remove signal handlers
 	private void my_gtk_main_quit_button(Gtk.Button b) { Gtk.main_quit(); }
-	private bool my_gtk_main_quit_event(Gdk.Event b) {
+	private bool my_gtk_main_quit_event(Gdk.EventAny b) {
 		Gtk.main_quit();
 		return false;
 	}

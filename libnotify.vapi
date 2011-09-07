@@ -1,1 +1,0 @@
-/usr/share/vala-0.12/vapi/libnotify.vapi

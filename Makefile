@@ -26,7 +26,7 @@ PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
 MIN_GLIB_VERSION=2.19.1
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
-VALAC=valac-0.12
+VALAC=valac-0.14
 H=@
 
 # ----------------------------------------------------------------------------
