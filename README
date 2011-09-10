@@ -247,6 +247,30 @@ where default must be repaced with the endpoint name:
     TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL default"
     TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR default"
 
+### excluding paths
+
+In case some paths need to be skipped, they can be specified as
+space separated glob(7) expressions in the following variable
+
+    EXCLUDE="Mail/Spam Mail/Trash"
+
+Note that these glob expressions have to match real paths, no translation
+operation is applied to them, so it may be necessary to specify different
+expressions for the local and remote endpoint.  In that case the following
+variables can be used:
+
+    EXCLUDE_LOCAL
+    EXCLUDE_REMOTE
+
+Matching is performed using fnmatch(3) with no special flags, thus '*' and
+'?' match any character including '/'. Last, note that spaces in glob
+expressions must be replaced by %20. For example, to exclude all
+paths matching the expression 'Mail/delayed [1-5] days/*' the variable
+EXCLUDE must be set to 'Mail/delayed%20[1-5]%20days/*'
+Last, matching is performed every time a directory is entered, and if
+the matching succeeds the derectory and all its subdirectories are skipped.
+Thus there is no need to specify a trailing '/*' in every expression.
+
 ### smd-loop
 
 `smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
