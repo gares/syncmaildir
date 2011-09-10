@@ -144,14 +144,74 @@ not edit your mailboxes during the first synchronization, since edits may
 force the software to bail out without saving the db-file, and thus making
 the following run as slow as the first one.
 
-#### dry run
+To check your setup you can run the `smd-check-conf` utility.
 
-From version 0.9.14, the tools `smd-push` and `smd-push` can be run with `-d`
-or `--dry-run` flags, that do not modify in any way your maildir, but
-can be very handy to understand which changes smd would perform if not told
-otherwise.
+The tools `smd-push` and `smd-push` can be run with the `-d`
+or `--dry-run` flag. In this way they will not modify in any way any maildir.
+Nevertheless it can be very handy to understand which changes smd would 
+perform if not told otherwise.
 
-#### hooks
+### smd-loop
+
+`smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
+by the user in the `~/.smd/loop` configuration file.  On errors that
+are reported to be transient, its retries a second time before failing.
+
+The first time you run `smd-loop` a sample config file is created for you.
+The configuration file is line oriented.  Each line is composed of three space
+separated fields:
+
+- `pull-frequency`
+- `push-frequency`
+- `endpoint-name`
+
+Frequencies are expressed in minutes, while endpoint
+name is a valid name for `smd-pull` and `smd-push`.  Lines
+beginning with # are considered as comments.  The following example
+calls the command `smd-pull default` every 3 minutes, and `smd-push default`
+every 10.
+
+    # pull-frequency push-frequency endpoint-name
+      3              10             default
+
+### smd-applet
+
+smd-applet just runs `smd-loop`, notifying the user if errors occur.  It
+can be run with `--configure` to pop-up its configuration window, that
+allows to tune its notification behaviour and to edit the configuration
+files for `smd-loop` and `smd-push/pull`.
+
+Notes on performances
+---------------------
+
+On my core duo 2 laptop equipped with a 5400rpm hard drive and with an hot
+cache, copying a 150MB mailbox with `tar cf - Mail | ssh -C localhost tar
+xf -` takes 17 seconds.  Doing the same with `smd-pull` takes 19 seconds.
+This is clearly an uncommon workload, since you rarely get 150MB of new
+mails, but it shows the extra work the tool is doing (like computing
+`sha1` sums for every mail, or the client-server protocol overhead) makes
+`smd` not so inefficient.  Once the mailbox has been copied, running
+`smd-pull` again to check for updates is almost instantaneous.
+
+Advanced Usage
+==============
+
+### multiple servers
+
+From verion `0.9.4` multiple configuration files are supported.  This means
+you can push/pull from/to different remote mailboxes (one at a time).  This
+turned out to be useful when migrating a mailbox:
+
+    smd-pull oldserver
+    smd-push newserver
+
+Note that you can run this for a while, not just one time.  This can make the
+transition from a mail-address to another smooth, since simply forwarding mail
+from the old to the new one makes you believe you changed the subscription to
+all your mailing lists, that is obviously not always the case since nobody
+remembers all the mailing lists he is subscribed to.
+
+### hooks
 
 From version 0.9.14, `smd-push` and `smd-pull` can run user defined
 hooks before and after doing their job.  Hooks are regular programs (usually
@@ -175,7 +235,7 @@ Hooks should not fail, if they do so then `smd-push/pull` will fail too.
 Sample hooks are available in the source tarball under the `sample-hooks/`.
 Some documentation about [available hooks](hooks.html) is also present.
 
-#### folder renaming
+### folder renaming
 
 In case your local and remote mailbox names or sub-folders structure differ,
 smd version 1.2.0 offers a translation functionality.
@@ -270,64 +330,6 @@ EXCLUDE must be set to 'Mail/delayed%20[1-5]%20days/*'
 Last, matching is performed every time a directory is entered, and if
 the matching succeeds the derectory and all its subdirectories are skipped.
 Thus there is no need to specify a trailing '/*' in every expression.
-
-### smd-loop
-
-`smd-loop` runs `smd-push` and `smd-pull` at regular intervals as defined
-by the user in the `~/.smd/loop` configuration file.  On errors that
-are reported to be transient, its retries a second time before failing.
-
-The first time you run `smd-loop` a sample config file is created for you.
-The configuration file is line oriented.  Each line is composed of three space
-separated fields:
-
-- `pull-frequency`
-- `push-frequency`
-- `endpoint-name`
-
-Frequencies are expressed in minutes, while endpoint
-name is a valid name for `smd-pull` and `smd-push`.  Lines
-beginning with # are considered as comments.  The following example
-calls the command `smd-pull default` every 3 minutes, and `smd-push default`
-every 10.
-
-    # pull-frequency push-frequency endpoint-name
-      3              10             default
-
-### smd-applet
-
-smd-applet just runs `smd-loop`, notifying the user if errors occur.  It
-can be run with `--configure` to pop-up its configuration window, that
-allows to tune its notification behaviour and to edit the configuration
-files for `smd-loop` and `smd-push/pull`.
-
-Notes on performances
----------------------
-
-On my core duo 2 laptop equipped with a 5400rpm hard drive and with an hot
-cache, copying a 150MB mailbox with `tar cf - Mail | ssh -C localhost tar
-xf -` takes 17 seconds.  Doing the same with `smd-pull` takes 19 seconds.
-This is clearly an uncommon workload, since you rarely get 150MB of new
-mails, but it shows the extra work the tool is doing (like computing
-`sha1` sums for every mail, or the client-server protocol overhead) makes
-`smd` not so inefficient.  Once the mailbox has been copied, running
-`smd-pull` again to check for updates is almost instantaneous.
-
-Advanced Usage
-==============
-
-From verion `0.9.4` multiple configuration files are supported.  This means
-you can push/pull from/to different remote mailboxes (one at a time).  This
-turned out to be useful when migrating a mailbox:
-
-    smd-pull oldserver
-    smd-push newserver
-
-Note that you can run this for a while, not just one time.  This can make the
-transition from a mail-address to another smooth, since simply forwarding mail
-from the old to the new one makes you believe you changed the subscription to
-all your mailing lists, that is obviously not always the case since nobody
-remembers all the mailing lists he is subscribed to.
 
 Installation
 ============
