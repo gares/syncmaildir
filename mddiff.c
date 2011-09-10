@@ -121,7 +121,6 @@ STATIC char* URLtxt(const char string[], char outbuff[]) {
 	return outbuff;
 }
 
-/* unused
 STATIC char* txtURL(const char* string, char* outbuff) {
 	size_t i,j;
 	size_t len = strlen(string);
@@ -138,7 +137,6 @@ STATIC char* txtURL(const char* string, char* outbuff) {
 	outbuff[j] = '\0';
 	return outbuff;
 }
-*/
 
 // flags used to mark struct mail so that at the end of the scanning 
 // we output commands lookig that flag
@@ -212,14 +210,15 @@ STATIC void assert_all_are(
 	int c, rc;
 	VERBOSE(input, "Asserting all input paths are: %s\n", description);
 	for(c = 0; c < argc; c++) { 
-		rc = stat(argv[c], &sb);
+		const char * argv_c = txtURL(argv[c], tmpbuff_5);
+		rc = stat(argv_c, &sb);
 		if (rc != 0) {
-			ERROR(stat,"unable to stat %s\n",argv[c]);
+			ERROR(stat,"unable to stat %s\n",argv_c);
 		} else if ( ! predicate(sb) ) {
 			ERROR(stat,"%s in not a %s, arguments must be omogeneous\n",
-				argv[c],description);
+				argv_c,description);
 		}
-		VERBOSE(input, "%s is a %s\n", argv[c], description);
+		VERBOSE(input, "%s is a %s\n", argv_c, description);
 	}
 }
 #define ASSERT_ALL_ARE(what,v,c) assert_all_are(what,tostring(what),v,c)
@@ -681,9 +680,10 @@ STATIC void analyze_dirs(char* paths[], int no){
 	int i;
 	for(i=0; i<no; i++){
 		// we remove a trailing '/' if any 
-		char *data = paths[i];
+		char *data = strdup(txtURL(paths[i],tmpbuff_5));
 		if (data[strlen(data)-1] == '/') data[strlen(data)-1] = '\0';
 		analyze_dir(data);
+		free(data);
 	}
 }
 
@@ -866,7 +866,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// remaining args is the dirs containing the data or the files to hash
-	data = argv[optind];
+	data = strdup(txtURL(argv[optind],tmpbuff_5));
 
 	// check if data is a directory or a regular file
 	c = stat(data, &sb);
@@ -916,6 +916,7 @@ int main(int argc, char *argv[]) {
 	} else if ( ! S_ISDIR(sb.st_mode) ) {
 		ERROR(stat, "given path is not a fifo nor a directory: %s\n",data);
 	}
+	free(data);
 	
 	// regular case, hash the content of maildirs rooted in the 
 	// list of directories specified at command line
