@@ -31,46 +31,20 @@ setup_plumbing
 setup_logging
 setup_mailboxnames
 
-bench(){
-	echo Benchmarking push boostrap time
-	cd 	
-	D_PRE=`date +%s`
-	setup_workarea
-	D_AFT=`date +%s`
-	echo `expr $D_AFT - $D_PRE`s
-}
-
 if [ -z "$SERVERNAME" -o -z "$CLIENTNAME" ]; then
 	echo "ERROR: SERVERNAME or CLIENTNAME not set"
 	exit 1
 fi
-if [ -z "$TRANSLATOR_LR" -a \
-	-z "$TRANSLATOR_RL" -a \
-	-z "$MAILBOX_LOCAL" -a \
-	-z "$MAILBOX_REMOTE" -a \
-	! -z "$MAILBOX" ]; then
 
-	bench "$@"
-
-	echo "Endpoint $REPNAME configuration file successfully checked"
-	exit 0
-fi
-
-if [ ! -z "$MAILBOX" -a ! -z "$MAILBOX_LOCAL" ]; then
+if [ ! -z "$MAILBOX" -a ! -z "$MAILBOX_LOCAL" -a "$MAILBOX" != "$MAILBOX_LOCAL" ]; then
 	echo "ERROR: both MAILBOX and MAILBOX_LOCAL set"
 	exit 1
 fi
-if [ ! -z "$MAILBOX" -a ! -z "$MAILBOX_REMOTE" ]; then
+if [ ! -z "$MAILBOX" -a ! -z "$MAILBOX_REMOTE" -a "$MAILBOX" != "$MAILBOX_REMOTE" ]; then
 	echo "ERROR: both MAILBOX and MAILBOX_REMOTE set"
 	exit 1
 fi
 
-if [ -z "$MAILBOX_LOCAL" ]; then
-	MAILBOX_LOCAL="$MAILBOX"
-fi
-if [ -z "$MAILBOX_REMOTE" ]; then
-	MAILBOX_REMOTE="$MAILBOX"
-fi
 if [ -z "$TRANSLATOR_LR" -o -z "$TRANSLATOR_RL" ]; then
 	echo ERROR: TRANSLATOR_LR and TRANSLATOR_RL not defined
 	exit 1
@@ -82,7 +56,7 @@ TL=`mktemp`
 TR=`mktemp`
 
 echo Local mailboxes translated to remote and back:
-$MDDIFF -l $MAILBOX_LOCAL > $TL
+$MDDIFF $LOCALEXCLUDE -l $MAILBOX_LOCAL > $TL
 if [ ! $? -eq 0 ]; then
 	echo Error while listing the content of $MAILBOX_LOCAL, skipping
 else
@@ -100,7 +74,7 @@ else
 fi
 echo
 echo Remote mailboxes translated to local and back:
-$SSH $SERVERNAME $MDDIFF -l $MAILBOX_REMOTE > $TR
+$SSH $SERVERNAME $MDDIFF $REMOTEEXCLUDE -l $MAILBOX_REMOTE > $TR
 if [ ! $? -eq 0 ]; then
 	echo Error while listing the content of $MAILBOX_REMOTE, skipping
 else
@@ -118,8 +92,6 @@ else
 fi
 
 rm $TL $TR
-
-bench "$@"
 
 echo "Endpoint $REPNAME configuration file successfully checked"
 exit 0
