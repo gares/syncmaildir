@@ -80,6 +80,8 @@ init() {
 	WORKAREA=$CONFDIR/workarea
 	REPNAME=default
 	CHILDSARGS=
+	REMOTEEXCLUDE=
+	LOCALEXCLUDE=
 
 	# default values for the configuration file
 	DEBUG=false
@@ -159,7 +161,7 @@ fi
 setup_workarea(){
 	local TMP_FIND=`gc_mktemp`
 	local TMP_FIND_ERR=`gc_mktemp`
-	$MDDIFF -l $MAILBOX_LOCAL >$TMP_FIND 2>$TMP_FIND_ERR
+	$MDDIFF $LOCALEXCLUDE -l $MAILBOX_LOCAL >$TMP_FIND 2>$TMP_FIND_ERR
 	if [ ! $? -eq 0 ]; then
 		echo "$MDDIFF gave an error while scanning $MAILBOX_LOCAL:"
 		cat $TMP_FIND_ERR
@@ -287,7 +289,8 @@ read_conffile() {
 
 		# The mailbox to sync, in case the path is the same on both hosts.
 		# The path MUST be relative to the home directory, use a symlink if
-		# the mailbox is not rooted there.
+		# the mailbox is not rooted there. If these paths contain spaces,
+		# they must be substituted with %20.
 		#
 		MAILBOX="Mail/"
 
@@ -302,6 +305,19 @@ read_conffile() {
 		# MAILBOX_REMOTE="OtherMail/"
 		# TRANSLATOR_RL=path
 		# TRANSLATOR_LR=path
+
+		# To exclude some paths from the synchronization you can specify
+		# a space separated list of glob(7) expressions. Spaces in these
+		# expressions must be replaced with %20.
+		#
+		# EXCLUDE="Mail/spam Mail/trash Mail/with%20spaces"
+		#
+		# If the local and remote mailbox differ in name or their
+		# sub directory/folder structure you can specify different
+		# excluded paths for the two endpoints.
+		#
+		# EXCLUDE_LOCAL="Mail/spam Mail/trash"
+		# EXCLUDE_REMOTE="OtherMail/with%20spaces"
 
 		# Log client to server and server to client communication.
 		# This is useful only for debugging, since all network traffic
@@ -328,6 +344,21 @@ read_conffile() {
 	MAILBOX="${MAILBOX%%/}"
 	MAILBOX_LOCAL="${MAILBOX_LOCAL%%/}"
 	MAILBOX_REMOTE="${MAILBOX_REMOTE%%/}"
+
+	# default exclude
+	if [ -z "$EXCLUDE_LOCAL" ]; then
+			EXCLUDE_LOCAL="$EXCLUDE"
+	fi
+	if [ -z "$EXCLUDE_REMOTE" ]; then
+			EXCLUDE_REMOTE="$EXCLUDE"
+	fi
+	for e in $EXCLUDE_LOCAL; do
+			LOCALEXCLUDE="$LOCALEXCLUDE --exclude $e"
+	done
+	for e in $EXCLUDE_REMOTE; do
+			REMOTEEXCLUDE="$REMOTEEXCLUDE --exclude $e"
+	done
+
 }
 
 ### Only one instance at a time please ###

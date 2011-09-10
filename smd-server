@@ -18,6 +18,7 @@ function main()
 	assert_exists(SHA1SUM)
 
 	-- argument parsing
+	local exclude = {}
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
 		" [-vd] endpointname mailboxes...\n"
 	while #arg > 2 do
@@ -26,6 +27,11 @@ function main()
 			table.remove(arg,1)
 		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
 			set_dry_run(true)
+			table.remove(arg,1)
+		elseif arg[1] == '--exclude' then
+			exclude[#exclude + 1] = arg[1]
+			exclude[#exclude + 1] = arg[2]
+			table.remove(arg,1)
 			table.remove(arg,1)
 		else
 			break
@@ -49,12 +55,14 @@ function main()
 	local mailbox_opt = table.concat(arg,' ')
 	local dry_opt = ''
 	if dry_run() then dry_opt = '-d' end
+	local exclude_opt = table.concat(exclude, ' ')
 
 	-- we check the protocol version and dbfile fingerprint
 	handshake(dbfile)
 	
 	-- run mddiff and send the output to the client
-	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..mailbox_opt
+	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
+		exclude_opt..' '..mailbox_opt
 	local r = io.popen(mddiff,"r")
 	local sent = 0
 	while true do
