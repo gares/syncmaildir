@@ -2,7 +2,7 @@ NAME
   mddiff - computes diff for maildirs
 SYNOPSIS
   mddiff [--max-mailno mno] [--db-file dbf] [-l|--list] [-s|--symlink]
-         [-v|--verbose] [-d|--dry-run] [--help] paths
+         [--exclude globexpr] [-v|--verbose] [-d|--dry-run] [--help] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
   recorded in a support file, called db file) and the current status, 
@@ -45,6 +45,13 @@ DESCRIPTION
   It is up to the higher level tool smd-server(1) to rename dbf.new to dbf 
   in case the other endpoint successfully applied the diff.
 
+  The --exclude option tells mddiff to ignore all paths matching the given
+  glob(7) expression. This option can be passed multiple times. Matching
+  is performed using fnmatch(3) with no special flags, thus '*' and '?' match
+  any character including '/'. Matching is performed when a directory is
+  entered. If the match is successful, the directory and all its 
+  subedirectories are skipped.
+
 OPTIONS
   --max-mailno mno      Estimation of max mail message number (defaults to the
                         number of messages in the db-file + 1000 or 500000
@@ -52,6 +59,7 @@ OPTIONS
                         for the first run on small systems. It is anyway
                         increased automatically when needed
   --db-file dbf         Name of the cache for the endpoint (default db.txt)
+  --exclude globexpr    Exclude paths maching the given expression
   -l --list             Only list the mailboxes recursively contained in paths
   -s --symlink          Create symlinks for paths reand on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <fnmatch.h>
 #include <glib.h>
 
 #include "smd-config.h"
@@ -183,6 +184,8 @@ STATIC int verbose;
 STATIC int dry_run;
 STATIC int only_list_subfolders;
 STATIC int only_generate_symlinks;
+STATIC int n_excludes;
+STATIC char **excludes;
 
 // ============================ helpers =====================================
 
@@ -635,6 +638,21 @@ STATIC void analyze_dir(const char* path){
 	DIR* dir;
 	struct dirent *dir_entry;
 	int inside_cur_or_new = 0;
+	int i, rc;
+
+	// skip excluded paths
+	for(i = 0; i < n_excludes; i++){
+		if ( (rc = fnmatch(excludes[i], path, 0)) == 0 ) {
+			VERBOSE(analyze_dir,
+				"skipping '%s' because excluded by pattern '%s'\n",
+				path, excludes[i]);
+			return;
+		}
+		if ( rc != FNM_NOMATCH ){
+			ERROR(fnmatch,"processing pattern '%s': %s",excludes[i],
+				strerror(errno))
+		}
+	}
 
 	// detect if inside cur/ or new/
 #ifdef __GLIBC__
@@ -644,7 +662,10 @@ STATIC void analyze_dir(const char* path){
 #endif
 	if ( !strcmp(bname,"cur") || !strcmp(bname,"new") ) {
 		inside_cur_or_new = 1;
-		if ( only_list_subfolders ) fprintf(stdout, "%s\n", path);
+		if ( only_list_subfolders ) {
+				fprintf(stdout, "%s\n", path);
+				return;
+		}
 	}
 #ifndef __GLIBC__
 	g_free(bname);
@@ -749,38 +770,41 @@ STATIC void extra_sha_file(const char* file, int suddenly_flush) {
 
 #define OPT_MAX_MAILNO 300
 #define OPT_DB_FILE    301
+#define OPT_EXCLUDE    302
 
 // command line options
 STATIC struct option long_options[] = {
-	{"max-mailno", 1, NULL, OPT_MAX_MAILNO},
-	{"db-file"   , 1, NULL, OPT_DB_FILE},
-	{"list"      , 0, NULL, 'l'},
-	{"symlink"   , 0, NULL, 's'},
-	{"verbose"   , 0, NULL, 'v'},
-	{"dry-run"   , 0, NULL, 'd'},
-	{"help"      , 0, NULL, 'h'},
-	{NULL        , 0, NULL, 0}, 
+	{"max-mailno", required_argument, NULL, OPT_MAX_MAILNO},
+	{"db-file"   , required_argument, NULL, OPT_DB_FILE},
+	{"exclude"   , required_argument, NULL, OPT_EXCLUDE},
+	{"list"      , no_argument      , NULL, 'l'},
+	{"symlink"   , no_argument      , NULL, 's'},
+	{"verbose"   , no_argument      , NULL, 'v'},
+	{"dry-run"   , no_argument      , NULL, 'd'},
+	{"help"      , no_argument      , NULL, 'h'},
+	{NULL        , no_argument      , NULL, 0},
 };
 
 // command line options documentation
 STATIC const char* long_options_doc[] = {
-	"Estimation of max mail message number (defaults to the" 
-		"\n                        " 
-		"number of messages in the db-file + 1000 or "
-		tostring(DEFAULT_MAIL_NUMBER) 
-		"\n                        " 
-		"if there is no db-file). You may want to decrease it"
-		"\n                        " 
-		"for the first run on small systems. It is anyway"
-		"\n                        " 
-		"increased automatically when needed", 
-	"Name of the cache for the endpoint (default db.txt)",
-	"Only list subfolders (short -l)",
-	"Symbolic Link generation mode (short -s)",
-	"Increase program verbosity (printed on stderr, short -v)", 
-	"Do not generate a new db file (short -d)",
-	"This help screen", 
-	NULL
+	" number Estimation of max mail message number (defaults to the"
+				"\n                      "
+				"number of messages in the db-file + 1000 or "
+				tostring(DEFAULT_MAIL_NUMBER)
+				"\n                      "
+				"if there is no db-file). You may want to decrease it"
+				"\n                      "
+				"for the first run on small systems. It is anyway"
+				"\n                      "
+				"increased automatically when needed",
+	"path      Name of the cache for the endpoint (default db.txt)",
+	"glob      Exclude paths matching the given glob expression",
+			"Only list subfolders (short -l)",
+			"Symbolic Link generation mode (short -s)",
+			"Increase program verbosity (printed on stderr, short -v)",
+			"Do not generate a new db file (short -d)",
+			"This help screen",
+			NULL
 };
 
 // print help and bail out
@@ -790,8 +814,12 @@ STATIC void help(char* argv0){
 
 	fprintf(stdout,"\nUsage: %s [options] (dirs...|fifo)\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
-		fprintf(stdout,"  --%-20s%s\n",
-			long_options[i].name,long_options_doc[i]);
+		if ( long_options[i].has_arg == required_argument )
+			fprintf(stdout,"  --%-8s%s\n",
+				long_options[i].name,long_options_doc[i]);
+		else
+			fprintf(stdout,"  --%-18s%s\n",
+				long_options[i].name,long_options_doc[i]);
 	}
 	fprintf(stdout,"\n\
 If paths is a single fifo, %s reads from it file names and outputs the\n\
@@ -836,6 +864,11 @@ int main(int argc, char *argv[]) {
 			break;
 			case OPT_DB_FILE:
 				dbfile = strdup(optarg);
+			break;
+			case OPT_EXCLUDE:
+				excludes = realloc(excludes, sizeof(char*) * (n_excludes + 1));
+				excludes[n_excludes] = strdup(txtURL(optarg,tmpbuff_5));
+				n_excludes++;
 			break;
 			case 'v':
 				verbose = 1;
