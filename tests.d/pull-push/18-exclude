@@ -1,0 +1,23 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+echo 'EXCLUDE="Mail/cur Mail/w%20space"'  >> target/.smd/config.default
+
+mkdir target/Mail
+mkdir -p 'Mail/w space/cur'
+mkdir -p 'Mail/x/cur'
+cp -r Mail/cur 'Mail/w space/cur'
+cp -r Mail/cur 'Mail/x/cur'
+
+mcheck
+assert $? 0 "check failed"
+
+mpull
+assert $? 0 "mpull failed"
+
+test ! -d target/Mail/cur
+assert $? 0 "mpull pulled excluded stuff 1"
+test ! -d 'target/Mail/w space'
+assert $? 0 "mpull pulled excluded stuff 2"

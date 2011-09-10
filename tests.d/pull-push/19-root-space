@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+echo 'MAILBOX="Ma%20il"'  >> target/.smd/config.default
+
+mkdir "target/Ma il"
+mv Mail 'Ma il'
+
+mcheck
+assert $? 0 "check failed"
+
+mpull
+assert $? 0 "mpull failed"
+test_eq 'Ma il' 'target/Ma il'

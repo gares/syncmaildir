@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mkdir -p a/b/c/
+mkdir -p a/b/d/new
+cp Mail/cur/* a/b/d/new
+mv Mail/cur a/b/c/
+rm -rf Mail
+mdiff --exclude '*/new' -l a
+assert `wc -l log.mddiff | cut -d ' ' -f 1` 1 "not excluding new"
+mdiff --exclude '*/new' a
+assert `grep 'ADD a/b/c/cur' log.mddiff | wc -l` 100 "not 100 mails"
+mdiff --exclude 'b' a
+assert `grep 'ADD a/b/' log.mddiff | wc -l` 200 "not 200 mails"
+mdiff --exclude "*/b/*" -v a
+assert `grep 'ADD a/b/' log.mddiff | wc -l` 0 "not 0 mails"
+
