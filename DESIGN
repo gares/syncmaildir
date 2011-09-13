@@ -22,6 +22,13 @@ inverts the sync direction.
 `smd-client` uses `mddiff` only compute sha1 sums, not to compute
 a diff as `smd-server` does.
 
+Both endpoints hold a file (the `db-file` described below) that describes the
+status of the mailbox on which they previously agreed. The server will compute
+the difference between the current mailbox status and the previous one on which
+the client agreed. This diff is sent to the client, that tries to apply it,
+possibly requesting some data to the server.  If the client succeeds, both the
+server and the client now agree on the new mailbox status.
+
 END USER tools 
 ==============
 
@@ -239,6 +246,19 @@ frequent, `mddiff` can operate in server mode. If the argument is a single
 file name and that file is a fifo, then `mddiff` reads file names not URL
 encoded, separated by `\n` from that fifo and outputs the sha1 sums of
 their header and body.
+
+`mddiff` as an `mkdir -p; ln` server
+------------------------------------
+
+`mddiff` is also used by the client to create the indirection layer
+needed to ranme mailbox folders. If the argument is a single
+file name and that file is a fifo and the `-s` flag is passed, then `mddiff`
+reads directories names not URL encoded, separated by `\n`, 2 at a time, 
+from that fifo. The first one is the source path, the latter the target.
+Then it behaves like `mkdir -p $(dirname $target); ln -s $source $target`.
+For example if source is `~/Mail/foo/cur` and the target is `Maildir/.foo/cur`
+then `mddiff` will create the direcotries `Maildir` and `Maildir/.foo`
+and place in the latter a link named `cur` to `~/Mail/foo/cur`.
 
 Easy to parse output messages
 =============================
