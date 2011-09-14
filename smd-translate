@@ -94,6 +94,36 @@ modes['oimap-dovecot'] = function(dir)
 		end
 	end
 end
+modes['nodots'] = function(dir)
+	if dir == 'LR' then
+		local l_ml = '^'..escape(mailbox_local)..'/'
+		local l_mlc = '^'..escape(mailbox_local)..'/(.*)/(cur)'
+		local l_mln = '^'..escape(mailbox_local)..'/(.*)/(new)'
+		local l_mlt = '^'..escape(mailbox_local)..'/(.*)/(tmp)'
+		local r_ml_dot = mailbox_remote..'/.'
+		local r_ml = mailbox_remote..'/'
+		local mc = mailbox_local..'/cur'
+		local mn = mailbox_local..'/new'
+		local mt = mailbox_local..'/tmp'
+		for l in io.stdin:lines() do
+			if l == mc or l == mn or l == mt then
+				print((l:gsub(l_ml,r_ml)))
+			else
+				local f = function(path, last)
+					return r_ml_dot..(path:gsub('/','.'))..'/'..last end
+				print((l:gsub(l_mlc,f):gsub(l_mln,f):gsub(l_mlt,f)))
+			end
+		end
+	else
+		local e_mr = '^'..escape(mailbox_remote)..'(/.*)'
+		local dot_ml = mailbox_local
+		for l in io.stdin:lines() do
+			print((l:gsub(e_mr,function(cap) 
+				return dot_ml..(cap:gsub('%.','/'):gsub('^//','/')) end)))
+		end
+	end
+
+end
 modes['cat'] = function(_) for l in io.stdin:lines() do print(l) end end
 modes['default'] = modes['oimap-dovecot']
 
