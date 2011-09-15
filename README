@@ -192,6 +192,8 @@ mails, but it shows the extra work the tool is doing (like computing
 `sha1` sums for every mail, or the client-server protocol overhead) makes
 `smd` not so inefficient.  Once the mailbox has been copied, running
 `smd-pull` again to check for updates is almost instantaneous.
+As of September 2011, my mailbox is 1.3G and is on average pulled/pushed in 
+less than 2s using a regular ADSL connection.
 
 Advanced Usage
 ==============
@@ -246,6 +248,12 @@ programs must be defined:
 
 - `TRANSLATOR_RL` to translate remote names to local ones
 - `TRANSLATOR_LR` to translate local names to remote ones
+
+To avoid common mistakes in writing translators, some recurrent renaming
+scenarios are handled by the `smd-translate` utility. Please refer to
+[`smd-translate`](smd-translate.1.html) manpage. What following describes 
+how to write a translator by hand, that may be necessary is your translation
+schema is no supported by `smd-translate`.
 
 A translator is a program that receives in standard input one or more
 folder names,
@@ -322,14 +330,14 @@ variables can be used:
     EXCLUDE_LOCAL
     EXCLUDE_REMOTE
 
-Matching is performed using fnmatch(3) with no special flags, thus '*' and
-'?' match any character including '/'. Last, note that spaces in glob
-expressions must be replaced by %20. For example, to exclude all
-paths matching the expression 'Mail/delayed [1-5] days/*' the variable
-EXCLUDE must be set to 'Mail/delayed%20[1-5]%20days/*'
+Matching is performed using fnmatch(3) with no special flags, thus '`*`' and
+'`?`' match any character including '`/`'. Note that spaces in glob
+expressions must be replaced by `%20`. For example, to exclude all
+paths matching the expression '`Mail/delayed [1-5] days/*`' the variable
+EXCLUDE must be set to '`Mail/delayed%20[1-5]%20days/*`'.
 Last, matching is performed every time a directory is entered, and if
 the matching succeeds the derectory and all its subdirectories are skipped.
-Thus there is no need to specify a trailing '/*' in every expression.
+Thus there is no need to specify a trailing '`/*`' in every expression.
 
 Installation
 ============
