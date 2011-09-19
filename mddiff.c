@@ -723,7 +723,7 @@ STATIC void generate_deletions(){
 	}
 }
 
-STATIC void extra_sha_file(const char* file, int suddenly_flush) {    
+STATIC void extra_sha_file(const char* file) {
 	unsigned char *addr,*next;
 	int fd, header_found;
 	struct stat sb;
@@ -762,8 +762,6 @@ STATIC void extra_sha_file(const char* file, int suddenly_flush) {
 	
 	munmap(addr, sb.st_size);
 	close(fd);
-
-	if (suddenly_flush) fflush(stdout);
 }
 
 // ============================ main =====================================
@@ -941,7 +939,8 @@ int main(int argc, char *argv[]) {
 				if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
 					size_t len = strlen(name);
 					if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
-					extra_sha_file(name,1);
+					extra_sha_file(name);
+					fflush(stdout);
 				}
 			}
 		}
