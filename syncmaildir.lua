@@ -34,18 +34,6 @@ if string.sub(XDELTA,1,1) == '@' then
 		XDELTA = 'xdelta'
 end
 
--- set mkfifo executable name
-MKFIFO = '@MKFIFO@'
-if string.sub(MKFIFO,1,1) == '@' then
-		MKFIFO = 'mkfifo'
-end
-
--- set mkdir executable name
-MKDIR = '@MKDIR@'
-if string.sub(MKDIR,1,1) == '@' then
-		MKDIR = 'mkdir -p'
-end
-
 -- set smd version 
 SMDVERSION = '@SMDVERSION@'
 if string.sub(SMDVERSION,1,1) == '@' then
@@ -283,7 +271,7 @@ end
 
 function dbfile_name(endpoint, mailboxes)
 	local HOME = os.getenv('HOME')
-	os.execute(MKDIR..' '..HOME..'/.smd/')
+	os.execute(MDDIFF..' --mkdir-p '..quote(HOME..'/.smd/'))
 	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
 		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
 	return dbfile
@@ -312,7 +300,7 @@ function mk_link_wa(src, target)
 			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
 			attempt = attempt + 1
 			mkdir_p(pipe)
-			rc = os.execute(MKFIFO..' -m 600 '..quote(pipe))
+			rc = os.execute(MDDIFF..' --mkfifo '..quote(pipe))
 		until rc == 0 or attempt > 10
 		if rc ~= 0 then
 			log_internal_error_and_fail('unable to create fifo', "mk_link_wa")
@@ -351,12 +339,14 @@ function make_dir_aux(absolute, pieces)
 			local lfn = translate(dir)
 			local abs_lfn = homefy(lfn)
 			if not dry_run() then
-				rc = os.execute(MKDIR..' '..quote(abs_lfn))
+				rc = os.execute(MDDIFF..' --mkdir-p '..quote(abs_lfn))
 			end
 			log('translating: '..dir..' -> '..lfn)
 			mk_link_wa(abs_lfn, dir)
 		else
-			if not dry_run() then rc = os.execute(MKDIR..' '..quote(dir)) end
+			if not dry_run() then
+				rc = os.execute(MDDIFF..' --mkdir-p '..quote(dir))
+			end
 		end
 		if rc ~= 0 then
 			log_error("Unable to create directory "..dir)
@@ -492,7 +482,7 @@ function sha_file(name)
 			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
 			attempt = attempt + 1
 			mkdir_p(pipe)
-			rc = os.execute(MKFIFO..' -m 600 '..quote(pipe))
+			rc = os.execute(MDDIFF..' --mkfifo '..quote(pipe))
 		until rc == 0 or attempt > 10
 		if rc ~= 0 then
 			log_internal_error_and_fail('unable to create fifo', "sha_file")

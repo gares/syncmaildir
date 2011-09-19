@@ -185,6 +185,8 @@ STATIC int dry_run;
 STATIC int only_list_subfolders;
 STATIC int only_generate_symlinks;
 STATIC int only_sha1sum_args;
+STATIC int only_mkdirp;
+STATIC int only_mkfifo;
 STATIC int n_excludes;
 STATIC char **excludes;
 
@@ -825,6 +827,8 @@ STATIC void extra_sha1sum_file(const char* file) {
 #define OPT_DB_FILE    301
 #define OPT_EXCLUDE    302
 #define OPT_SHA1SUM    303
+#define OPT_MKDIRP     304
+#define OPT_MKFIFO     305
 
 // command line options
 STATIC struct option long_options[] = {
@@ -832,6 +836,8 @@ STATIC struct option long_options[] = {
 	{"db-file"   , required_argument, NULL, OPT_DB_FILE},
 	{"exclude"   , required_argument, NULL, OPT_EXCLUDE},
 	{"sha1sum"   , no_argument      , NULL, OPT_SHA1SUM},
+	{"mkdir-p"   , no_argument      , NULL, OPT_MKDIRP},
+	{"mkfifo"    , no_argument      , NULL, OPT_MKFIFO},
 	{"list"      , no_argument      , NULL, 'l'},
 	{"symlink"   , no_argument      , NULL, 's'},
 	{"verbose"   , no_argument      , NULL, 'v'},
@@ -854,7 +860,9 @@ STATIC const char* long_options_doc[] = {
 				"increased automatically when needed",
 	"path      Name of the cache for the endpoint (default db.txt)",
 	"glob      Exclude paths matching the given glob expression",
-			"sha1sum the arguments (that must be regular files)",
+			"behave as sha1sum",
+			"behave as mkdir -p",
+			"behave as mkfifo",
 			"Only list subfolders (short -l)",
 			"Symbolic Link generation mode (short -s)",
 			"Increase program verbosity (printed on stderr, short -v)",
@@ -929,6 +937,12 @@ int main(int argc, char *argv[]) {
 			case OPT_SHA1SUM:
 				only_sha1sum_args = 1;
 			break;
+			case OPT_MKDIRP:
+				only_mkdirp = 1;
+			break;
+			case OPT_MKFIFO:
+				only_mkfifo = 1;
+			break;
 			case 'v':
 				verbose = 1;
 			break;
@@ -957,6 +971,39 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	if ( only_mkdirp ) {
+		int i;
+		for (i = optind; i < argc; i++) {
+			if ( g_mkdir_with_parents(argv[i], 0770) ) {
+				ERROR(mkdir,"unable to create dir %s: %s\n", argv[i], 
+					strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+		}
+		exit(EXIT_SUCCESS);
+	}
+
+	if ( only_sha1sum_args ) {
+		int i;
+		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
+		for (i = optind; i < argc; i++) {
+			extra_sha1sum_file(argv[i]);
+		}
+		exit(EXIT_SUCCESS);
+	}
+
+	if ( only_mkfifo ) {
+		int i;
+		for (i = optind; i < argc; i++) {
+			if ( mknod(argv[i], 0600 | S_IFIFO, 0) ) {
+				ERROR(mknod,"Unable to create fifo %s: %s\n", argv[i],
+					strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+		}
+		exit(EXIT_SUCCESS);
+	}
+
 	// remaining args is the dirs containing the data or the files to hash
 	data = strdup(txtURL(argv[optind],tmpbuff_5));
 
@@ -964,16 +1011,6 @@ int main(int argc, char *argv[]) {
 	c = stat(data, &sb);
 	if (c != 0) ERROR(stat,"unable to stat %s\n",data);
 	
-	if ( only_sha1sum_args ) {
-		int i;
-		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
-		for (i = optind; i < argc; i++) {
-			extra_sha1sum_file(argv[i]);
-			fflush(stdout);
-		}
-		exit(EXIT_SUCCESS);
-	}
-
 	if ( S_ISFIFO(sb.st_mode) && argc - optind == 1){
 		FILE *in = fopen(data,"r");
 		if (in == NULL) {

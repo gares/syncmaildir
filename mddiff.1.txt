@@ -62,8 +62,9 @@ OPTIONS
                         increased automatically when needed
   --db-file dbf         Name of the cache for the endpoint (default db.txt)
   --exclude globexpr    Exclude paths maching the given expression
-  --sha1sum             Behaves as the sha1sum utility, all paths must be
-                        regular files
+  --sha1sum             Behaves like the sha1sum utility
+  --mkdir-p             Behaves like mkdir -p
+  --mkfifo              Behaves like mkfifo
   -l --list             Only list the mailboxes recursively contained in paths
   -s --symlink          Create symlinks for paths reand on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)

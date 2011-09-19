@@ -37,8 +37,6 @@ H=@
 PREFIX=usr/local
 SED=sed
 XDELTA=xdelta
-MKFIFO=mkfifo
-MKDIR=mkdir -p
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
@@ -140,8 +138,6 @@ define install-replacing
 		$(SED) 's?@PREFIX@?/$(PREFIX)?' |\
 		$(SED) 's?@SED@?$(SED)?'  |\
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
-		$(SED) 's?@MKFIFO@?$(MKFIFO)?' |\
-		$(SED) 's?@MKDIR@?$(MKDIR)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
 		$(SED) 's?@SMDVERSION@?$(VERSION)?' |\
 		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
@@ -276,7 +272,6 @@ osx/%:
 abspath/%:
 	$H $(MAKE) $* SED=/bin/sed \
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
-		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p' \
 		PREFIX="$(PREFIX)" H=$H
 
 .PHONY : update-smd-config

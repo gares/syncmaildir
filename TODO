@@ -1,1 +1,0 @@
-- consider using lua-posix, to get rid of MKDIR, MKFIFO
