@@ -923,7 +923,11 @@ int main(int argc, char *argv[]) {
 					if (tgt_len > 0 && tgt_name[tgt_len-1] == '\n')
 						tgt_name[tgt_len-1]='\0';
 					gchar* dir_tgt = g_path_get_dirname(tgt_name);
-					g_mkdir_with_parents(dir_tgt, 0770);
+					if ( g_mkdir_with_parents(dir_tgt, 0770) ){
+						ERROR(mkdir,"unable to create dir %s: %s\n",
+							dir_tgt, strerror(errno));
+						exit(EXIT_FAILURE);
+					}
 					if ( symlink(src_name, tgt_name) != 0 ){
 						ERROR(symlink,"unable to symlink %s to %s: %s\n",
 							src_name, tgt_name, strerror(errno));
