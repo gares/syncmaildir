@@ -184,6 +184,7 @@ STATIC int verbose;
 STATIC int dry_run;
 STATIC int only_list_subfolders;
 STATIC int only_generate_symlinks;
+STATIC int only_sha1sum_args;
 STATIC int n_excludes;
 STATIC char **excludes;
 
@@ -204,6 +205,7 @@ STATIC void set_mail_name(mail_t mail_idx, name_t name) {
 
 // predicates for assert_all_are
 STATIC int directory(struct stat sb){ return S_ISDIR(sb.st_mode); }
+STATIC int regular_file(struct stat sb){ return S_ISREG(sb.st_mode); }
 
 // stats and asserts pred on argv[optind] ... argv[argc-optind]
 STATIC void assert_all_are(
@@ -218,13 +220,36 @@ STATIC void assert_all_are(
 		if (rc != 0) {
 			ERROR(stat,"unable to stat %s\n",argv_c);
 		} else if ( ! predicate(sb) ) {
-			ERROR(stat,"%s in not a %s, arguments must be omogeneous\n",
-				argv_c,description);
+			ERROR(stat,"%s in not a %s\n", argv_c,description);
 		}
 		VERBOSE(input, "%s is a %s\n", argv_c, description);
 	}
 }
 #define ASSERT_ALL_ARE(what,v,c) assert_all_are(what,tostring(what),v,c)
+
+// open a file in read only mode trying to use O_NOATIME
+STATIC int open_rdonly_noatime(const char *fname) {
+	int fd = open(fname, O_RDONLY | O_NOATIME);
+	// if the file is not owned by the euid of the process, then
+	// it cannot be opened using the O_NOATIME flag (man 2 open)
+	if (fd == -1 && errno == EPERM) {
+		fd = open(fname, O_RDONLY);
+	}
+	return fd;
+}
+
+// looks for \n\n in a buffer starting at addr of size size
+STATIC unsigned char * find_endof_header(unsigned char *addr, size_t size) {
+	unsigned char * next;
+	unsigned char * end = addr + size;
+	for(next = addr; next + 1 < end; next++){
+		if (*next == '\n' && *(next+1) == '\n') {
+			next+=2;
+			return next;
+		}
+	}
+	return NULL;
+}
 
 // =========================== memory allocator ============================
 
@@ -505,7 +530,7 @@ STATIC void load_db(const char* dbname){
 // the heart
 STATIC void analyze_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
-	int fd, header_found;
+	int fd;
 	struct stat sb;
 	mail_t alias, bodyalias, m;
 	GChecksum* ctx;
@@ -515,19 +540,13 @@ STATIC void analyze_file(const char* dir,const char* file) {
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
 	set_mail_name(m,alloc_name());
 
-	fd = open(mail_name(m), O_RDONLY | O_NOATIME);
+	fd = open_rdonly_noatime(mail_name(m));
+
 	if (fd == -1) {
-		if (errno == EPERM) {
-			// if the file is not owned by the euid of the process, then
-			// it cannot be opened using the O_NOATIME flag (man 2 open)
-			fd = open(mail_name(m), O_RDONLY);
-		}
-		if (fd == -1) {
-			WARNING(open,"unable to open file '%s': %s\n", mail_name(m),
-				strerror(errno));
-			WARNING(open,"ignoring '%s'\n", mail_name(m));
-			goto err_alloc_cleanup;
-		}
+		WARNING(open,"unable to open file '%s': %s\n", mail_name(m),
+			strerror(errno));
+		WARNING(open,"ignoring '%s'\n", mail_name(m));
+		goto err_alloc_cleanup;
 	}
 
 	if (fstat(fd, &sb) == -1) {
@@ -555,16 +574,9 @@ STATIC void analyze_file(const char* dir,const char* file) {
 			ERROR(mmap, "unable to load '%s'\n",mail_name(m));
 	}
 
-	// skip header
-	for(next = addr, header_found=0; next + 1 < addr + sb.st_size; next++){
-		if (*next == '\n' && *(next+1) == '\n') {
-			next+=2;
-			header_found=1;
-			break;
-		}
-	}
+	next = find_endof_header(addr, sb.st_size);
 
-	if (!header_found) {
+	if ( next == NULL ) {
 		WARNING(parse, "malformed file '%s', no header\n",mail_name(m));
 		munmap(addr, sb.st_size);
 		goto err_alloc_fd_cleanup;
@@ -723,13 +735,19 @@ STATIC void generate_deletions(){
 	}
 }
 
+// removes trailing '\n' modifying the string
+STATIC void rm_trailing_n(char *src_name){
+	size_t src_len = strlen(src_name);
+	if (src_len > 0 && src_name[src_len-1] == '\n') src_name[src_len-1]='\0';
+}
+
 STATIC void extra_sha_file(const char* file) {
 	unsigned char *addr,*next;
-	int fd, header_found;
+	int fd;
 	struct stat sb;
 	gchar* sha1;
 
-	fd = open(file, O_RDONLY | O_NOATIME);
+	fd = open_rdonly_noatime(file);
 	if (fd == -1) ERROR(open,"unable to open file '%s'\n",file);
 
 	if (fstat(fd, &sb) == -1) ERROR(fstat,"unable to stat file '%s'\n",file);
@@ -740,16 +758,9 @@ STATIC void extra_sha_file(const char* file) {
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
 
-	// skip header
-	for(next = addr, header_found=0; next + 1 < addr + sb.st_size; next++){
-		if (*next == '\n' && *(next+1) == '\n') {
-			next+=2;
-			header_found=1;
-			break;
-		}
-	}
+	next = find_endof_header(addr, sb.st_size);
 
-	if (!header_found) ERROR(parse, "malformed file '%s', no header\n",file);
+	if ( next == NULL ) ERROR(parse, "malformed file '%s', no header\n",file);
 
 	// calculate sha1
 	fprintf(stdout, "%s ", 
@@ -764,17 +775,63 @@ STATIC void extra_sha_file(const char* file) {
 	close(fd);
 }
 
+STATIC void extra_mkdir_ln(char* src_name, char* tgt_name) {
+	gchar* dir_tgt = g_path_get_dirname(tgt_name);
+
+	if ( g_mkdir_with_parents(dir_tgt, 0770) ){
+		ERROR(mkdir,"unable to create dir %s: %s\n",
+			dir_tgt, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	if ( symlink(src_name, tgt_name) != 0 ){
+		ERROR(symlink,"unable to symlink %s to %s: %s\n",
+			src_name, tgt_name, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stdout,"OK\n");
+
+	g_free(dir_tgt);
+}
+
+STATIC void extra_sha1sum_file(const char* file) {
+	unsigned char *addr;
+	int fd;
+	struct stat sb;
+	gchar* sha1;
+
+	fd = open_rdonly_noatime(file);
+	if (fd == -1) ERROR(open,"unable to open file '%s'\n",file);
+
+	if (fstat(fd, &sb) == -1) ERROR(fstat,"unable to stat file '%s'\n",file);
+
+	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
+
+	// calculate sha1
+	fprintf(stdout, "%s  %s\n", 
+		sha1 = g_compute_checksum_for_data(G_CHECKSUM_SHA1, addr, sb.st_size),
+		file);
+	g_free(sha1);
+	
+	munmap(addr, sb.st_size);
+	close(fd);
+}
+
 // ============================ main =====================================
 
 #define OPT_MAX_MAILNO 300
 #define OPT_DB_FILE    301
 #define OPT_EXCLUDE    302
+#define OPT_SHA1SUM    303
 
 // command line options
 STATIC struct option long_options[] = {
 	{"max-mailno", required_argument, NULL, OPT_MAX_MAILNO},
 	{"db-file"   , required_argument, NULL, OPT_DB_FILE},
 	{"exclude"   , required_argument, NULL, OPT_EXCLUDE},
+	{"sha1sum"   , no_argument      , NULL, OPT_SHA1SUM},
 	{"list"      , no_argument      , NULL, 'l'},
 	{"symlink"   , no_argument      , NULL, 's'},
 	{"verbose"   , no_argument      , NULL, 'v'},
@@ -797,6 +854,7 @@ STATIC const char* long_options_doc[] = {
 				"increased automatically when needed",
 	"path      Name of the cache for the endpoint (default db.txt)",
 	"glob      Exclude paths matching the given glob expression",
+			"sha1sum the arguments (that must be regular files)",
 			"Only list subfolders (short -l)",
 			"Symbolic Link generation mode (short -s)",
 			"Increase program verbosity (printed on stderr, short -v)",
@@ -810,7 +868,7 @@ STATIC void help(char* argv0){
 	int i;
 	char *bname = g_path_get_basename(argv0);
 
-	fprintf(stdout,"\nUsage: %s [options] (dirs...|fifo)\n",bname);
+	fprintf(stdout,"\nUsage: %s [options] (paths...|fifo)\n",bname);
 	for (i=0;long_options[i].name != NULL;i++) {
 		if ( long_options[i].has_arg == required_argument )
 			fprintf(stdout,"  --%-8s%s\n",
@@ -868,6 +926,9 @@ int main(int argc, char *argv[]) {
 				excludes[n_excludes] = strdup(txtURL(optarg,tmpbuff_5));
 				n_excludes++;
 			break;
+			case OPT_SHA1SUM:
+				only_sha1sum_args = 1;
+			break;
 			case 'v':
 				verbose = 1;
 			break;
@@ -903,6 +964,16 @@ int main(int argc, char *argv[]) {
 	c = stat(data, &sb);
 	if (c != 0) ERROR(stat,"unable to stat %s\n",data);
 	
+	if ( only_sha1sum_args ) {
+		int i;
+		ASSERT_ALL_ARE(regular_file, &argv[optind], argc - optind);
+		for (i = optind; i < argc; i++) {
+			extra_sha1sum_file(argv[i]);
+			fflush(stdout);
+		}
+		exit(EXIT_SUCCESS);
+	}
+
 	if ( S_ISFIFO(sb.st_mode) && argc - optind == 1){
 		FILE *in = fopen(data,"r");
 		if (in == NULL) {
@@ -916,35 +987,18 @@ int main(int argc, char *argv[]) {
 			while (!feof(in)) {
 				if(fgets(src_name,MAX_EMAIL_NAME_LEN,in) != NULL &&
 				   fgets(tgt_name,MAX_EMAIL_NAME_LEN,in) != NULL) {
-					size_t src_len = strlen(src_name);
-					size_t tgt_len = strlen(tgt_name);
-					if (src_len > 0 && src_name[src_len-1] == '\n')
-						src_name[src_len-1]='\0';
-					if (tgt_len > 0 && tgt_name[tgt_len-1] == '\n')
-						tgt_name[tgt_len-1]='\0';
-					gchar* dir_tgt = g_path_get_dirname(tgt_name);
-					if ( g_mkdir_with_parents(dir_tgt, 0770) ){
-						ERROR(mkdir,"unable to create dir %s: %s\n",
-							dir_tgt, strerror(errno));
-						exit(EXIT_FAILURE);
-					}
-					if ( symlink(src_name, tgt_name) != 0 ){
-						ERROR(symlink,"unable to symlink %s to %s: %s\n",
-							src_name, tgt_name, strerror(errno));
-						exit(EXIT_FAILURE);
-					}
-					fprintf(stdout,"OK\n");
+					rm_trailing_n(src_name);
+					rm_trailing_n(tgt_name);
+					extra_mkdir_ln(src_name, tgt_name);
 					fflush(stdout);
-					g_free(dir_tgt);
 				}
 			}
 		} else {
-			/* sha1 */
+			/* sha1 mail */
+			char name[MAX_EMAIL_NAME_LEN];
 			while (!feof(in)) {
-				char name[MAX_EMAIL_NAME_LEN];
 				if(fgets(name,MAX_EMAIL_NAME_LEN,in) != NULL){
-					size_t len = strlen(name);
-					if (len > 0 && name[len-1] == '\n') name[len-1]='\0';
+					rm_trailing_n(name);
 					extra_sha_file(name);
 					fflush(stdout);
 				}

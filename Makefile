@@ -36,7 +36,6 @@ H=@
 
 PREFIX=usr/local
 SED=sed
-SHA1SUM=sha1sum
 XDELTA=xdelta
 MKFIFO=mkfifo
 MKDIR=mkdir -p
@@ -140,7 +139,6 @@ define install-replacing
 	cat $(1) |\
 		$(SED) 's?@PREFIX@?/$(PREFIX)?' |\
 		$(SED) 's?@SED@?$(SED)?'  |\
-		$(SED) 's?@SHA1SUM@?$(SHA1SUM)?' |\
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
 		$(SED) 's?@MKFIFO@?$(MKFIFO)?' |\
 		$(SED) 's?@MKDIR@?$(MKDIR)?' |\
@@ -276,7 +274,7 @@ osx/%:
 	$H $(MAKE) $* SED=sed PREFIX="$(PREFIX)" H=$H
 
 abspath/%:
-	$H $(MAKE) $* SED=/bin/sed SHA1SUM=/usr/bin/sha1sum \
+	$H $(MAKE) $* SED=/bin/sed \
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
 		MKFIFO=/usr/bin/mkfifo MKDIR='/bin/mkdir -p' \
 		PREFIX="$(PREFIX)" H=$H

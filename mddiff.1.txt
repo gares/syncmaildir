@@ -2,7 +2,8 @@ NAME
   mddiff - computes diff for maildirs
 SYNOPSIS
   mddiff [--max-mailno mno] [--db-file dbf] [-l|--list] [-s|--symlink]
-         [--exclude globexpr] [-v|--verbose] [-d|--dry-run] [--help] paths
+         [--exclude globexpr] [-v|--verbose] [-d|--dry-run] [--help]
+         [--sha1sum] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
   recorded in a support file, called db file) and the current status, 
@@ -61,6 +62,8 @@ OPTIONS
                         increased automatically when needed
   --db-file dbf         Name of the cache for the endpoint (default db.txt)
   --exclude globexpr    Exclude paths maching the given expression
+  --sha1sum             Behaves as the sha1sum utility, all paths must be
+                        regular files
   -l --list             Only list the mailboxes recursively contained in paths
   -s --symlink          Create symlinks for paths reand on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)

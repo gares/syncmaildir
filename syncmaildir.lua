@@ -28,12 +28,6 @@ else
 		MDDIFF = PREFIX .. '/bin/mddiff'
 end
 
--- set sha1sum executable name
-SHA1SUM = '@SHA1SUM@'
-if string.sub(SHA1SUM,1,1) == '@' then
-		SHA1SUM = 'sha1sum'
-end
-
 -- set xdelta executable name
 XDELTA = '@XDELTA@'
 if string.sub(XDELTA,1,1) == '@' then
@@ -245,7 +239,7 @@ function handshake(dbfile)
 	
 	-- we must have at least an empty file to compute its SHA1 sum
 	touch(dbfile)
-	local inf = io.popen(SHA1SUM..' '.. dbfile,'r')
+	local inf = io.popen(MDDIFF..' --sha1sum '.. dbfile,'r')
 	
 	local db_sha = inf:read('*a'):match('^(%S+)')
 	io.write('dbfile ',db_sha,'\n')

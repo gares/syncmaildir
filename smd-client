@@ -464,7 +464,6 @@ function main()
 	-- sanity checks for external softwares
 	assert_exists(MDDIFF)
 	assert_exists(XDELTA)
-	assert_exists(SHA1SUM)
 
 	-- argument parsing
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
