@@ -52,12 +52,6 @@ if string.sub(MKDIR,1,1) == '@' then
 		MKDIR = 'mkdir -p'
 end
 
--- set ln executable name
-LN = '@LN@'
-if string.sub(LN,1,1) == '@' then
-		LN = 'ln -s'
-end
-
 -- set smd version 
 SMDVERSION = '@SMDVERSION@'
 if string.sub(SMDVERSION,1,1) == '@' then
@@ -303,6 +297,48 @@ end
 
 -- =================== fast/maildir aware mkdir -p ==========================
 
+local mddiff_mkdirln_handler = {}
+
+-- create a link from the workarea to the real mailbox using mddiff
+function mk_link_wa(src, target)
+	local pipe, rm_pipe = nil, false
+	if mddiff_mkdirln_handler.inf == nil then
+		local rc
+		local base_dir
+		local home = os.getenv('HOME')
+		local user = os.getenv('USER') or 'nobody'
+		local mangled_name = string.gsub(src..target,"/","-"):gsub(' ','-')
+		local attempt = 0
+		if home ~= nil then
+			base_dir = home ..'/.smd/fifo/'
+		else
+			base_dir = '/tmp/'
+		end
+		repeat 
+			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
+			attempt = attempt + 1
+			mkdir_p(pipe)
+			rc = os.execute(MKFIFO..' -m 600 '..quote(pipe))
+		until rc == 0 or attempt > 10
+		if rc ~= 0 then
+			log_internal_error_and_fail('unable to create fifo', "mk_link_wa")
+		end
+		mddiff_mkdirln_handler.inf = io.popen(MDDIFF .. ' -s ' .. quote(pipe))
+		mddiff_mkdirln_handler.outf = io.open(pipe,'w')
+		rm_pipe = true
+	end
+	mddiff_mkdirln_handler.outf:write(src,'\n',target,'\n')
+	mddiff_mkdirln_handler.outf:flush()
+	local data = mddiff_mkdirln_handler.inf:read('*l')
+	if data:match('^ERROR') or not data:match('^OK') then
+		log_tags_and_fail('Failed to mddiff -s',
+			'mddiff-s','wrong-permissions',true)
+	end
+	-- we are now sure that both endpoints opened the file, thus
+	-- we can safely garbage collect it
+	if rm_pipe then os.remove(pipe) end
+end
+
 local mkdir_p_cache = {}
 
 -- function to create the dir calling the real mkdir command
@@ -312,22 +348,19 @@ function make_dir_aux(absolute, pieces)
 	local root = ""
 	if absolute then root = '/' end
 	local dir = root .. table.concat(pieces,'/')
-	local last = table.remove(pieces, #pieces)
 	if not mkdir_p_cache[dir] then
 		local rc = 0
-		if is_translator_set() and
+		local last = pieces[#pieces]
+		if is_translator_set() and not absolute and
 		   (last == 'cur' or last == 'new' or last == 'tmp')
 		then
-			local foldername = table.concat(pieces,'/')
-			local local_foldername = translate(foldername..'/'..last)
-			local qlfn = quote(homefy(local_foldername))
-			local rc1 = 0
-			if not dry_run() then rc1 = os.execute(MKDIR..' '..qlfn) end
-			local rc2 = os.execute(MKDIR..' '..quote(foldername))
-			local rc3 = os.execute(LN..' '..qlfn..' '..quote(foldername))
-			log('translating: '..foldername..'/'..last..
-				' -> '..local_foldername)
-			rc = rc1 + rc2 + rc3
+			local lfn = translate(dir)
+			local abs_lfn = homefy(lfn)
+			if not dry_run() then
+				rc = os.execute(MKDIR..' '..quote(abs_lfn))
+			end
+			log('translating: '..dir..' -> '..lfn)
+			mk_link_wa(abs_lfn, dir)
 		else
 			if not dry_run() then rc = os.execute(MKDIR..' '..quote(dir)) end
 		end
@@ -341,8 +374,6 @@ function make_dir_aux(absolute, pieces)
 		end
 		mkdir_p_cache[dir] = true
 	end
-	-- we restore the original input (ugly)
-	pieces[#pieces+1]=last
 end
 
 -- creates a directory that can contains a path, should be equivalent
@@ -447,11 +478,11 @@ function parse(s,spec)
 	return unpack(res)
 end
 
-local mddiff_handler = {}
+local mddiff_sha_handler = {}
 
 function sha_file(name)
 	local pipe, rm_pipe = nil, false
-	if mddiff_handler.inf == nil then
+	if mddiff_sha_handler.inf == nil then
 		local rc
 		local base_dir
 		local home = os.getenv('HOME')
@@ -472,13 +503,13 @@ function sha_file(name)
 		if rc ~= 0 then
 			log_internal_error_and_fail('unable to create fifo', "sha_file")
 		end
-		mddiff_handler.inf = io.popen(MDDIFF .. ' ' .. quote(pipe))
-		mddiff_handler.outf = io.open(pipe,'w')
+		mddiff_sha_handler.inf = io.popen(MDDIFF .. ' ' .. quote(pipe))
+		mddiff_sha_handler.outf = io.open(pipe,'w')
 		rm_pipe = true
 	end
-	mddiff_handler.outf:write(name..'\n')
-	mddiff_handler.outf:flush()
-	local data = mddiff_handler.inf:read('*l')
+	mddiff_sha_handler.outf:write(name..'\n')
+	mddiff_sha_handler.outf:flush()
+	local data = mddiff_sha_handler.inf:read('*l')
 	if data:match('^ERROR') then
 		log_tags_and_fail('Failed to sha1 a message',
 			'sha_file','modify-while-update',false,'retry')

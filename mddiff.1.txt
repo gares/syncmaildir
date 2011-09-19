@@ -22,7 +22,8 @@ DESCRIPTION
   is passed, mddiff reads from that fifo two lines at a time, respectively
   a source name and a target name. It then creates a symlink named as
   as the target name pointing to the source name. If some dictories need to be
-  created in order to create the symlink, this is also done.
+  created in order to create the symlink, this is also done. mddiff will
+  print 'OK' on stdout to signal a success, 'ERROR' to signal an error.
   
   If paths is a list of directories, mddiff outputs a list of actions a client
   has to perform to synchronize a copy of the same maildirs. This set of actions

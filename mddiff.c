@@ -933,6 +933,8 @@ int main(int argc, char *argv[]) {
 							src_name, tgt_name, strerror(errno));
 						exit(EXIT_FAILURE);
 					}
+					fprintf(stdout,"OK\n");
+					fflush(stdout);
 					g_free(dir_tgt);
 				}
 			}

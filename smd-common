@@ -170,9 +170,12 @@ setup_workarea(){
 
 	local FIFO_MKDIR="$CONFDIR/fifo/mkdir"
 	[ -p "$FIFO_MKDIR" ] || mkfifo "$FIFO_MKDIR"
-	$MDDIFF -s "$FIFO_MKDIR" &
+	local FIFO_MKDIRB="$CONFDIR/fifo/mkdir-back"
+	[ -p "$FIFO_MKDIRB" ] || mkfifo "$FIFO_MKDIRB"
+	$MDDIFF -s "$FIFO_MKDIR" > "$FIFO_MKDIRB" &
 	local DIR_MAKER=$!
 	atexit_kill $DIR_MAKER
+	exec 6<$FIFO_MKDIRB
 	exec 9>$FIFO_MKDIR
 
 	local TMP_T=`gc_mktemp`
@@ -195,8 +198,16 @@ setup_workarea(){
 		fi
 		echo "$HOME/$M" 1>&9
 		echo ".smd/workarea/$TM" 1>&9
+		read R <&6
+		if [ "$R" != "OK" ]; then
+			echo "$REPNAME: $localprog@localhost: TAGS: error::context(workarea) probable-cause(mddiff-s-error) human-intervention(necessary)"
+			exit 1
+		fi
 	done
 
+	exec 6<&-
+	exec 7<&-
+	exec 8<&-
 	exec 9>&-
 
 	wait $DIR_MAKER || ERR=1
