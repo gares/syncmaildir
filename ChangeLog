@@ -1,3 +1,10 @@
+../../2011 - ... - version 1.2.2
+	* mddiff:
+	  - add --sha1sum to avoid depending on this external utility
+	  - print OK on successful symlink creation
+	* syncmaildir.lua:
+	  - use mddiff to create symlinks to remove dependency over ln
+
 10/09/2011 - minor feature improvement - version 1.2.1
 	* mddiff:
 	  - support for --exclude via fnmatch(3) to filter out unwanted
