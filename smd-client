@@ -13,6 +13,8 @@ for k,v in pairs(syncmaildir) do _G[k] = v end
 local statistics = {
 	added = 0,
 	removed = 0,
+	received = 0,
+	xdelta = 0,
 }
 
 -- ========================= get mail queue =================================
@@ -35,7 +37,7 @@ function process_get_full_email_queue()
 	for _,v in ipairs(get_full_email_queue) do
 		tmp[#tmp+1] = tmp_for(v.name)
 		v.tmp = tmp[#tmp]
-		receive(io.stdin, tmp[#tmp])
+		statistics.received = statistics.received + receive(io.stdin, tmp[#tmp])
 	end
 	tmp = nil
 	for _,v in ipairs(get_full_email_queue) do
@@ -528,7 +530,7 @@ function main()
 	-- we commit and update the dbfile
 	io.write('COMMIT\n')
 	io.flush()
-	receive(io.stdin, xdelta)
+	statistics.xdelta = receive(io.stdin, xdelta)
 
 	local rc
 	if not dry_run() then 
@@ -559,7 +561,10 @@ function main()
 
 	-- some machine understandable output before quitting
 	log_tag('stats::new-mails('..  statistics.added..
-		'), del-mails('..statistics.removed..')')
+		'), del-mails('..statistics.removed..
+		'), bytes-received('..statistics.received..
+		'), xdelta-received('..statistics.xdelta..
+		')')
 
 	os.exit(0)
 end

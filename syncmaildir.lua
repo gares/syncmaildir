@@ -199,6 +199,7 @@ function receive(inf,outfile)
 			"receive","network",false,"retry")
 	end
 	local len = tonumber(line:match('^chunk (%d+)'))
+	local total = len
 	while len > 0 do
 		local next_chunk = 16384
 		if len < next_chunk then next_chunk = len end
@@ -213,6 +214,7 @@ function receive(inf,outfile)
 		outf:write(data)
 	end
 	outf:close()
+	return total
 end
 
 function handshake(dbfile)
