@@ -99,14 +99,14 @@ PATHS EXCLUSION
   EXCLUDE_LOCAL   glob expressions identifying local paths to be excluded
   EXCLUDE_REMOTE  glob expressions identifying remote paths to be excluded
 
-  Matching is performed using fnmatch(3) with no special flags, thus '*' and
-  '?' match any character including '/'. Last, note that spaces in glob
+  Matching is performed using fnmatch(3) with no special flags, thus `*' and
+  `?' match any character including `/'. Last, note that spaces in glob
   expressions must be replaced by %20. For example, to exclude all
-  paths matching the expression 'Mail/delayed [1-5] days/*' the variable
-  EXCLUDE must be set to 'Mail/delayed%20[1-5]%20days/*'
+  paths matching the expression `Mail/delayed [1-5] days/*' the variable
+  EXCLUDE must be set to `Mail/delayed%20[1-5]%20days/*'
 
   Last, matching is performed every time a directory is entered, and if
-  the matching succeeds the derectory and all its subdirectories are skipped.
+  the matching succeeds the directory and all its subdirectories are skipped.
   Thus there is no need to specify a trailing '/*' in every expression.
 
 FILES

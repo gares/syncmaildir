@@ -1,4 +1,8 @@
 ../../2011 - ... - version 1.2.2
+	* smd-config.5.txt:
+	  - fixed typo and use `quotes' to delimit strings
+	* smd-common:
+	  - fixed temp file leak
 	* mddiff:
 	  - add --sha1sum to avoid depending on the sha1sum external utility
 	  - add --mkdir-p to avoid depending on the mkdir external utility
