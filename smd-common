@@ -27,7 +27,7 @@ atexit_kill() {
 gc_mktemp() {
 	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`
 	atexit_rm $tmp
-	echo "$tmp"
+	RC="$tmp"
 }
 
 __cleanup() {
@@ -159,8 +159,10 @@ fi
 }
 
 setup_workarea(){
-	local TMP_FIND=`gc_mktemp`
-	local TMP_FIND_ERR=`gc_mktemp`
+	gc_mktemp
+	local TMP_FIND="$RC"
+	gc_mktemp
+	local TMP_FIND_ERR="$RC"
 	$MDDIFF $LOCALEXCLUDE -l $MAILBOX_LOCAL >$TMP_FIND 2>$TMP_FIND_ERR
 	if [ ! $? -eq 0 ]; then
 		echo "$MDDIFF gave an error while scanning $MAILBOX_LOCAL:"
@@ -178,7 +180,8 @@ setup_workarea(){
 	exec 6<$FIFO_MKDIRB
 	exec 9>$FIFO_MKDIR
 
-	local TMP_T=`gc_mktemp`
+	gc_mktemp
+	local TMP_T="$RC"
 	local ERR=0
 	$TRANSLATOR_LR <$TMP_FIND >$TMP_T || ERR=$?
 	exec 7<$TMP_FIND
