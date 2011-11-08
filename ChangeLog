@@ -3,6 +3,7 @@
 	  - fixed typo and use `quotes' to delimit strings
 	* smd-common:
 	  - fixed temp file leak
+	  - fixed stale lock file detection
 	* mddiff:
 	  - add --sha1sum to avoid depending on the sha1sum external utility
 	  - add --mkdir-p to avoid depending on the mkdir external utility

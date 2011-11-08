@@ -381,7 +381,7 @@ check_lockfile() {
 	# could be relaxed to non related mailboxes/enpoints, but the test is
 	# not straightforward
 	if [ -f $LOCKFILE ]; then
-		if ps -p `cat $LOCKFILE` > /dev/null | grep -E 'smd-(push|pull)'; then
+		if ps -p `cat $LOCKFILE` 2> /dev/null | grep -E 'smd-(push|pull)'; then
 			echo Already running.
 			echo If this is not the case, remove $LOCKFILE by hand.
 			echo "any: smd-pushpull@localhost: TAGS: error::context(locking) probable-cause(another-instance-is-running) human-intervention(necessary) suggested-actions(run(kill `cat $LOCKFILE`) run(rm $LOCKFILE))"
