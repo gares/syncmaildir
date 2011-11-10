@@ -66,7 +66,7 @@ OPTIONS
   --mkdir-p             Behaves like mkdir -p
   --mkfifo              Behaves like mkfifo
   -l --list             Only list the mailboxes recursively contained in paths
-  -s --symlink          Create symlinks for paths reand on the input fifo
+  -s --symlink          Create symlinks for paths read on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)
   -d --dry-run          Do not generate a new db-file
   --help                This help screen
