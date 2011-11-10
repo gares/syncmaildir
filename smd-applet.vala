@@ -1,6 +1,6 @@
 // Released under the terms of GPLv3 or at your option any later version.
 // No warranties.
-// Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
+// Copyright Enrico Tassi <gares@fettunta.org>
 
 errordomain Exit { ABORT }
 
@@ -206,6 +206,7 @@ class smdApplet {
 		win = builder.get_object("wPrefs") as Gtk.Window;
 		err_win = builder.get_object("wError") as Gtk.Window;
 		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
+		about_win.set_copyright("Copyright " + SMDConf.COPYRIGHT);
 		log_win = builder.get_object("wLog") as Gtk.Window;
 		var logs_vb = builder.get_object("vbLog") as Gtk.VBox;
 		cblogs = new Gtk.ComboBoxText();

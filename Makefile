@@ -4,6 +4,7 @@
 
 PROJECTNAME=syncmaildir
 VERSION=1.2.2
+COPYRIGHT=© 2008-2011 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1 smd-translate.1 \
@@ -52,6 +53,8 @@ all: check-build update-smd-config $(BINARIES)
 update-smd-config:
 	$H echo "#define SMD_CONF_PREFIX \"/$(PREFIX)\"" > smd-config.h.new
 	$H echo "#define SMD_CONF_VERSION \"$(VERSION)\"" >> smd-config.h.new
+	$H echo "#define SMD_CONF_COPYRIGHT \"$(COPYRIGHT)\"" \
+		>> smd-config.h.new
 	$H if diff -q smd-config.h smd-config.h.new > /dev/null 2>&1; then \
 		rm smd-config.h.new; \
 	else \

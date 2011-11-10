@@ -1,4 +1,4 @@
-../../2011 - ... - version 1.2.2
+../11/2011 - minor fix - version 1.2.2
 	* smd-config.5.txt:
 	  - fixed typo and use `quotes' to delimit strings
 	* smd-common:
@@ -9,6 +9,7 @@
 	  - add --mkdir-p to avoid depending on the mkdir external utility
 	  - add --mkfifo to avoid depending on the mkfifo external utility
 	  - print OK on successful symlink creation
+	  - updated copyright
 	* syncmaildir.lua:
 	  - use mddiff to create symlinks to remove dependency over ln
 

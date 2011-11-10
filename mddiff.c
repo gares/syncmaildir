@@ -6,8 +6,7 @@
 //
 // Absolutely no warranties, released under GNU GPL version 3 or at your 
 // option any later version.
-//
-// Copyright 2008-2010 Enrico Tassi <gares@fettunta.org>
+// Copyright Enrico Tassi <gares@fettunta.org>
 
 #define _BSD_SOURCE
 #define _GNU_SOURCE
@@ -898,10 +897,10 @@ Every client must use a different db-file, and the db-file is strictly\n\
 related with the set of directories given as arguments, and should not\n\
 be used with a different directory set. Adding items to the directory\n\
 set is safe, while removing them may not do what you want (delete actions\n\
-are generated).\n", bname, bname);
-	fprintf(stdout,
-		"\nVersion %s, © 2009 Enrico Tassi, released under GPLv3, \
-no waranties\n\n",SMD_CONF_VERSION);
+are generated).\n\n", bname, bname);
+	fprintf(stdout, "Copyright %s\n",SMD_CONF_COPYRIGHT);
+	fprintf(stdout, "Version %s, ",SMD_CONF_VERSION);
+	fprintf(stdout, "released under the terms of GPLv3, no waranties\n\n");
 }
 
 int main(int argc, char *argv[]) {
