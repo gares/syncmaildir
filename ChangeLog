@@ -1,4 +1,4 @@
-../11/2011 - minor fix - version 1.2.2
+01/12/2011 - minor fix - version 1.2.2
 	* smd-config.5:
 	  - fixed typo and use `quotes' to delimit strings
 	* smd-common:
