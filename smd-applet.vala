@@ -760,7 +760,7 @@ class smdApplet {
 		try { si.set_visible(!gconf.get_bool(key_icon)); }
 		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		debug("joining smdThread");
-		thread.join<void *>();
+		thread.join();
 		thread_die = false;
 		debug("starting smdThread");
 		start_smdThread(force);
