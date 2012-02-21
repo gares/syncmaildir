@@ -1,3 +1,20 @@
+../02/2012 - minor feature improvement - version 1.2.3
+	* smd-pull:
+	  - print progress report if -v is passed
+	* smd-client:
+	  - generate progress report
+	  - generate verbose progress report during fist synchronization
+	* smd-common:
+	  - create a new fifo for progress reporters
+	  - standard progress reporter printing on stdout PROGRESS: lines
+	* smd-applet:
+	  - ported to vala 0.16
+	TODO: 
+	  - patch smd-push to generate reports
+	  - test reports
+	  - ssh restricted shell
+
+
 01/12/2011 - minor fix - version 1.2.2
 	* smd-config.5:
 	  - fixed typo and use `quotes' to delimit strings

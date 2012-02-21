@@ -444,14 +444,32 @@ end
 
 -- ============================= MAIN =====================================
 
+-- report every n mails
+local report_frequency = 5000
+
 -- receive a list of commands
-function receive_delta(inf)
+function receive_delta(inf, firsttime)
 	local cmds = {}
 	local line = ""
+
+	log_progress('Phase 1: computing remote mailbox status')
+	if firsttime then
+		log_progress([[
+		 This phase computes the SHA1 sum of all the emails in the remote
+		 mailbox.
+		 Depending on the size of the mailbox size and the speed of the hard
+		 drive, this operation may take a lot of time. After the first
+		 synchronization it will be much faster, since only new emails have
+		 to be scanned.
+		 On a cheap laptop it takes 10m to scan a 1G mailbox.]])
+	end
 
 	repeat
 		line = inf:read("*l")
 		if line and line ~= "END" then cmds[#cmds+1] = line end
+		if #cmds % report_frequency == 0 then
+			log_progress(string.format('  %3dK emails scanned', #cmds / 1000))
+		end
 	until not line or line == "END"
 	if line ~= "END" then
 		log_error('Unable to receive a complete diff')
@@ -508,10 +526,29 @@ function main()
 	end
 
 	-- we check the protocol version and dbfile fingerprint
+	local firsttime = not exists(dbfile)
+	if firsttime then
+		log_progress('This is the first synchronization, '..
+			'verbose progress report enabled.')
+	end
+	log_progress('Phase 0: handshake')
+	if firsttime then log_progress(' This phase opens the ssh connection.') end
+
 	handshake(dbfile)
 	
 	-- receive and process commands
-	local commands = receive_delta(io.stdin)
+	local commands = receive_delta(io.stdin, firsttime)
+	log_progress('Phase 3: synchronization')
+	if firsttime then
+		log_progress([[
+		 This phase propagates the chages occurred to the remote mailbox to
+		 the local one.
+		 In the first run of smd-pull all remote emails are considered as
+		 new, and if not already present in the local mailbox, they are
+		 transferred over the ssh link.
+		 It is thus recommended to run the first synchronization on mailboxes
+		 that are resonably similar (i.e. not on an empty local mailbox).]])
+	end
 	for i,cmd in ipairs(commands) do
 		local rc = execute(cmd)
 		if not rc then
@@ -523,11 +560,23 @@ function main()
 		if #get_full_email_queue > queue_max_len then
 				process_pending_queue()
 		end
+		if firsttime and i % report_frequency == 0 then
+			log_progress(string.format('  %3d%% complete', i / #commands * 100))
+		end
 	end
 	-- some commands may still be in the queue, we fire them now
 	process_pending_queue()
 	
 	-- we commit and update the dbfile
+	log_progress('Phase 4: agreement')
+	if firsttime then
+		log_progress([[
+		 This last phase concludes the agreement between the remote and the
+		 local mailbox. In particular the s $tatus of the mailbox is sent
+		 from the remote host and stored locally.
+		 The status file size is circa 7M (3M compressed) for a 1G mailbox
+		 and it needs to be transferred completely only the first time.]])
+	end
 	io.write('COMMIT\n')
 	io.flush()
 	statistics.xdelta = receive(io.stdin, xdelta)

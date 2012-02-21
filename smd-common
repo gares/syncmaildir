@@ -402,11 +402,13 @@ setup_plumbing() {
 	LtC=$CONFDIR/fifo/l2c.$REPNAME
 	LtS=$CONFDIR/fifo/l2s.$REPNAME
 	StL=$CONFDIR/fifo/s2l.$REPNAME
+	CLp=$CONFDIR/fifo/clp.$REPNAME
 
 	[ -p $CtL ] || mkfifo $CtL
 	[ -p $LtC ] || mkfifo $LtC
 	[ -p $LtS ] || mkfifo $LtS
 	[ -p $StL ] || mkfifo $StL
+	[ -p $CLp ] || mkfifo $CLp
 }
 
 ### Logging ###
@@ -414,6 +416,10 @@ setup_plumbing() {
 __mycat() {
 	# like cat, but ignores arguments
 	cat
+}
+
+myreporter() {
+	tee -a $1 | grep ^PROGRESS: | cut -d ' ' -f 2-
 }
 
 setup_logging() {
@@ -427,6 +433,11 @@ setup_logging() {
 	if [ "$DEBUG" = "true" ]; then
 		MITM=tee
 		CHILDSARGS="$CHILDSARGS -v"
+	fi
+
+	PROGRESS_REPORTER=__mycat
+	if [ $VERBOSE -eq 1 ]; then
+		PROGRESS_REPORTER=myreporter
 	fi
 }
 

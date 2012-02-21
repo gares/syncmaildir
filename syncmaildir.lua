@@ -104,6 +104,14 @@ function log_tag(tag)
 	io.stderr:write('TAGS: ',tag,'\n')
 end
 
+function log_progress(msg)
+	if verbose then
+		for l in msg:gmatch('\t*([^\n]+)') do
+			io.stderr:write('PROGRESS: ',l,'\n')
+		end
+	end
+end
+
 -- this function shoud be used only by smd-client leaves
 function log_tags(context, cause, human, ...)
 	cause = cause or 'unknown'
