@@ -461,7 +461,7 @@ report() {
 	local inversecmd="$4"
 	local localprog="$5"
 	local remoteprog="$6"
-	if [ $VERBOSE = 1 ]; then
+	if [ $VERBOSE -eq 1 ]; then
 		grep ^INFO: $SL | sed 's/^INFO: //'
 		grep ^INFO: $CL | sed 's/^INFO: //'
 	fi
