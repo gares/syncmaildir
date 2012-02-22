@@ -9,6 +9,8 @@
 	  - standard progress reporter printing on stdout PROGRESS: lines
 	* smd-applet:
 	  - ported to vala 0.16
+	* smd-loop:
+	  - fixed cleanup process (Thanks Ralf Schmitt)
 	TODO: 
 	  - patch smd-push to generate reports
 	  - test reports

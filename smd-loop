@@ -156,7 +156,7 @@ cleanup() {
 }
 
 cleanup_killed() {
-	clenup
+	cleanup
 	log "killed"
 	exit 1
 }
