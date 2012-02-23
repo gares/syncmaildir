@@ -414,7 +414,7 @@ setup_plumbing() {
 
 ### Logging ###
 
-__mycat() {
+mycat() {
 	# like cat, but ignores arguments
 	cat
 }
@@ -423,20 +423,23 @@ myreporter() {
 	tee -a $1 | grep ^PROGRESS: | cut -d ' ' -f 2-
 }
 
+mysilentreporter() {
+	cat >> $1
+}
+
 setup_logging() {
 	CtS=$CONFDIR/log/c2s.$REPNAME.log
 	StC=$CONFDIR/log/s2c.$REPNAME.log
 	CL=$CONFDIR/log/client.$REPNAME.log
 	SL=$CONFDIR/log/server.$REPNAME.log
 
-	MITM=__mycat
-
+	MITM=mycat
 	if [ "$DEBUG" = "true" ]; then
 		MITM=tee
 		CHILDSARGS="$CHILDSARGS -v"
 	fi
 
-	PROGRESS_REPORTER=__mycat
+	PROGRESS_REPORTER=mysilentreporter
 	if [ $VERBOSE -eq 1 ]; then
 		PROGRESS_REPORTER=myreporter
 	fi
