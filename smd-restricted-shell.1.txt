@@ -1,0 +1,22 @@
+NAME
+  smd-restricted-shell - restricted shell for smd
+
+SYNOPSIS
+  command="smd-restricted-shell" ssh-rsa ...
+
+DESCRIPTION
+  This utility is meant to be used in conjunction with an ssh key.
+  You can restrict the commands that are allowed to be executed on your
+  remote host when the login is performed using a particular ssh key.
+  Just prefix the line corresponding to that ssh key with
+
+    command="smd-restricted-shell"
+
+FILES
+  ~/.ssh/authorized_keys
+
+SEE ALSO
+  ssd(8)
+
+AUTHOR
+  Enrico Tassi <gares@fettunta.org>

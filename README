@@ -76,6 +76,8 @@ flexibility).
   performs a quick check that a setup, especially when it involves
   some folders renaming, actually works as expected. This tool is meant to
   be manually called by the user to check a given configuration file.
+- [`smd-restricted-shell`](smd-restricted-shell.1.html)
+  ...
 - [`smd-loop`](smd-loop.1.html) 
   runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but

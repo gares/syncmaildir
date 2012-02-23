@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright Enrico Tassi <gares@fettunta.org>
+
+set -e
+#set -x
+
+PREFIX="@PREFIX@"
+if [ `echo "$PREFIX" | cut -c -1` = "@" ]; then
+	echo "smd-restricted-shell not installed, assuming PREFIX=."
+	WHERE="./"
+else
+	WHERE="$PREFIX/bin"
+fi
+
+# check that SSH_ORIGINAL_COMMAND contains only
+# smd-client/smd-server
+C=`echo $SSH_ORIGINAL_COMMAND | cut -f 1`
+if [ "$C" != "$WHERE/smd-client" -a "$C" != "$WHERE/smd-server" ]; then
+      exit 1
+fi
+
+# we now run the smd command
+exec $SSH_ORIGINAL_COMMAND
