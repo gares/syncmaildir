@@ -11,11 +11,10 @@
 	  - ported to vala 0.16
 	* smd-loop:
 	  - fixed cleanup process (Thanks Ralf Schmitt)
-	TODO: 
-	  - patch smd-push to generate reports
-	  - test reports
-	  - ssh restricted shell
-
+	* smd-restricted-shell:
+	  - new utility to be used in the command option for and ssh key
+	    listed in the authorized_keys file (Thanks Luca Capello for the
+	    idea)
 
 01/12/2011 - minor fix - version 1.2.2
 	* smd-config.5:

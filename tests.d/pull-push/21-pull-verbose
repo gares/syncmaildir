@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+mpull -v
+assert $? 0 "failed mpull -v"
+test_eq Mail target/Mail 
+W=`grep '^Phase.[0-9]:' log.pull | wc -l`
+assert $W 4 "bad log"
+
+mpull -s
+assert $? 0 "failed mpull -v"
+test_eq Mail target/Mail 
+W=`grep '^Phase.[0-9]:' log.pull | wc -l`
+assert $W 0 "bad log, not 0 Phases"

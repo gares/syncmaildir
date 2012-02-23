@@ -231,6 +231,7 @@ parse_args() {
 			-v|--verbose)
 				VERBOSE=1
 				SHOWTAGS=1
+				CHILDSARGS="$CHILDSARGS -v"
 			;;
 			-s|--show-tags)
 				SHOWTAGS=1
@@ -240,7 +241,7 @@ parse_args() {
 			;;
 			-d|--dry-run)
 				DRYRUN=1
-				CHILDSARGS=-d
+				CHILDSARGS="$CHILDSARGS -d"
 				VERBOSE=1
 				SHOWTAGS=1
 			;;
@@ -402,13 +403,13 @@ setup_plumbing() {
 	LtC=$CONFDIR/fifo/l2c.$REPNAME
 	LtS=$CONFDIR/fifo/l2s.$REPNAME
 	StL=$CONFDIR/fifo/s2l.$REPNAME
-	CLp=$CONFDIR/fifo/clp.$REPNAME
+	PRp=$CONFDIR/fifo/pr.$REPNAME
 
 	[ -p $CtL ] || mkfifo $CtL
 	[ -p $LtC ] || mkfifo $LtC
 	[ -p $LtS ] || mkfifo $LtS
 	[ -p $StL ] || mkfifo $StL
-	[ -p $CLp ] || mkfifo $CLp
+	[ -p $PRp ] || mkfifo $PRp
 }
 
 ### Logging ###
