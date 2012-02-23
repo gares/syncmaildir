@@ -452,7 +452,7 @@ function receive_delta(inf, firsttime)
 	local cmds = {}
 	local line = ""
 
-	log_progress('Phase 1: computing remote mailbox status')
+	log_progress('Phase 1: changes detection')
 	if firsttime then
 		log_progress([[
 		 This phase computes the SHA1 sum of all the emails in the remote
