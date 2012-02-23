@@ -17,7 +17,7 @@ fi
 
 # check that SSH_ORIGINAL_COMMAND contains only
 # smd-client/smd-server
-C=`echo $SSH_ORIGINAL_COMMAND | cut -f 1`
+C=`echo $SSH_ORIGINAL_COMMAND | cut -f 1 -d ' '`
 if [ "$C" != "$WHERE/smd-client" -a "$C" != "$WHERE/smd-server" ]; then
       exit 1
 fi
