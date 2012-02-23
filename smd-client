@@ -467,7 +467,7 @@ function receive_delta(inf, firsttime)
 	repeat
 		line = inf:read("*l")
 		if line and line ~= "END" then cmds[#cmds+1] = line end
-		if #cmds % report_frequency == 0 then
+		if #cmds % report_frequency == 0 and #cmds > 0 then
 			log_progress(string.format('  %3dK emails scanned', #cmds / 1000))
 		end
 	until not line or line == "END"
