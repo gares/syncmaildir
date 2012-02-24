@@ -1,5 +1,5 @@
 ../02/2012 - minor feature improvement - version 1.2.3
-	* smd-pull:
+	* smd-pull, smd-push:
 	  - print progress report if -v is passed
 	* smd-client:
 	  - generate progress report
@@ -12,9 +12,8 @@
 	* smd-loop:
 	  - fixed cleanup process (Thanks Ralf Schmitt)
 	* smd-restricted-shell:
-	  - new utility to be used in the command option for and ssh key
-	    listed in the authorized_keys file (Thanks Luca Capello for the
-	    idea)
+	  - new utility to be used in .ssh/authorized_keys, see the command=
+	    option (Thanks Luca Capello for the idea)
 
 01/12/2011 - minor fix - version 1.2.2
 	* smd-config.5:
