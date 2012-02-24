@@ -4,9 +4,11 @@
 	* smd-client:
 	  - generate progress report
 	  - generate verbose progress report during fist synchronization
+	  - log "translating:" only when meaningful (i.e. not a noop)
 	* smd-common:
 	  - create a new fifo for progress reporters
 	  - standard progress reporter printing on stdout PROGRESS: lines
+	  - use mddiff as mkdir and mkfifo (no more calls to mkfifo and mkdir)
 	* smd-applet:
 	  - ported to vala 0.16
 	* smd-loop:
