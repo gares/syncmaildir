@@ -538,7 +538,7 @@ function main()
 	
 	-- receive and process commands
 	local commands = receive_delta(io.stdin, firsttime)
-	log_progress('Phase 3: synchronization')
+	log_progress('Phase 2: synchronization')
 	if firsttime then
 		log_progress([[
 		 This phase propagates the chages occurred to the remote mailbox to
@@ -568,7 +568,7 @@ function main()
 	process_pending_queue()
 	
 	-- we commit and update the dbfile
-	log_progress('Phase 4: agreement')
+	log_progress('Phase 3: agreement')
 	if firsttime then
 		log_progress([[
 		 This last phase concludes the agreement between the remote and the
