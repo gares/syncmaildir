@@ -351,7 +351,9 @@ function make_dir_aux(absolute, pieces)
 			if not dry_run() then
 				rc = os.execute(MDDIFF..' --mkdir-p '..quote(abs_lfn))
 			end
-			log('translating: '..dir..' -> '..lfn)
+			if dir ~= lfn then
+				log('translating: '..dir..' -> '..lfn)
+			end
 			mk_link_wa(abs_lfn, dir)
 		else
 			if not dry_run() then
