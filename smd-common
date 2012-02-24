@@ -106,14 +106,14 @@ init() {
 	assert_executable $SMDCLIENT
 
 	# setup of confdir
-	mkdir -p $CONFDIR/
-	mkdir -p $CONFDIR/log
-	mkdir -p $CONFDIR/fifo
-	mkdir -p $CONFDIR/hooks
-	mkdir -p $CONFDIR/hooks/pre-pull.d
-	mkdir -p $CONFDIR/hooks/pre-push.d
-	mkdir -p $CONFDIR/hooks/post-pull.d
-	mkdir -p $CONFDIR/hooks/post-push.d
+	$MDDIFF --mkdir-p $CONFDIR/
+	$MDDIFF --mkdir-p $CONFDIR/log
+	$MDDIFF --mkdir-p $CONFDIR/fifo
+	$MDDIFF --mkdir-p $CONFDIR/hooks
+	$MDDIFF --mkdir-p $CONFDIR/hooks/pre-pull.d
+	$MDDIFF --mkdir-p $CONFDIR/hooks/pre-push.d
+	$MDDIFF --mkdir-p $CONFDIR/hooks/post-pull.d
+	$MDDIFF --mkdir-p $CONFDIR/hooks/post-push.d
 	CRUFT=`find $CONFDIR/workarea ! -type d -a ! -type l 2> /dev/null || true`
 	if [ ! -z "$CRUFT" ]; then
 		echo "Some files are left in $CONFDIR/workarea"
@@ -124,7 +124,7 @@ init() {
 		exit 1
 	fi
 	rm -rf $CONFDIR/workarea
-	mkdir -p $CONFDIR/workarea
+	$MDDIFF --mkdir-p $CONFDIR/workarea
 }
 
 is_absolute() {
@@ -171,9 +171,9 @@ setup_workarea(){
 	fi
 
 	local FIFO_MKDIR="$CONFDIR/fifo/mkdir"
-	[ -p "$FIFO_MKDIR" ] || mkfifo "$FIFO_MKDIR"
+	[ -p "$FIFO_MKDIR" ] || $MDDIFF --mkfifo "$FIFO_MKDIR"
 	local FIFO_MKDIRB="$CONFDIR/fifo/mkdir-back"
-	[ -p "$FIFO_MKDIRB" ] || mkfifo "$FIFO_MKDIRB"
+	[ -p "$FIFO_MKDIRB" ] || $MDDIFF --mkfifo "$FIFO_MKDIRB"
 	$MDDIFF -s "$FIFO_MKDIR" > "$FIFO_MKDIRB" &
 	local DIR_MAKER=$!
 	atexit_kill $DIR_MAKER
@@ -405,11 +405,11 @@ setup_plumbing() {
 	StL=$CONFDIR/fifo/s2l.$REPNAME
 	PRp=$CONFDIR/fifo/pr.$REPNAME
 
-	[ -p $CtL ] || mkfifo $CtL
-	[ -p $LtC ] || mkfifo $LtC
-	[ -p $LtS ] || mkfifo $LtS
-	[ -p $StL ] || mkfifo $StL
-	[ -p $PRp ] || mkfifo $PRp
+	[ -p $CtL ] || $MDDIFF --mkfifo $CtL
+	[ -p $LtC ] || $MDDIFF --mkfifo $LtC
+	[ -p $LtS ] || $MDDIFF --mkfifo $LtS
+	[ -p $StL ] || $MDDIFF --mkfifo $StL
+	[ -p $PRp ] || $MDDIFF --mkfifo $PRp
 }
 
 ### Logging ###

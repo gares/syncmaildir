@@ -358,7 +358,6 @@ want to run `make osx/text/all && make osx/text/install` to properly build and
 install text mode only syncmaildir utilities on an MacOSX platform.
 
 Runtime dependencies are: `ssh`, `xdelta`, `lua5.1` and `bash`.
-Moreover some core utilities are also needed: `sha1sum`, `mkfifo` and `mkdir`.
 
 Design
 ======
