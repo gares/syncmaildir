@@ -77,7 +77,8 @@ flexibility).
   some folders renaming, actually works as expected. This tool is meant to
   be manually called by the user to check a given configuration file.
 - [`smd-restricted-shell`](smd-restricted-shell.1.html)
-  ...
+  only meant to be used in conjunction with an SSH key and specifically in
+  the remote OpenSSH's authorized_keys file to restrict the commands allowed.
 - [`smd-loop`](smd-loop.1.html) 
   runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
@@ -199,6 +200,20 @@ less than 2s using a regular ADSL connection.
 
 Advanced Usage
 ==============
+
+### restricted remote shell
+
+Version `1.2.3` comes with `smd-restricted-shell` to improve security,
+especially when using password-less SSH keys.  This tool takes
+advantage of the OpenSSH command= option, which permits to restrict
+the command that is allowed to be executed on the remote host when the
+login is performed using a particular SSH key.
+
+Once you have identified in the ~/.ssh/authorized_keys on the remote
+host the SSH key you use together with Sync Mail Dir, prepend the line
+as in the following example:
+
+    command="/usr/bin/smd-restricted-shell" ssh-rsa AAAABBBBCCCC....
 
 ### multiple servers
 
