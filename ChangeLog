@@ -1,9 +1,9 @@
-../02/2012 - minor feature improvement - version 1.2.3
+03/03/2012 - minor feature improvement - version 1.2.3
 	* smd-pull, smd-push:
 	  - print progress report if -v is passed
 	* smd-client:
-	  - generate progress report
-	  - generate verbose progress report during fist synchronization
+	  - generate progress report if verbose mode is on
+	  - generate verbose progress report during first synchronization
 	  - log "translating:" only when meaningful (i.e. not a noop)
 	* smd-common:
 	  - create a new fifo for progress reporters
@@ -12,10 +12,13 @@
 	* smd-applet:
 	  - ported to vala 0.16
 	* smd-loop:
-	  - fixed cleanup process (Thanks Ralf Schmitt)
+	  - fixed cleanup process (Thanks Ralf Schmitt for the patch)
 	* smd-restricted-shell:
 	  - new utility to be used in .ssh/authorized_keys, see the command=
-	    option (Thanks Luca Capello for the idea)
+	    option (Thanks Luca Capello for the idea and the documentation)
+	* syncmaildir.lua:
+	  - When mddiff fails to sha1 a message print the file name (thanks 
+	    Zhengdao Wang for the idea)
 
 01/12/2011 - minor fix - version 1.2.2
 	* smd-config.5:

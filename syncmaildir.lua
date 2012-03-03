@@ -507,7 +507,7 @@ function sha_file(name)
 	mddiff_sha_handler.outf:flush()
 	local data = mddiff_sha_handler.inf:read('*l')
 	if data:match('^ERROR') then
-		log_tags_and_fail('Failed to sha1 a message',
+		log_tags_and_fail("Failed to sha1 message: "..(name or "nil"),
 			'sha_file','modify-while-update',false,'retry')
 	end
 	local hsha, bsha = data:match('(%S+) (%S+)') 
