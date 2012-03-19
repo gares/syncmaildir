@@ -16,6 +16,8 @@ OPTIONS
   -t --translator  Specify a program to translate remote mailbox names to 
                    local ones. Note that the translator 'cat' (the identity
                    program) is optimized away
+  -l --local-sync  Local synchronization, no changes is made to the db-file
+                   since smd-server takes care of it
   -v --verbose     Increase program verbosity (printed on stderr)
   -d --dry-run     Do not perform any action for real
 

@@ -488,12 +488,16 @@ function main()
 	-- argument parsing
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
 		" [-vd] [-t translatorRL] endpointname mailboxes...\n"
+	local apply_xdelta = true
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
 			table.remove(arg,1)
 		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
 			set_dry_run(true)
+			table.remove(arg,1)
+		elseif arg[1] == '-l' or arg[1] == '--local-sync' then
+			apply_xdelta = false
 			table.remove(arg,1)
 		elseif arg[1] == '-t' or arg[1] == '--translator' then
 			set_translator(arg[2])
@@ -582,7 +586,7 @@ function main()
 	statistics.xdelta = receive(io.stdin, xdelta)
 
 	local rc
-	if not dry_run() then 
+	if not dry_run() and apply_xdelta then 
 		rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
 	else
 		rc = 0 -- the xdelta transmitted with --dry-run is dummy
@@ -593,7 +597,7 @@ function main()
 		io.flush()
 		os.exit(4)
 	end
-	if not dry_run() then
+	if not dry_run() and apply_xdelta then
 		rc = os.rename(newdb,dbfile)
 	else
 		rc = true -- with --dry-run there is no xdelta affair
