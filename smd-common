@@ -82,6 +82,7 @@ init() {
 	CHILDSARGS=
 	REMOTEEXCLUDE=
 	LOCALEXCLUDE=
+	LOCALSYNC=
 
 	# default values for the configuration file
 	DEBUG=false
@@ -374,6 +375,10 @@ read_conffile() {
 			REMOTEEXCLUDE="$REMOTEEXCLUDE --exclude $e"
 	done
 
+	# check for local synchronization
+	if [ "$SERVERNAME" = "localhost" ]; then
+			LOCALSYNC=-l
+	fi
 }
 
 ### Only one instance at a time please ###
