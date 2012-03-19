@@ -1,0 +1,30 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+echo SERVERNAME=localhost >> target/.smd/config.default
+echo MAILBOX= >> target/.smd/config.default
+echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
+echo MAILBOX_REMOTE=../Mail >> target/.smd/config.default
+echo "TRANSLATOR_RL=\"sed 's|^\.\./\\(.*\\)|\1|'\"" >> target/.smd/config.default
+echo "TRANSLATOR_LR=\"sed s|\\(.*\\)|\1|\"" >> target/.smd/config.default
+
+cat > bin/fakessh <<EOT
+#!/bin/sh
+shift
+exec "\$@"
+EOT
+
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail target/Mail 
+
+mpull
+assert $? 0 "failed 2nd mpull"
+test_eq Mail target/Mail 
+
+mpush
+assert $? 0 "failed mpush"
+test_eq Mail target/Mail 
