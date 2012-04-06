@@ -6,7 +6,7 @@
 
 -- utils
 function normalize(x)
-	return x:gsub("^['\"]",''):gsub("[/'\"]$",'')
+	return x:gsub("^['\"]",''):gsub("['\"]$",''):gsub("/$",'')
 end
 
 function escape(x)
