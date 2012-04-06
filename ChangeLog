@@ -1,3 +1,15 @@
+../04/2012 - minor feature improvement - version 1.2.4
+	* smd-translate:
+	  - fix bug in removing trailing / or " or ' from the
+	    MAILBOX_REMOTE/LOCAL value
+	  - new trasnlator 'move' that just replaces MAILBOX_LOCAL
+	    with MAILBOX_REMOTE and viceversa.
+	* smd-push/smd-pull:
+	  - new option -l --local-sync to handle local synchronizations, i.e.
+	    when SERVERNAME=localhost. (Thanks Miguel Fernandes for the idea
+	    and his time for testing/debugging my prototype implementation).
+	  FIXME DOC
+
 03/03/2012 - minor feature improvement - version 1.2.3
 	* smd-pull, smd-push:
 	  - print progress report if -v is passed
