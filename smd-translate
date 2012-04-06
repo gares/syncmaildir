@@ -125,6 +125,21 @@ modes['nodots'] = function(dir)
 	end
 
 end
+modes['move'] = function(dir)
+	if dir == 'LR' then
+		local l_m = '^'..escape(mailbox_local)..'/'
+		local r_m = mailbox_remote..'/'
+		for l in io.stdin:lines() do
+			print((l:gsub(l_m,r_m)))
+		end
+	else
+		local r_m = '^'..escape(mailbox_remote)..'/'
+		local l_m = mailbox_local..'/'
+		for l in io.stdin:lines() do
+			print((l:gsub(r_m,l_m)))
+		end
+	end
+end
 modes['cat'] = function(_) for l in io.stdin:lines() do print(l) end end
 modes['default'] = modes['oimap-dovecot']
 

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+echo SERVERNAME=localhost >> target/.smd/config.default
+echo MAILBOX= >> target/.smd/config.default
+echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
+echo "MAILBOX_REMOTE='MyMail/'" >> target/.smd/config.default
+echo 'TRANSLATOR_RL="smd-translate -m move -d RL default"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m move -d LR default"' >> target/.smd/config.default
+
+cat > bin/fakessh <<EOT
+#!/bin/sh
+shift
+exec "\$@"
+EOT
+
+mv Mail target/MyMail
+
+mpull
+assert $? 0 "failed mpull"
+test_eq target/MyMail target/Mail 
+
+mkdir -p target/Mail/.foo.bar
+cp -r target/Mail/cur target/Mail/.foo.bar/
+
+mpush
+assert $? 0 "failed mpush"
+test_eq target/MyMail target/Mail 
+

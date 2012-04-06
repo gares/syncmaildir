@@ -39,6 +39,11 @@ DESCRIPTION
     
     Mail/cur
     Mail/sub/folder/new
+
+  move
+
+  This mode just replaces the root of the mailbox, i.e. substitutes
+  MAILBOX_LOCAL for MAILBOX_REMOTE and viceversa.
     
     
 USAGE IN CONFIGURATION FILE
