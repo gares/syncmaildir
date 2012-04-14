@@ -7,9 +7,9 @@ SYNOPSIS
 DESCRIPTION
   smd-loop runs smd-push and smd-pull at regular intervals as defined
   by the user in the ~/.smd/loop configuration file. On errors that
-  are reported to be transient, its retries a second time before failing.
+  are reported to be transient, it retries a second time before failing.
 
-  The configuration file is like oriented. Each line is composed of
+  The configuration file is line-oriented. Each line is composed of
   three space separated fields: pull-frequency, push-frequency and
   endpoint-name. Frequencies are expressed in minutes, while endpoint
   name is a valid name for smd-pull(1) and smd-push(1). Lines
