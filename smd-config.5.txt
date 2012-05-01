@@ -109,6 +109,13 @@ PATHS EXCLUSION
   the matching succeeds the directory and all its subdirectories are skipped.
   Thus there is no need to specify a trailing '/*' in every expression.
 
+LOCAL SYNCHRONIZATION
+
+  If the local and remote mailboxes are on the same filesystem the following
+  option must be added to the configuration file:
+
+  SMDCLIENTOPTS=-l
+
 FILES
 
   ~/.smd/config.*

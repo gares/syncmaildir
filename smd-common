@@ -82,7 +82,7 @@ init() {
 	CHILDSARGS=
 	REMOTEEXCLUDE=
 	LOCALEXCLUDE=
-	LOCALSYNC=
+	SMDCLIENTOPTS=
 
 	# default values for the configuration file
 	DEBUG=false
@@ -376,8 +376,9 @@ read_conffile() {
 	done
 
 	# check for local synchronization
-	if [ "$SERVERNAME" = "localhost" ]; then
-			LOCALSYNC=-l
+	if [ "$SERVERNAME" = "localhost" -a -z "$SMDCLIENTOPTS" ]; then
+			echo "SERVERNAME is localhost but SMDCLIENTOPTS is not set."
+			echo "Local synchronizations must set SMDCLIENTOPTS."
 	fi
 }
 
