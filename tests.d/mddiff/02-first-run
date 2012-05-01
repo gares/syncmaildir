@@ -5,6 +5,8 @@ assert $? 0 "mdiff failed"
 
 test -f db.txt.new
 assert $? 0 "mdiff not generating .new file"
+test -f db.txt.mtime.new
+assert $? 0 "mdiff not generating mtime.new file"
 
 grep -v ^warning log.mddiff > log.cleaned
 grep -v ^ADD log.cleaned > /dev/null
