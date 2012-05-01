@@ -1,0 +1,29 @@
+#!/bin/sh
+
+mdiff Mail
+assert $? 0 "mdiff failed"
+
+mv db.txt.new db.txt
+mv db.txt.mtime.new db.txt.mtime
+
+ls Mail/cur | head -n 2 > mails
+exec 7<mails
+read MAIL1 <&7
+read MAIL2 <&7
+exec 7<&-
+
+rm Mail/cur/$MAIL1
+mv Mail/cur/$MAIL2 Mail/cur/foo
+
+mdiff Mail
+N=`cat log.mddiff | wc -l`
+assert $N 3 "too many commands: $N"
+N=`cat log.mddiff | grep ^DELETE | wc -l`
+assert $N 2 "too few DELETE commands: $N"
+N=`cat log.mddiff | grep ^COPY | wc -l`
+assert $N 1 "not 1 COPY command: $N"
+mdiff -n Mail
+N=`cat log.mddiff | grep ^DELETE | wc -l`
+assert $N 1 "too many DELETE commands: $N"
+N=`cat log.mddiff | grep ^DELETE | grep $MAIL1 | wc -l`
+assert $N 0 "deletes aven if -n"

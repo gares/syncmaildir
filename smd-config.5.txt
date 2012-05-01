@@ -116,6 +116,17 @@ LOCAL SYNCHRONIZATION
 
   SMDCLIENTOPTS=-l
 
+DELETIONS
+
+  In some cases, usually unidirectional synchronizations, one may want
+  to not propagate deletions. E.g. one keeps a slim working mailbox but
+  pushes to a backup mailbox to save every email. For that scenario
+  smd-pull and smd-push accept a -n, --no-delete, option. 
+  To avoid specifying this option every time one can put it in the
+  configuration file:
+
+  SMDSERVEROPTS=-n
+
 FILES
 
   ~/.smd/config.*

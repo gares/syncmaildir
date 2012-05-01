@@ -18,14 +18,18 @@ function main()
 
 	-- argument parsing
 	local exclude = {}
+	local no_delete = false
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
-		" [-vd] endpointname mailboxes...\n"
+		" [-vdn] endpointname mailboxes...\n"
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
 			table.remove(arg,1)
 		elseif arg[1] == '-d' or arg[1] == '--dry-run' then
 			set_dry_run(true)
+			table.remove(arg,1)
+		elseif arg[1] == '-n' or arg[1] == '--no-delete' then
+			no_delete = true
 			table.remove(arg,1)
 		elseif arg[1] == '--exclude' then
 			exclude[#exclude + 1] = arg[1]
@@ -52,6 +56,8 @@ function main()
 
 	local database_opt = '--db-file '.. dbfile
 	local mailbox_opt = table.concat(arg,' ')
+	local no_delete_opt = ''
+	if no_delete then no_delete_opt = '-n' end
 	local dry_opt = ''
 	if dry_run() then dry_opt = '-d' end
 	local exclude_opt = table.concat(exclude, ' ')
@@ -61,7 +67,7 @@ function main()
 	
 	-- run mddiff and send the output to the client
 	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
-		exclude_opt..' '..mailbox_opt
+		exclude_opt..' '..no_delete_opt..' '..mailbox_opt
 	local r = io.popen(mddiff,"r")
 	local sent = 0
 	while true do

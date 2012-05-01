@@ -18,6 +18,7 @@ DESCRIPTION
 OPTIONS
   -v --verbose    Increase program verbosity (printed on stderr)
   -d --dry-run    Do not perform any action for real
+  -n --no-delete  Do not track deleted files
   --exclude glob  Exclude paths matching glob
 
 NOTES

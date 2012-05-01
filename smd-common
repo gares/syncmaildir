@@ -83,6 +83,7 @@ init() {
 	REMOTEEXCLUDE=
 	LOCALEXCLUDE=
 	SMDCLIENTOPTS=
+	SMDSERVEROPTS=
 
 	# default values for the configuration file
 	DEBUG=false
@@ -245,6 +246,9 @@ parse_args() {
 				CHILDSARGS="$CHILDSARGS -d"
 				VERBOSE=1
 				SHOWTAGS=1
+			;;
+			-n|--no-delete)
+				SMDSERVEROPTS="$SMDSERVEROPTS -n"
 			;;
 			-*)
 				cat <<-EOT

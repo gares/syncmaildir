@@ -138,6 +138,8 @@ STATIC char* txtURL(const char* string, char* outbuff) {
 	return outbuff;
 }
 
+#define PROMOTE(what,from,to) ((what) = ((what) == (from)) ? (to) : (from))
+
 // flags used to mark struct mail so that at the end of the scanning 
 // we output commands lookig that flag
 enum sight {
@@ -188,6 +190,7 @@ STATIC int only_mkdirp;
 STATIC int only_mkfifo;
 STATIC int n_excludes;
 STATIC char **excludes;
+STATIC int no_delete;
 
 // ============================ helpers =====================================
 
@@ -623,10 +626,12 @@ STATIC void analyze_file(const char* dir,const char* file) {
 	if (bodyalias != 0) {
 		if (hsha_equal(GPTR(bodyalias), GPTR(m))) {
 			COMMAND_COPY(bodyalias,m);
+			PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
 			mail(m)->seen=SEEN;
 			return;
 		} else {
 			COMMAND_COPYBODY(bodyalias,m);
+			PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
 			mail(m)->seen=SEEN;
 			return;
 		}
@@ -727,7 +732,11 @@ STATIC void generate_deletions(){
 	size_t m;
 
 	for(m=1; m < mailno; m++){
-		if (mail(m)->seen == NOT_SEEN) 
+		if (!no_delete && (mail(m)->seen == NOT_SEEN || mail(m)->seen == MOVED))
+			// normally moved or removed mails are deleted
+			COMMAND_DELETE(m);
+		else if (no_delete && mail(m)->seen == MOVED)
+			// if --no-delete only moved mails should be deleted
 			COMMAND_DELETE(m);
 		else 
 			VERBOSE(seen,"STATUS OF %s %s %s IS %s\n",
@@ -841,6 +850,7 @@ STATIC struct option long_options[] = {
 	{"symlink"   , no_argument      , NULL, 's'},
 	{"verbose"   , no_argument      , NULL, 'v'},
 	{"dry-run"   , no_argument      , NULL, 'd'},
+	{"no-delete" , no_argument      , NULL, 'n'},
 	{"help"      , no_argument      , NULL, 'h'},
 	{NULL        , no_argument      , NULL, 0},
 };
@@ -866,6 +876,7 @@ STATIC const char* long_options_doc[] = {
 			"Symbolic Link generation mode (short -s)",
 			"Increase program verbosity (printed on stderr, short -v)",
 			"Do not generate a new db file (short -d)",
+			"Do not track deletions (short -n)",
 			"This help screen",
 			NULL
 };
@@ -919,7 +930,7 @@ int main(int argc, char *argv[]) {
 	g_assert(MAIL(GPTR(1)) == 1);
 
 	for(;;) {
-		c = getopt_long(argc, argv, "vhdls", long_options, &option_index);
+		c = getopt_long(argc, argv, "vhndls", long_options, &option_index);
 		if (c == -1) break; // no more args
 		switch (c) {
 			case OPT_MAX_MAILNO:
@@ -947,6 +958,9 @@ int main(int argc, char *argv[]) {
 			break;
 			case 'd':
 				dry_run = 1;
+			break;
+			case 'n':
+				no_delete = 1;
 			break;
 			case 'l':
 				only_list_subfolders = 1;

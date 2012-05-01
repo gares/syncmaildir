@@ -2,8 +2,8 @@ NAME
   mddiff - computes diff for maildirs
 SYNOPSIS
   mddiff [--max-mailno mno] [--db-file dbf] [-l|--list] [-s|--symlink]
-         [--exclude globexpr] [-v|--verbose] [-d|--dry-run] [--help]
-         [--sha1sum] paths
+         [--exclude globexpr] [-v|--verbose] [-d|--dry-run] 
+         [-n|--no-delete] [--help] [--sha1sum] paths
 DESCRIPTION
   mddiff computes the delta from an old status of a maildir (previously
   recorded in a support file, called db file) and the current status, 
@@ -54,6 +54,11 @@ DESCRIPTION
   entered. If the match is successful, the directory and all its 
   subedirectories are skipped.
 
+  The --no-delete option tells mddiff to not output a DELETE action for
+  files that disappear. Note that a DELETE action is anyway generated for
+  files that are moved (i.e. move is COPY plus DELETE). The result is that
+  deletions are not propagated to the other endpoint.
+
 OPTIONS
   --max-mailno mno      Estimation of max mail message number (defaults to the
                         number of messages in the db-file + 1000 or 500000
@@ -69,6 +74,7 @@ OPTIONS
   -s --symlink          Create symlinks for paths read on the input fifo
   -v --verbose          Increase program verbosity (printed on stderr)
   -d --dry-run          Do not generate a new db-file
+  -n --no-delete        Do not track deleted files
   --help                This help screen
 
 NOTES
