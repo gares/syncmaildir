@@ -39,9 +39,9 @@ test_eq(){
 }
 
 run_server(){
-	HOME=$ROOT/$TESTSUITE/$N/ \
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$__N__/ \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
 		smd-server -v test Mail < c2s 2> log.server.$1 \
 		| tee log.s2c > s2c &
 	RC=$!
@@ -53,9 +53,9 @@ run_client(){
 	mkdir -p target/.smd/workarea/
 	cd target/.smd/workarea/
 	local DD=../../../
-	HOME=$ROOT/$TESTSUITE/$N/target \
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$__N__/target \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
 		smd-client -t 'cat' -v \
 		test Mail < $DD/s2c 2> $DD/log.client.$1 \
 		| tee $DD/log.c2s > $DD/c2s &
@@ -65,9 +65,9 @@ run_client(){
 }
 
 msync(){
-	run_server $N
+	run_server $__N__
 	local SERVER=$RC
-	run_client $N
+	run_client $__N__
 	local CLIENT=$RC
 	
 	wait $SERVER
@@ -75,33 +75,33 @@ msync(){
 }
 
 mpull(){
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
-	HOME=$ROOT/$TESTSUITE/$N/target \
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	HOMES=$ROOT/$TESTSUITE/$N/ \
-		$ROOT/$TESTSUITE/$N/bin/smd-pull "$@" > log.pull 2>&1
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$__N__/target \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	HOMES=$ROOT/$TESTSUITE/$__N__/ \
+		$ROOT/$TESTSUITE/$__N__/bin/smd-pull "$@" > log.pull 2>&1
 }
 
 mpush(){
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
-	HOME=$ROOT/$TESTSUITE/$N/target \
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	HOMES=$ROOT/$TESTSUITE/$N/ \
-		$ROOT/$TESTSUITE/$N/bin/smd-push "$@" > log.push 2>&1
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$__N__/target \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	HOMES=$ROOT/$TESTSUITE/$__N__/ \
+		$ROOT/$TESTSUITE/$__N__/bin/smd-push "$@" > log.push 2>&1
 }
 
 mdiff(){
-	LUA_INIT="package.path='$ROOT/$TESTSUITE/$N/share/lua/5.1/?.lua;'" \
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	HOME=$ROOT/$TESTSUITE/$N/ \
-		$VALGRIND $ROOT/$TESTSUITE/$N/bin/mddiff "$@" > log.mddiff 2>&1
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	HOME=$ROOT/$TESTSUITE/$__N__/ \
+		$VALGRIND $ROOT/$TESTSUITE/$__N__/bin/mddiff "$@" > log.mddiff 2>&1
 }
 
 mcheck(){
-	PATH=$ROOT/$TESTSUITE/$N/bin:$PATH \
-	HOME=$ROOT/$TESTSUITE/$N/target/ \
-	HOMES=$ROOT/$TESTSUITE/$N/ \
-		$ROOT/$TESTSUITE/$N/bin/smd-check-conf "$@" > log.check 2>&1
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	HOME=$ROOT/$TESTSUITE/$__N__/target/ \
+	HOMES=$ROOT/$TESTSUITE/$__N__/ \
+		$ROOT/$TESTSUITE/$__N__/bin/smd-check-conf "$@" > log.check 2>&1
 }
 
 assert(){
@@ -115,17 +115,17 @@ assert(){
 
 prepare(){
 	local testcase=$1
-	local N=$2
+	local __N__=$2
 
 	cd $BASE
-	rm -rf $ROOT/$TESTSUITE/$N
-	mkdir -p $ROOT/$TESTSUITE/$N/target
+	rm -rf $ROOT/$TESTSUITE/$__N__
+	mkdir -p $ROOT/$TESTSUITE/$__N__/target
 	make --no-print-directory --quiet text/all
 	make --no-print-directory --quiet text/install-bin \
-		SSH=$ROOT/$TESTSUITE/$N/bin/fakessh \
-		PREFIX=$ROOT/$TESTSUITE/$N
+		SSH=$ROOT/$TESTSUITE/$__N__/bin/fakessh \
+		PREFIX=$ROOT/$TESTSUITE/$__N__
 
-	cd $ROOT/$TESTSUITE/$N
+	cd $ROOT/$TESTSUITE/$__N__
 	cat > bin/fakessh <<-EOT
 	#!/bin/sh
 	shift
@@ -144,9 +144,9 @@ run_test() {
 	local testcase="$1"
 	local T="$2"
 	echo -n "running $TESTSUITE/`basename $T`: "
-	local N=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
-	prepare $testcase $N
-	cd $ROOT/$TESTSUITE/$N
+	local __N__=`echo $T | sed 's/^[^0-9]*\([0-9][0-9]*\).*$/\1/'`
+	prepare $testcase $__N__
+	cd $ROOT/$TESTSUITE/$__N__
 	. $T
 	echo OK
 }
