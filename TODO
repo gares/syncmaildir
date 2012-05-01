@@ -1,5 +1,3 @@
 - it seems that escaping in translator LR RL is inconsistent
 - check for .. in MAILBOX_*
-- document localsync
-- never delete option
 - smd-uniform-names
