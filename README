@@ -356,6 +356,12 @@ Last, matching is performed every time a directory is entered, and if
 the matching succeeds the derectory and all its subdirectories are skipped.
 Thus there is no need to specify a trailing '`/*`' in every expression.
 
+### local synchronization
+
+If the remote and local mailboxes are on the same filesystem, one has
+to specify the `-l` option to `smd-client`. This option can be specified
+adding to the configuration file `SMDCLIENTOPTS=-l` and set `SERVER=localhost`. 
+
 Installation
 ============
 
