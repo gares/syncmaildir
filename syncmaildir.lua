@@ -372,6 +372,25 @@ function make_dir_aux(absolute, pieces)
 	end
 end
 
+function tokenize_path(path)
+	local t = {} 
+	local absolute = false
+	local file = ""
+
+	if string.byte(path,1) == string.byte('/',1) then absolute = true end
+
+	-- tokenization
+	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
+
+	-- strip last component if not ending with '/'
+	if string.byte(path,string.len(path)) ~= string.byte('/',1) then
+		file=t[#t]
+		table.remove(t,#t) 
+	end
+
+	return absolute, t, file
+end
+
 -- creates a directory that can contains a path, should be equivalent
 -- to mkdir -p `dirname path`. moreover, if the last component is 'tmp',
 -- 'cur' or 'new', they are all are created too. exampels:
@@ -379,18 +398,7 @@ end
 --  mkdir_p('/foo/bar/')    creates /foo/bar/
 --  mkdir_p('/foo/tmp/baz') creates /foo/tmp/, /foo/cur/ and /foo/new/
 function mkdir_p(path)
-	local t = {} 
-
-	local absolute = false
-	if string.byte(path,1) == string.byte('/',1) then absolute = true end
-
-	-- tokenization
-	for m in path:gmatch('([^/]+)') do t[#t+1] = m end
-
-	-- strip last component is not ending with '/'
-	if string.byte(path,string.len(path)) ~= string.byte('/',1) then 
-		table.remove(t,#t) 
-	end
+	local absolute, t, _ = tokenize_path(path)
 
 	make_dir_aux(absolute, t)
 

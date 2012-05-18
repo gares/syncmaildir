@@ -20,7 +20,9 @@ function main()
 	local exclude = {}
 	local no_delete = false
 	local just_mddiff = false
-	local just_dbfile = false
+	local stop_after_diff = false
+	local override_db = nil
+	local dump_stdin_to = nil
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
 		" [-vdn] endpointname mailboxes...\n"
 	while #arg > 2 do
@@ -38,11 +40,19 @@ function main()
 			exclude[#exclude + 1] = arg[2]
 			table.remove(arg,1)
 			table.remove(arg,1)
-		elseif arg[1] == '--just-print-mddiff-cmdline' then
+		elseif arg[1] == '--get-mddiff-cmdline' then
 			just_mddiff = true
 			table.remove(arg,1)
-		elseif arg[1] == '--just-print-db-filename' then
-			just_dbfile = true
+		elseif arg[1] == '--override-db' then
+			override_db = arg[2]
+			table.remove(arg,1)
+			table.remove(arg,1)
+		elseif arg[1] == '--stop-after-diff' then
+			stop_after_diff = true
+			table.remove(arg,1)
+		elseif arg[1] == '--dump-stdin' then
+			dump_stdin_to = arg[2]
+			table.remove(arg,1)
 			table.remove(arg,1)
 		else
 			break
@@ -54,9 +64,27 @@ function main()
 		os.exit(2)
 	end
 
+	if dump_stdin_to ~= nil then
+		dump_stdin_to = dump_stdin_to:gsub('^~',os.getenv('HOME'))
+		mkdir_p(dump_stdin_to)
+		local f = io.open(dump_stdin_to,'w')
+		local data = nil
+		repeat
+				data = io.read(4096)
+				if data then f:write(data) end
+		until data == nil
+		f:close()
+		os.exit(0)
+	end
+
 	local endpoint = arg[1]
 	table.remove(arg,1)
-	local dbfile = dbfile_name(endpoint, arg)
+	local dbfile = nil
+	if override_db ~= nil then
+		dbfile = override_db:gsub('^~',os.getenv('HOME'))
+	else
+		dbfile = dbfile_name(endpoint, arg)
+	end
 	local xdelta = dbfile .. '.xdelta'
 	local dbfilemt = dbfile .. '.mtime'
 	local newdb = dbfile .. '.new'
@@ -72,12 +100,10 @@ function main()
 	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
 		exclude_opt..' '..no_delete_opt..' '..mailbox_opt
 	
+	-- to call mddiff from another tool with the same cmdline
 	if just_mddiff then
-			print(mddiff)
-			os.exit(0)
-	elseif just_dbfile then
-			print(dbfile)
-			os.exit(0)
+		print(mddiff)
+		os.exit(0)
 	end
 
 
@@ -103,6 +129,17 @@ function main()
 	-- of some data
 	io.write('END\n')
 	io.flush()
+
+	-- if renaming mode, we exit
+	if stop_after_diff then
+		if override_db ~= nil then
+			os.remove(dbfile)
+			os.remove(dbfilemt)
+			os.remove(newdb)
+			os.remove(newdbmt)
+		end
+		os.exit(0)
+	end
 	
 	-- process client commands
 	while true do

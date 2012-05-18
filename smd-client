@@ -139,6 +139,48 @@ function get_header_and_merge(name,hsha)
 	end
 end
 
+-- ============================= renaming ====================================
+
+function compute_renamings(actions)
+	local copy = {}
+	local delete = {}
+	local script = {}
+	for _, cmd in ipairs(actions) do
+		local opcode = parse(cmd, '^(%S+)')
+		if opcode == "COPY" then
+			local name_src, hsha, bsha, name_tgt = 
+				parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
+			name_src = url_decode(name_src)
+			name_tgt = url_decode(name_tgt)
+			copy[#copy + 1] = { src = name_src, tgt = name_tgt}
+		elseif opcode == "DELETE" then
+			local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
+			name = url_decode(name)
+			delete[name] = true
+		end
+	end
+	for _, cp in ipairs(copy) do
+		-- it is a real move
+		if delete[cp.src] then
+			local absolute1, t1, last1 = tokenize_path(cp.src)
+			local absolute2, t2, last2 = tokenize_path(cp.tgt)
+			local dir1 = table.concat(t1,'/')
+			local dir2 = table.concat(t2,'/')
+			if not absolute1 and not absolute2 and 
+				last1 ~= nil and last2 ~= nil and
+				(t1[#t1] == "cur" or t1[#t1] == "new") and
+				(t2[#t2] == "cur" or t2[#t2] == "new") and
+				dir1 == dir2 and is_translator_set() then
+				local t_dir =  homefy(translate(dir1))
+				script[#script + 1] = string.format( "mv %s %s",
+					quote(t_dir..'/'..last1),
+					quote(t_dir..'/'..last2))
+			end
+		end
+	end
+	return script
+end
+
 -- ============================= actions =====================================
 
 function execute_add(name, hsha, bsha)
@@ -489,6 +531,8 @@ function main()
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
 		" [-vd] [-t translatorRL] endpointname mailboxes...\n"
 	local apply_xdelta = true
+	local rename_only = false
+	local override_db = nil
 	while #arg > 2 do
 		if arg[1] == '-v' or arg[1] == '--verbose' then
 			set_verbose(true)
@@ -501,6 +545,13 @@ function main()
 			table.remove(arg,1)
 		elseif arg[1] == '-t' or arg[1] == '--translator' then
 			set_translator(arg[2])
+			table.remove(arg,1)
+			table.remove(arg,1)
+		elseif arg[1] == '--rename-only' then
+			rename_only = true
+			table.remove(arg,1)
+		elseif arg[1] == '--override-db' then
+			override_db = arg[2]
 			table.remove(arg,1)
 			table.remove(arg,1)
 		else
@@ -516,7 +567,12 @@ function main()
 	-- here we go
 	local endpoint = arg[1]
 	table.remove(arg,1)
-	local dbfile = dbfile_name(endpoint, arg)
+	local dbfile = nil
+	if override_db ~= nil then
+		dbfile = override_db:gsub('^~',os.getenv('HOME'))
+	else
+		dbfile = dbfile_name(endpoint, arg)
+	end
 	local xdelta = dbfile .. '.xdelta'
 	local newdb = dbfile .. '.new'
 	
@@ -542,6 +598,20 @@ function main()
 	
 	-- receive and process commands
 	local commands = receive_delta(io.stdin, firsttime)
+	if rename_only then
+			-- in renaming mode, we handle commands in a peculiar way
+			log_progress('Phase 2: renaming script generation')
+			local script = compute_renamings(commands)
+			local fname = os.getenv('HOME')..'/smd-rename.sh'
+			local f = io.open(fname,'w')
+			f:write('#!/bin/sh\n\n')
+			f:write(table.concat(script,'\n'))
+			f:close()
+			log('Please check and run: '..fname)
+			-- and we exit
+			os.exit(0)
+	end
+
 	log_progress('Phase 2: synchronization')
 	if firsttime then
 		log_progress([[

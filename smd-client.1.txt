@@ -2,7 +2,9 @@ NAME
   smd-client - receives diffs and performs actions
 
 SYNOPSIS
-  smd-client [-v|--verbose] [-d|--dry-run] [-t|--translator] endpoint mailboxes
+  smd-client [-v|--verbose] [-d|--dry-run] [-t|--translator]
+	[-l|--local-sync] [--rename-only]
+	[--override-db dbf] endpoint mailboxes
 
 DESCRIPTION
   smd-client needs to know a name (endpoint) for the client (that must not
@@ -18,6 +20,10 @@ OPTIONS
                    program) is optimized away
   -l --local-sync  Local synchronization, no changes is made to the db-file
                    since smd-server takes care of it
+  --rename-only    Do not synchronize the mailboxes but generate the 
+                   script '~/smd-rename.sh' to uniform the files names in the
+                   mailbox
+  --override-db dbf  Use dbf as the db-file
   -v --verbose     Increase program verbosity (printed on stderr)
   -d --dry-run     Do not perform any action for real
 
