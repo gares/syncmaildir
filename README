@@ -3,7 +3,7 @@ SYNC MAIL DIR
 
 Sync Mail Dir (`smd`) is a set of tools to synchronize a pair of mailboxes
 in Maildir format.  It is Free Software, released under the terms of GPLv3,
-Copyright © 2008-2011 Enrico Tassi.
+Copyright © 2008-2012 Enrico Tassi.
 
 It differs from other solutions in terms of performances and lower
 installation requirements.  The widespread solution IMAP-server plus
