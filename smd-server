@@ -19,6 +19,8 @@ function main()
 	-- argument parsing
 	local exclude = {}
 	local no_delete = false
+	local just_mddiff = false
+	local just_dbfile = false
 	local usage = "Usage: "..arg[0]:match('[^/]+$')..
 		" [-vdn] endpointname mailboxes...\n"
 	while #arg > 2 do
@@ -35,6 +37,12 @@ function main()
 			exclude[#exclude + 1] = arg[1]
 			exclude[#exclude + 1] = arg[2]
 			table.remove(arg,1)
+			table.remove(arg,1)
+		elseif arg[1] == '--just-print-mddiff-cmdline' then
+			just_mddiff = true
+			table.remove(arg,1)
+		elseif arg[1] == '--just-print-db-filename' then
+			just_dbfile = true
 			table.remove(arg,1)
 		else
 			break
@@ -61,13 +69,22 @@ function main()
 	local dry_opt = ''
 	if dry_run() then dry_opt = '-d' end
 	local exclude_opt = table.concat(exclude, ' ')
+	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
+		exclude_opt..' '..no_delete_opt..' '..mailbox_opt
+	
+	if just_mddiff then
+			print(mddiff)
+			os.exit(0)
+	elseif just_dbfile then
+			print(dbfile)
+			os.exit(0)
+	end
+
 
 	-- we check the protocol version and dbfile fingerprint
 	handshake(dbfile)
 	
 	-- run mddiff and send the output to the client
-	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
-		exclude_opt..' '..no_delete_opt..' '..mailbox_opt
 	local r = io.popen(mddiff,"r")
 	local sent = 0
 	while true do

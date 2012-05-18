@@ -2,7 +2,9 @@ NAME
   smd-server - sends diffs and mails to smd-client
 
 SYNOPSIS
-  smd-server [--exclude glob] [-v|--verbose] [-d|--dry-run] endpoint mailboxes
+  smd-server [--exclude glob] [-v|--verbose] [-d|--dry-run]
+	[--just-print-mddiff-cmdline]
+	[--just-print-db-filename] endpoint mailboxes
 
 DESCRIPTION
   smd-server needs to know a name (endpoint) for the client (that must not
@@ -20,6 +22,8 @@ OPTIONS
   -d --dry-run    Do not perform any action for real
   -n --no-delete  Do not track deleted files
   --exclude glob  Exclude paths matching glob
+  --just-print-mddiff-cmdline  Prints the command like used for mddiff and then exists
+  --just-print-db-filename  Prints the db-file name and then exists
 
 NOTES
   smd-server is a low level utility. You should use higher level tools like
