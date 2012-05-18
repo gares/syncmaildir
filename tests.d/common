@@ -130,7 +130,7 @@ prepare(){
 	#!/bin/sh
 	shift
 	cd \$HOMES
-	HOME=\$HOMES \$@
+	HOME=\$HOMES "\$@"
 	EOT
 	chmod a+x bin/fakessh
 	tar -xzf $BASE/$testcase
