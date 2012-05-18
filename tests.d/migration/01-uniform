@@ -1,0 +1,18 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+
+cp -r Mail target/Mail
+cd target/Mail/cur
+for x in *; do mv $x $x`md5sum $x | cut -d ' ' -f 1`; done
+cd ../../..
+
+muniform -v
+cd target
+sh smd-rename.sh
+cd ..
+
+test_eq Mail target/Mail 
+

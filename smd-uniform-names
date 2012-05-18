@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# Released under the terms of GPLv3 or at your option any later version.
+# No warranties.
+# Copyright Enrico Tassi <gares@fettunta.org>
+
+# the idea is:
+# 0) it is the first run (no db)
+# 1) we compute the local db with mddiff
+# 2) we push it to the remote host via ssh
+# 3) we start a special pull where smd-server uses the special db
+#    and where smd-client just emits a shell script with all the renaming
+# 4) we remove the remote db
+
+set -e
+#set -x
+
+PREFIX="@PREFIX@"
+if [ `echo "$PREFIX" | cut -c -1` = "@" ]; then
+	SMDROOT=.
+	echo "smd-uniform-names not installed, assuming smd-common is ./smd-common"
+else
+	SMDROOT=$PREFIX/share/syncmaildir
+fi
+
+. $SMDROOT/smd-common
+
+init
+parse_args "$@"
+read_conffile
+# this could be a system wide pre-hook
+check_lockfile
+setup_plumbing
+setup_logging
+setup_mailboxnames
+
+# we move to the home, since Mail paths are relative
+# to the home
+cd
+
+setup_workarea
+
+ORIG_CHILDARGS="$CHILDSARGS"
+
+CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db $RENAMEDB"
+MDLINE=`run_local_server`
+
+
+gc_mktemp
+TMPERR="$RC"
+$MDLINE > /dev/null 2> $TMPERR
+grep -v '^warning.*unable to open db' $TMPERR || true
+mv $RENAMEDB.new $RENAMEDB
+atexit_rm $RENAMEDB.mtime.new
+atexit_rm $RENAMEDB
+
+CHILDSARGS="$ORIG_CHILDARGS --dump-stdin $RENAMEDB"
+cat $RENAMEDB | run_remote_server 
+
+($MITM $CtS > $LtS) < $CtL &
+LOGGER1=$!
+atexit_kill $LOGGER1
+
+($MITM $StC > $LtC) < $StL &
+LOGGER2=$!
+atexit_kill $LOGGER2
+
+($PROGRESS_REPORTER $CL) < $PRp &
+REPORTER=$!
+atexit_kill $REPORTER
+
+CHILDSARGS="$ORIG_CHILDARGS --rename-only --override-db $RENAMEDB"
+(run_local_client < $LtC 2> $PRp) > $CtL &
+CLIENT=$!
+atexit_kill $CLIENT
+
+CHILDSARGS="$ORIG_CHILDARGS --stop-after-diff --override-db $RENAMEDB"
+EXITCODE=0
+(run_remote_server < $LtS 2> $SL) > $StL  || EXITCODE=1
+
+wait $CLIENT || EXITCODE=1 
+wait $REPORTER || EXITCODE=1 
+
+report $EXITCODE 0 smd-push smd-pull smd-server smd-client
+
+exit $EXITCODE

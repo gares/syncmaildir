@@ -8,7 +8,7 @@ COPYRIGHT=© 2008-2012 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1 smd-translate.1 \
-	 smd-check-conf.1 smd-restricted-shell.1
+	 smd-check-conf.1 smd-restricted-shell.1 smd-uniform-names.1
 MANPAGES5=smd-config.5
 HTML=index.html design.html hooks.html
 DESTDIR=
@@ -17,7 +17,7 @@ SF_LOGIN=$(SF_USER),syncmaildir
 SF_WEB=htdocs
 TEST_SIZE=100
 TEST_MAILBOX=misc/Mail.TEST.tgz
-TEST_SUITES=mddiff client-server pull-push
+TEST_SUITES=mddiff client-server pull-push migration
 BENCH_SIZE=25000
 BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
@@ -171,6 +171,7 @@ install-bin: $(BINARIES)
 	$(call install-replacing,smd-push,bin)
 	$(call install-replacing,smd-translate,bin)
 	$(call install-replacing,smd-check-conf,bin)
+	$(call install-replacing,smd-uniform-names,bin)
 	$(call install-replacing,smd-restricted-shell,bin)
 	$(call install-replacing,smd-loop,bin)
 	$(call install-replacing,smd-common,share/$(PROJECTNAME))

@@ -104,6 +104,16 @@ mcheck(){
 		$ROOT/$TESTSUITE/$__N__/bin/smd-check-conf "$@" > log.check 2>&1
 }
 
+muniform(){
+	LUA_INIT="package.path='$ROOT/$TESTSUITE/$__N__/share/lua/5.1/?.lua;'" \
+	HOME=$ROOT/$TESTSUITE/$__N__/target \
+	PATH=$ROOT/$TESTSUITE/$__N__/bin:$PATH \
+	HOMES=$ROOT/$TESTSUITE/$__N__/ \
+		$ROOT/$TESTSUITE/$__N__/bin/smd-uniform-names "$@" \
+		> log.uniform 2>&1
+
+}
+
 assert(){
 	if [ "$1" = "$2" ]; then
 		echo -n '.'
