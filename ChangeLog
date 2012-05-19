@@ -3,7 +3,7 @@
 	  - fix bug in removing trailing / or " or ' from the
 	    MAILBOX_REMOTE/LOCAL value
 	  - new trasnlator 'move' that just replaces MAILBOX_LOCAL
-	    with MAILBOX_REMOTE and viceversa.
+	    with MAILBOX_REMOTE and vice versa.
 	* smd-push/smd-pull/smd-client:
 	  - Support for local synchronizations, i.e.
 	    when SERVERNAME=localhost. (Thanks Miguel Fernandes for the idea
@@ -14,8 +14,12 @@
 	* smd-pull/push/common:
 	  - New option -n --nodelete to not propagate deletions
 	  - Support for SMDCLIENTOPTS and SMDSERVEROPTS in config file
-	  - Code refactored to put all low level tools invocatoin in the
+	  - Code refactoring to put all low level tools invocation in the
 	    same place to ease auditing
+	* smd-uniform-names:
+	  - new tool to ease the migration from offlineimap. When the mailboxes
+	    have roughly the same content but emails are named differently
+	    this tool can generate a shell script that renames local mails
 
 03/03/2012 - minor feature improvement - version 1.2.3
 	* smd-pull, smd-push:
