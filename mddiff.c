@@ -440,7 +440,7 @@ STATIC void load_db(const char* dbname){
 
 	fd = fopen(new_dbname,"r");
 	if (fd == NULL){
-		WARNING(fopen,"unable to load db file '%s'\n",new_dbname);
+		WARNING(fopen,"unable to open db file '%s'\n",new_dbname);
 		lastcheck = 0L;
 	} else {
 		fields = fscanf(fd,"%1$lu",&lastcheck);
