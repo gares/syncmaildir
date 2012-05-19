@@ -198,7 +198,7 @@ setup_workarea(){
 			fi
 			exit 1
 		fi
-		if [ $VERBOSE -eq 1 ]; then
+		if [ $VERBOSE -eq 1 -a "$M" != "$TM" ]; then
 			echo "translating:" $M "->" $TM
 		fi
 		echo "$HOME/$M" 1>&9
@@ -487,8 +487,8 @@ report() {
 	local localprog="$5"
 	local remoteprog="$6"
 	if [ $VERBOSE -eq 1 ]; then
-		grep ^INFO: $SL | sed 's/^INFO: //'
-		grep ^INFO: $CL | sed 's/^INFO: //'
+		grep ^INFO: $SL | $SED 's/^INFO: //'
+		grep ^INFO: $CL | $SED 's/^INFO: //'
 	fi
 	if [ $exitcode = 1 ]; then
 		grep ^ERROR $SL \
