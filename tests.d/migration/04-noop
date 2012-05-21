@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+
+cp -r Mail target/Mail
+
+muniform -v
+cd target
+N=`grep ^mv smd-rename.sh| wc -l`
+assert $N 0 "some renamings on identical mailboxes"
+sh smd-rename.sh
+cd ..
+test_eq Mail target/Mail 
+
