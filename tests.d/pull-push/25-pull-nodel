@@ -13,4 +13,7 @@ rm Mail/cur/`ls Mail/cur|head -n1`
 mpull -n
 assert $? 0 "failed mpull after deletion"
 test_eq target/Mail target/Mail.bak 
+mpull -n
+assert $? 0 "failed mpull after deletion"
+test_eq target/Mail target/Mail.bak 
 
