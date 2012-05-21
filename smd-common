@@ -193,7 +193,7 @@ setup_workarea(){
 	gc_mktemp
 	local TMP_T="$RC"
 	local ERR=0
-	$TRANSLATOR_LR <$TMP_FIND >$TMP_T || ERR=$?
+	eval "$TRANSLATOR_LR" <$TMP_FIND >$TMP_T || ERR=$?
 	exec 7<$TMP_FIND
 	exec 8<$TMP_T
 

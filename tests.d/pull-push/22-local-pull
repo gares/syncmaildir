@@ -9,7 +9,7 @@ echo MAILBOX= >> target/.smd/config.default
 echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
 echo MAILBOX_REMOTE=../Mail >> target/.smd/config.default
 echo "TRANSLATOR_RL=\"sed 's|^\.\./\\(.*\\)|\1|'\"" >> target/.smd/config.default
-echo "TRANSLATOR_LR=\"sed s|\\(.*\\)|\1|\"" >> target/.smd/config.default
+echo "TRANSLATOR_LR=\"sed 's|\\(.*\\)|\1|'\"" >> target/.smd/config.default
 
 cat > bin/fakessh <<EOT
 #!/bin/sh
