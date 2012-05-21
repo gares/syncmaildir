@@ -41,8 +41,7 @@ XDELTA=xdelta
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
-CFLAGS=-O2 -Wall -Wextra -Wcast-align -g -I .
-CFLAGS_VALA=-O2 -w -g -I . 
+CFLAGS=-O2 -Wall -Wextra -Wcast-align -g
 PKG_FLAGS=
 
 # ----------------------------------------------------------------------------
@@ -83,12 +82,13 @@ smd-applet.c: smd-applet.vala smd-config.vapi
 mddiff: mddiff.c smd-config.h
 	@echo CC $<
 	$H $(CC) $(CFLAGS) $< -o $@ \
-		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` 
+		`pkg-config $(PKG_FLAGS) --cflags --libs glib-2.0` $(LDFLAGS)
 
 smd-applet: $(SMD_APPLET_C) smd-config.h
 	@echo CC $<
-	$H $(CC) $(CFLAGS_VALA) $< -o $@ \
-		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)`
+	$H $(CC) $(CFLAGS) -w $< -o $@ \
+		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)` \
+		$(LDFLAGS)
 
 check-build: check-w-gcc check-w-$(VALAC)
 	$H pkg-config $(PKGCONFIG_CHECK_GLIB_VERSION) || \
@@ -258,27 +258,31 @@ text/%:
 	$H $(MAKE) $* \
 		BINARIES="$(subst smd-applet,,$(BINARIES))" \
 		MANPAGES1="$(subst smd-applet.1,,$(MANPAGES1))" \
-		PREFIX="$(PREFIX)" VALAC=ls H=$H
+		PREFIX="$(PREFIX)" VALAC=ls H=$H \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 static/%:
 	$H $(MAKE) $* \
 		CFLAGS="$(CFLAGS) -static " \
 		PKG_FLAGS="$(PKG_FLAGS) --static " \
-		PREFIX="$(PREFIX)" H=$H
+		PREFIX="$(PREFIX)" H=$H LDFLAGS="$(LDFLAGS)"
 
 gnome2/%:
 	$H gunzip -c misc/smd-applet-1.0.0.c.gz > misc/smd-applet-1.0.0.c
 	$H $(MAKE) $* \
-		SMD_APPLET_C=misc/smd-applet-1.0.0.c PKG_GTK=gtk+-2.0
+		SMD_APPLET_C=misc/smd-applet-1.0.0.c PKG_GTK=gtk+-2.0 \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 
 osx/%:
-	$H $(MAKE) $* SED=sed PREFIX="$(PREFIX)" H=$H
+	$H $(MAKE) $* SED=sed PREFIX="$(PREFIX)" H=$H \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 abspath/%:
 	$H $(MAKE) $* SED=/bin/sed \
 		XDELTA=/usr/bin/xdelta SSH=/usr/bin/ssh \
-		PREFIX="$(PREFIX)" H=$H
+		PREFIX="$(PREFIX)" H=$H \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 .PHONY : update-smd-config
 # eof
