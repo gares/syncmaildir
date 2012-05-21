@@ -251,7 +251,7 @@ Hooks receive four arguments in the following order:
    `smd-push/pull` will return after the hooks terminate
 
 Hooks should not fail, if they do so then `smd-push/pull` will fail too.
-Sample hooks are available in the source tarball under the `sample-hooks/`.
+Sample hooks are available in the source tarball under `sample-hooks/`.
 Some documentation about [available hooks](hooks.html) is also present.
 
 ### folder renaming
