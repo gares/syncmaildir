@@ -45,11 +45,16 @@ ORIG_CHILDARGS="$CHILDSARGS"
 CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db $RENAMEDB"
 MDLINE=`run_local_server`
 
+EXITCODE=0
 
 gc_mktemp
 TMPERR="$RC"
-$MDLINE > /dev/null 2> $TMPERR
+gc_mktemp
+TMPOUT="$RC"
+(cd $WORKAREA; $MDLINE) > $TMPOUT 2> $TMPERR || EXITCODE=1
 grep -v '^warning.*unable to open db' $TMPERR || true
+grep '^ERROR' $TMPOUT || true
+if [ $EXITCODE = 1 ]; then exit $EXITCODE; fi
 mv $RENAMEDB.new $RENAMEDB
 atexit_rm $RENAMEDB.mtime.new
 atexit_rm $RENAMEDB
@@ -75,7 +80,6 @@ CLIENT=$!
 atexit_kill $CLIENT
 
 CHILDSARGS="$ORIG_CHILDARGS --stop-after-diff --override-db $RENAMEDB"
-EXITCODE=0
 (run_remote_server < $LtS 2> $SL) > $StL  || EXITCODE=1
 
 wait $CLIENT || EXITCODE=1 
