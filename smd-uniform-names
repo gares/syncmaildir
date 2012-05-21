@@ -42,6 +42,15 @@ setup_workarea
 
 ORIG_CHILDARGS="$CHILDSARGS"
 
+CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline"
+DB=`run_local_server | sed 's?^.*--db-file \([^ ][^ ]*\) .*$?\1?'`
+if [ -e "$DB" ]; then
+	echo "Found db file: $DB"
+	echo "This utility can be used only before any synchronization"
+	echo "takes place. See the manpage for more details."
+	exit 1
+fi
+
 CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db $RENAMEDB"
 MDLINE=`run_local_server`
 
