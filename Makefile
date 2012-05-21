@@ -24,8 +24,8 @@ BENCH_SUITES=benchmarks
 PKG_GTK=gtk+-3.0 
 SMD_APPLET_C=smd-applet.c 
 PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
-MIN_GLIB_VERSION=2.19.1
-PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(MIN_GLIB_VERSION) glib-2.0
+TARGET_GLIB=2.32
+PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(TARGET_GLIB) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
 VALAC=valac-0.16
 H=@
@@ -66,6 +66,7 @@ smd-applet.c: smd-applet.vala smd-config.vapi
 	$H if which $(VALAC) >/dev/null; then \
 		echo "VALAC $^"; \
 		$(VALAC) -C $^ --thread --vapidir=./ \
+			--target-glib=$(TARGET_GLIB) \
 			--pkg posix $(patsubst %,--pkg %,$(PKGS_VALA)); \
 	elif [ -e smd-applet.c ]; then \
 		echo "** No $(VALAC), reusing precompiled .c files"; \
@@ -93,7 +94,7 @@ check-build: check-w-gcc check-w-$(VALAC)
 	$H pkg-config $(PKGCONFIG_CHECK_GLIB_VERSION) || \
 		(echo glib version too old: \
 			`pkg-config $(PKGCONFIG_GLIB_VERSION)`; \
-		 echo required version: $(MIN_GLIB_VERSION); \
+		 echo required version: $(TARGET_GLIB); \
 		 false)
 
 check-run: check-w-$(LUA) check-w-bash 
@@ -179,9 +180,9 @@ install-bin: $(BINARIES)
 
 install-misc: $(MANPAGES1) $(MANPAGES5)
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
-	cp smd-applet.desktop $(DESTDIR)/etc/xdg/autostart
 	$(call mkdir-p,share/applications)
 	$(call install,smd-applet-configure.desktop,share/applications)
+	$(call install,smd-applet.desktop,share/applications)
 	$(call install,smd-applet.ui,share/$(PROJECTNAME)-applet)
 	$(call mkdir-p,share/man/man1)
 	$(call mkdir-p,share/man/man5)

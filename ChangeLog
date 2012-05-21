@@ -20,6 +20,9 @@
 	  - new tool to ease the migration from offlineimap. When the mailboxes
 	    have roughly the same content but emails are named differently
 	    this tool can generate a shell script that renames local mails
+	* smd-applet:
+	  - XDG compliant autostart, with a button in the options window
+	  - target glib 2.32 and gtk 3.0 for the .ui file
 
 03/03/2012 - minor feature improvement - version 1.2.3
 	* smd-pull, smd-push:

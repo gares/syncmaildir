@@ -105,9 +105,12 @@ class Event {
 static const string SMD_LOOP = "/bin/smd-loop";
 static const string SMD_PUSH = "/bin/smd-push";
 static const string SMD_APPLET_UI = "/share/syncmaildir-applet/smd-applet.ui";
+static const string SMD_APPLET_DESKTOP = "/share/applications/smd-applet.desktop";
+static const string GNOME_AUTOSTART_DISABLED ="X-GNOME-Autostart-enabled=false";
 static string SMD_LOGS_DIR;
 static string SMD_LOOP_CFG;
 static string SMD_PP_DEF_CFG;
+static string XDG_AUTORUN_FILE;
 
 // the main class containing all the data smd-applet will use
 class smdApplet {
@@ -123,6 +126,7 @@ class smdApplet {
 	public static string smd_loop_cmd = null;
 	public static string smd_applet_ui = null;
 	public static string smd_push_cmd = null;
+	public static string smd_applet_desktop = null;
 
 	// =================== the data =====================================
 
@@ -147,13 +151,13 @@ class smdApplet {
 	GConf.Client gconf = null;
 
 	// the thread to manage the child smd-loop instance
-	weak GLib.Thread<void *> thread = null;
+	GLib.Thread<void *> thread = null;
 	bool thread_die = false;
 	GLib.Pid pid; // smd-loop pid, initially set to 0
 	
 	// communication structure between the child process (managed by a thread
 	// and the notifier timeout handler).
-	GLib.Mutex events_lock = null;
+	Mutex events_lock = Mutex();
 	Gee.ArrayList<Event> events = null; 
 
 	// if the program is stuck
@@ -185,7 +189,6 @@ class smdApplet {
 	
 		// events queue and mutex
 		events = new Gee.ArrayList<Event>();
-		events_lock = new GLib.Mutex();
 
 		// connect to gconf
 		gconf = GConf.Client.get_default();
@@ -261,6 +264,25 @@ class smdApplet {
 		bnotify.toggled.connect((b) => {
 			try { gconf.set_bool(key_newmail,b.active); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		});
+		var bautostart = builder.get_object("cbAutostart") as Gtk.CheckButton;
+		try { string content;
+		  if (GLib.FileUtils.get_contents(XDG_AUTORUN_FILE,out content)){
+			if (GLib.Regex.match_simple(GNOME_AUTOSTART_DISABLED,content))
+				bautostart.set_active(false);
+			else bautostart.set_active(true);
+		  } else bautostart.set_active(false);
+		} catch (FileError e) { stderr.printf("%s\n",e.message); }
+		bautostart.toggled.connect((b) => {
+			if (b.active) {
+				string content;
+				try {
+					GLib.FileUtils.get_contents(smd_applet_desktop,out content);
+					GLib.FileUtils.set_contents(XDG_AUTORUN_FILE,content);
+				} catch (FileError e) { stderr.printf("%s\n",e.message); }
+			} else {
+				GLib.FileUtils.remove(XDG_AUTORUN_FILE);
+			}
 		});
 		var bc = builder.get_object("bClose") as Gtk.Button;
 		bc.clicked.connect(close_err_action);
@@ -376,11 +398,7 @@ class smdApplet {
 			miPause.set_active(true);
 		} else {
 			// the thread fills the event queue
-			try { thread = GLib.Thread.create<void *>(smdThread,true); }
-			catch (GLib.ThreadError e) {
-				stderr.printf("Unable to start a thread\n");
-				Gtk.main_quit();
-			}
+			thread = new GLib.Thread<void *>(null, smdThread);
 		}
 	}
 
@@ -965,16 +983,28 @@ static int main(string[] args){
 		smdApplet.smd_push_cmd = "./smd-push";
 		stderr.printf("smd-applet not installed, " +
 			"assuming smd-push is: %s\n", smdApplet.smd_push_cmd);
+		smdApplet.smd_applet_desktop = "./smd-applet.desktop";
+		stderr.printf("smd-applet not installed, " +
+			"assuming smd-applet.desktop is: %s\n",
+			smdApplet.smd_applet_desktop);
 	} else {
 		smdApplet.smd_loop_cmd = PREFIX + SMD_LOOP;
 		smdApplet.smd_push_cmd = PREFIX + SMD_PUSH;
 		smdApplet.smd_applet_ui = PREFIX + SMD_APPLET_UI; 
+		smdApplet.smd_applet_desktop = PREFIX + SMD_APPLET_DESKTOP; 
 	}
 
 	var homedir = GLib.Environment.get_home_dir();
 	SMD_LOGS_DIR = homedir+"/.smd/log/";
 	SMD_LOOP_CFG = homedir+"/.smd/loop";
 	SMD_PP_DEF_CFG = homedir+"/.smd/config.default";
+	var conf_home = GLib.Environment.get_variable("XDG_CONFIG_HOME");
+	if (conf_home != null)
+		XDG_AUTORUN_FILE = conf_home+"/autostart/smd-applet.desktop";
+	else 
+		XDG_AUTORUN_FILE = homedir + "/.config/autostart/smd-applet.desktop";
+	GLib.DirUtils.create_with_parents(
+		GLib.Path.get_dirname(XDG_AUTORUN_FILE),0700);
 
 	// we init gtk+ and notify
 	Gtk.init (ref args);
