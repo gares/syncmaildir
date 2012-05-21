@@ -113,6 +113,13 @@ init() {
 	$MDDIFF --mkdir-p $CONFDIR/log
 	$MDDIFF --mkdir-p $CONFDIR/fifo
 	$MDDIFF --mkdir-p $CONFDIR/hooks
+	cat > $CONFDIR/hooks/README <<-EOT
+	From version 0.9.14, smd-push and smd-pull can run user defined
+	hooks before and after doing their job.
+	
+	Sample hooks are available in the source tarball under sample-hooks/.
+	The invocation of hooks is documented in the main README file.
+	EOT
 	$MDDIFF --mkdir-p $CONFDIR/hooks/pre-pull.d
 	$MDDIFF --mkdir-p $CONFDIR/hooks/pre-push.d
 	$MDDIFF --mkdir-p $CONFDIR/hooks/post-pull.d

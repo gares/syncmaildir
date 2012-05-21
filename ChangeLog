@@ -16,6 +16,8 @@
 	  - Support for SMDCLIENTOPTS and SMDSERVEROPTS in config file
 	  - Code refactoring to put all low level tools invocation in the
 	    same place to ease auditing
+	  - Put a minimal README in the hooks/ directory telling the user
+	    what these directories are for
 	* smd-uniform-names:
 	  - new tool to ease the migration from offlineimap. When the mailboxes
 	    have roughly the same content but emails are named differently
