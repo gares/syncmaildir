@@ -80,6 +80,12 @@ function set_translator(p)
 				'translate','bad-translator',true)
 		end
 		f:close()
+		if rc:match('%.%.') then
+			log_error("Translator "..p.." on input "..x..
+				" returned a path containing ..")
+			log_tags_and_fail('Translator returned a path containing ..',
+				'translate','bad-translator',true)
+		end
 		return rc end
 	end
 end

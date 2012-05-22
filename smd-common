@@ -209,6 +209,10 @@ setup_workarea(){
 		if [ $VERBOSE -eq 1 -a "$M" != "$TM" ]; then
 			echo "translating:" $M "->" $TM
 		fi
+		if echo "$TM" | grep -q -e '\.\.'; then
+			echo "Error: the translator returned a path containing .."
+			exit 1
+		fi
 		echo "$HOME/$M" 1>&9
 		echo ".smd/workarea/$TM" 1>&9
 		read R <&6
@@ -480,6 +484,12 @@ setup_mailboxnames() {
 		MAILBOX_LOCAL="$MAILBOX"
 		MAILBOX_REMOTE="$MAILBOX"
 	fi
+
+	if echo "$MAILBOX_LOCAL $MAILBOX_REMOTE" | grep -q -e '\.\.'; then
+		echo "Mailbox names can't contain .."
+		exit 1
+	fi
+
 	resolve_translator "$TRANSLATOR_RL"
 	TRANSLATOR_RL="$RC"
 	resolve_translator "$TRANSLATOR_LR"

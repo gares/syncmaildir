@@ -1,0 +1,10 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo MAILBOX=../Mail >> target/.smd/config.default
+
+mcheck
+assert $? 1 "mcheck does not detect .."

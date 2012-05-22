@@ -6,26 +6,30 @@ echo DEBUG=true >> target/.smd/config.default
 echo SERVERNAME=localhost >> target/.smd/config.default
 echo SMDCLIENTOPTS=-l >> target/.smd/config.default
 echo MAILBOX= >> target/.smd/config.default
-echo MAILBOX_LOCAL=Mail >> target/.smd/config.default
-echo MAILBOX_REMOTE=../Mail >> target/.smd/config.default
-echo "TRANSLATOR_RL=\"sed 's|^\.\./\\(.*\\)|\1|'\"" >> target/.smd/config.default
-echo "TRANSLATOR_LR=\"sed 's|\\(.*\\)|\1|'\"" >> target/.smd/config.default
+echo MAILBOX_LOCAL=MailBK >> target/.smd/config.default
+echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
+echo "TRANSLATOR_RL=\"smd-translate -m move -d RL default\"" >> target/.smd/config.default
+echo "TRANSLATOR_LR=\"smd-translate -m move -d LR default\"" >> target/.smd/config.default
 
 cat > bin/fakessh <<EOT
 #!/bin/sh
 shift
+cd \$HOME
 exec "\$@"
 EOT
 
+mv Mail target/
+
+mcheck
 
 mpull
 assert $? 0 "failed mpull"
-test_eq Mail target/Mail 
+test_eq target/Mail target/MailBK 
 
 mpull
 assert $? 0 "failed 2nd mpull"
-test_eq Mail target/Mail 
+test_eq target/Mail target/MailBK
 
 mpush
 assert $? 0 "failed mpush"
-test_eq Mail target/Mail 
+test_eq target/Mail target/MailBK
