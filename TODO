@@ -1,5 +1,2 @@
-- it seems that escaping in translator LR RL is inconsistent
-- check for .. in MAILBOX_*
-- smd-uniform-names
-- no delete 2nd round
-- autostart option in smd applet
+- mcheck + localsync
+- document smd-uniform-names in README and oimap migration
