@@ -59,8 +59,12 @@ if conf_f == nil then
 	os.exit(1)
 end
 local conf_tbl = {}
-for k, v in conf_f:read('*a'):gmatch('%s*(%S+)%s*=%s*(%S+)') do
-	conf_tbl[k]=v
+for l in conf_f:lines() do
+	-- this way we skip comments
+	local k,v = l:match('^%s*(%S+)%s*=%s*(%S+)')
+	if k ~= nil and v ~= nil then
+		conf_tbl[k]=v
+	end
 end
 conf_f:close()
 
