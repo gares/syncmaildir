@@ -11,12 +11,6 @@ echo "MAILBOX_REMOTE='MyMail/'" >> target/.smd/config.default
 echo 'TRANSLATOR_RL="smd-translate -m move -d RL default"'>> target/.smd/config.default
 echo 'TRANSLATOR_LR="smd-translate -m move -d LR default"' >> target/.smd/config.default
 
-cat > bin/fakessh <<EOT
-#!/bin/sh
-shift
-exec "\$@"
-EOT
-
 mv Mail target/MyMail
 
 mpull

@@ -11,13 +11,6 @@ echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
 echo "TRANSLATOR_RL=\"smd-translate -m move -d RL default\"" >> target/.smd/config.default
 echo "TRANSLATOR_LR=\"smd-translate -m move -d LR default\"" >> target/.smd/config.default
 
-cat > bin/fakessh <<EOT
-#!/bin/sh
-shift
-cd \$HOME
-exec "\$@"
-EOT
-
 mv Mail target/
 
 mcheck

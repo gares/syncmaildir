@@ -281,6 +281,12 @@ parse_args() {
 
 ### Confdir setup ###
 
+myfakessh() {
+	shift
+	cd
+	"$@"
+}
+
 read_conffile() {
 	# backward compatibility code
 	if [ ! -f $CONFFILE ] && \
@@ -392,9 +398,14 @@ read_conffile() {
 	done
 
 	# check for local synchronization
-	if [ "$SERVERNAME" = "localhost" -a -z "$SMDCLIENTOPTS" ]; then
+	if [ "$SERVERNAME" = "localhost" ]; then
+		if echo  "$SMDCLIENTOPTS" | grep -q -v -e "-l"; then
 			echo "SERVERNAME is localhost but SMDCLIENTOPTS is not set."
 			echo "Local synchronizations must set SMDCLIENTOPTS."
+		else
+			# no need to ssh
+			SSH=myfakessh
+		fi
 	fi
 }
 
