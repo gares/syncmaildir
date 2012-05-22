@@ -1,0 +1,52 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo 'MAILBOX_LOCAL="MyMail/"' >> target/.smd/config.default
+echo 'MAILBOX_REMOTE="Mail/"' >> target/.smd/config.default
+echo 'TRANSLATOR_RL="smd-translate -m default -d RL default"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m default -d LR default"' >> target/.smd/config.default
+echo 'EXCLUDE_LOCAL="MyMail/mygarbage"' >> target/.smd/config.default
+echo 'EXCLUDE_REMOTE="Mail/.garbage"' >> target/.smd/config.default
+echo DEBUG=true >>  target/.smd/config.default
+
+mkdir -p Mail/.foo.bar
+cp -r Mail/* Mail/.foo.bar/
+
+mkdir -p target/MyMail/foo.bar/cur
+cp Mail/.foo.bar/cur/*  target/MyMail/foo.bar/cur
+
+cd target/MyMail/foo.bar/cur
+for x in *; do mv $x $x-`md5sum $x | cut -d ' ' -f 1`; done
+cd ../../../..
+
+mkdir -p target/MyMail/mygarbage/cur
+echo -e "head: er\n\nbody" > target/MyMail/mygarbage/cur/mail1
+
+mkdir -p Mail/.garbage/cur
+echo -e "head: er\n\nbody" > Mail/.garbage/cur/mail1
+
+mcheck -v
+assert $? 0 "failed mcheck"
+
+muniform -v
+cd target
+sh smd-rename.sh
+cd ..
+
+test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
+N=`grep garbage target/smd-rename.sh | wc -l`
+assert $N 0 "uniform ignores EXCLUDE"
+
+mpull -v
+assert $? 0 "failed mpull"
+mpush -v
+assert $? 0 "failed mpush"
+test_eq Mail/cur target/MyMail/cur
+
+test ! -d target/MyMail/garbage
+assert $? 0 "EXCLUDE_LOCAL ignored"
+test ! -d Mail/.mygarbage
+assert $? 0 "EXCLUDE_REMOTE ignored"
