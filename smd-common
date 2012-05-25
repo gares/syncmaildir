@@ -453,7 +453,7 @@ mycat() {
 }
 
 myreporter() {
-	tee -a $1 | grep ^PROGRESS: | cut -d ' ' -f 2-
+	tee -a $1 | grep --line-buffered ^PROGRESS: | sed 's?^PROGRESS: ??'
 }
 
 mysilentreporter() {

@@ -20,6 +20,8 @@
 	  - Put a minimal README in the hooks/ directory to tell the user
 	    what these directories are for
 	  - Fix inconsistency in escaping of the value of TRANSLATOR_LR/RL
+	  - Turn off grep buffered mode for progress reporting (Thanks
+	    Stefano Zacchiroli for enlightening me on the subject)
 	* smd-translate:
 	  - Fix bug in removing trailing / or " or ' from the
 	    MAILBOX_REMOTE/LOCAL value
