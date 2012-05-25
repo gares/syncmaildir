@@ -138,7 +138,7 @@ STATIC char* txtURL(const char* string, char* outbuff) {
 	return outbuff;
 }
 
-#define PROMOTE(what,from,to) ((what) = ((what) == (from)) ? (to) : (from))
+#define PROMOTE(what,from,to) ((what) = ((what) == (from)) ? (to) : (what))
 
 // flags used to mark struct mail so that at the end of the scanning 
 // we output commands lookig that flag
