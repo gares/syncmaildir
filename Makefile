@@ -271,7 +271,7 @@ gnome2/%:
 	$H gunzip -c misc/smd-applet-1.0.0.c.gz > misc/smd-applet-1.0.0.c
 	$H $(MAKE) $* \
 		SMD_APPLET_C=misc/smd-applet-1.0.0.c PKG_GTK=gtk+-2.0 \
-		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" TARGET_GLIB="2.19.1"
 
 
 osx/%:
