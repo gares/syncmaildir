@@ -308,7 +308,8 @@ read_conffile() {
 		# for extra options). smd-pull will pull from this host, smd-push
 		# will push to this host and use it as the id of the remote mailbox.
 		#
-		# We suggest creating an alias with your ~/.ssh/config like:
+		# You should create an alias within your ~/.ssh/config like the
+		# following on:
 		#
 		#   Host smd-server-foo
 		#     Compression yes
@@ -332,6 +333,8 @@ read_conffile() {
 		#
 		MAILBOX="Mail/"
 
+		# Use different paths on the local and remote hosts
+		#
 		# Local and remote mailbox may differ in name, as well as their
 		# sub directory/folder structure. In that case a translator must be
 		# provided. A translator is a program that takes in input, as it
@@ -341,9 +344,11 @@ read_conffile() {
 		#
 		# MAILBOX_LOCAL="Mail/"
 		# MAILBOX_REMOTE="OtherMail/"
-		# TRANSLATOR_RL=path
-		# TRANSLATOR_LR=path
+		# TRANSLATOR_RL=command
+		# TRANSLATOR_LR=command
 
+		# Ignore some paths
+		#
 		# To exclude some paths from the synchronization you can specify
 		# a space separated list of glob(7) expressions. Spaces in these
 		# expressions must be replaced with %20.
@@ -357,7 +362,28 @@ read_conffile() {
 		# EXCLUDE_LOCAL="Mail/spam Mail/trash"
 		# EXCLUDE_REMOTE="OtherMail/with%20spaces"
 
+		# Local synchronization
+		#
+		# If the local and remote mailboxes are on the same host
+		# the  following option must be added to the configuration file:
+		#
+		# SMDCLIENTOPTS=-l
+
+		# Avoid deletions
+		#
+		# In some cases, usually unidirectional synchronizations, one may want
+		# to not propagate deletions. E.g. one keeps a slim working mailbox but
+		# pushes to a backup mailbox to save every email.
+		# 
+		# SMDSERVEROPTS=-n
+
+		# If the local and remote mailboxes are on the same host
+		# the  following option must be added to the configuration file:
+		#
+		# SMDCLIENTOPTS=-l
+
 		# Log client to server and server to client communication.
+		#
 		# This is useful only for debugging, since all network traffic
 		# is dumped, including transmitted mails.
 		#
