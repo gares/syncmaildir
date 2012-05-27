@@ -111,10 +111,13 @@ PATHS EXCLUSION
 
 LOCAL SYNCHRONIZATION
 
-  If the local and remote mailboxes are on the same filesystem the following
+  If the local and remote mailboxes are on the same host the following
   option must be added to the configuration file:
 
   SMDCLIENTOPTS=-l
+
+  Note that this options has also the effect that ssh is not used. A a simple
+  pair of pipes is used instead.
 
 DELETIONS
 
