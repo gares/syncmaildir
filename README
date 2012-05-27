@@ -79,6 +79,11 @@ flexibility).
 - [`smd-restricted-shell`](smd-restricted-shell.1.html)
   only meant to be used in conjunction with an SSH key and specifically in
   the remote OpenSSH's authorized_keys file to restrict the commands allowed.
+- [`smd-uniform-names`](smd-uniform-names.1.html)
+  meant to be used before the first synchronization, when the content of
+  the local and remote mailboxes is similar, but mails are named differently.
+  This is often the case when migrating from offlineimap, that encodes
+  some metadata in the local file names.
 - [`smd-loop`](smd-loop.1.html) 
   runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
@@ -362,6 +367,30 @@ If the remote and local mailboxes are on the same filesystem, one has
 to specify the `-l` option to `smd-client`. This option can be specified
 adding to the configuration file `SMDCLIENTOPTS=-l` and set 
 `SERVERNAME=localhost`. 
+
+### avoid deletions 
+
+In some cases, usually unidirectional synchronizations, one may want
+to not propagate deletions. E.g. one keeps a slim working mailbox but
+pushes to a backup mailbox to save every email. For that scenario
+smd-pull and smd-push accept a -n, --no-delete, option. 
+To avoid specifying this option every time one can put it in the
+configuration file:
+
+    SMDSERVEROPTS=-n
+
+### migration for offlineimap
+
+Migrating from offlineimap may require an extra step, since the local and
+remote mailboxes may not only differ in their names and sub folders, but also
+in the names of the single mail messages. Indeed offlineimap encodes some
+metadata in the file names local to the client. The `smt-translate` utility
+translates only folder names and not messages names. To uniform the names
+used on the client to the ones used on the server you can use the 
+`smd-uniform-names` utility. This utility has to be run before the first
+synchronization, but after smd is configured and `smd-check-conf` has
+reported no errors. `smd-uniform-names` does not modify the mailbox, but
+instead it generates a shell script that you can run to perform the renaming.
 
 Installation
 ============

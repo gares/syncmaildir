@@ -36,7 +36,7 @@
 	  - TODO: understand -l
 	* README:
 	  - Update copyright dates to include 2012
-	  - TODO: howto migrate from offlineimap
+	  - Document smd-uniform-names
 	  - TODO: document smd-uniform-names
 
 03/03/2012 - minor feature improvement - version 1.2.3
