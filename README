@@ -379,7 +379,7 @@ configuration file:
 
     SMDSERVEROPTS=-n
 
-### migration for offlineimap
+### migration from offlineimap
 
 Migrating from offlineimap may require an extra step, since the local and
 remote mailboxes may not only differ in their names and sub folders, but also
