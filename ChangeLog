@@ -1,4 +1,4 @@
-../05/2012 - minor feature improvement - version 1.2.4
+28/05/2012 - minor feature improvement - version 1.2.4
 	* smd-uniform-names:
 	  - New tool to ease the migration from offlineimap. 
 	    When the mailboxes have roughly the same content but emails are
