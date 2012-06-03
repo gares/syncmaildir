@@ -51,7 +51,9 @@ if [ -e "$DB" ]; then
 	exit 1
 fi
 
-CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db $RENAMEDB"
+set -x
+
+CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db ~/$RENAMEDB"
 MDLINE=`run_local_server`
 
 EXITCODE=0
@@ -64,12 +66,12 @@ TMPOUT="$RC"
 grep -v '^warning.*unable to open db' $TMPERR || true
 grep '^ERROR' $TMPOUT || true
 if [ $EXITCODE = 1 ]; then exit $EXITCODE; fi
-mv $RENAMEDB.new $RENAMEDB
-atexit_rm $RENAMEDB.mtime.new
-atexit_rm $RENAMEDB
+mv ~/$RENAMEDB.new ~/$RENAMEDB
+atexit_rm ~/$RENAMEDB.mtime.new
+atexit_rm ~/$RENAMEDB
 
-CHILDSARGS="$ORIG_CHILDARGS --dump-stdin $RENAMEDB"
-cat $RENAMEDB | run_remote_server 
+CHILDSARGS="$ORIG_CHILDARGS --dump-stdin ~/$RENAMEDB"
+cat ~/$RENAMEDB | run_remote_server 
 
 ($MITM $CtS > $LtS) < $CtL &
 LOGGER1=$!
@@ -83,12 +85,12 @@ atexit_kill $LOGGER2
 REPORTER=$!
 atexit_kill $REPORTER
 
-CHILDSARGS="$ORIG_CHILDARGS --rename-only --override-db $RENAMEDB"
+CHILDSARGS="$ORIG_CHILDARGS --rename-only --override-db ~/$RENAMEDB"
 (run_local_client < $LtC 2> $PRp) > $CtL &
 CLIENT=$!
 atexit_kill $CLIENT
 
-CHILDSARGS="$ORIG_CHILDARGS --stop-after-diff --override-db $RENAMEDB"
+CHILDSARGS="$ORIG_CHILDARGS --stop-after-diff --override-db ~/$RENAMEDB"
 (run_remote_server < $LtS 2> $SL) > $StL  || EXITCODE=1
 
 wait $CLIENT || EXITCODE=1 

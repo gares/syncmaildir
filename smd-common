@@ -84,7 +84,7 @@ init() {
 	LOCALEXCLUDE=
 	SMDCLIENTOPTS=
 	SMDSERVEROPTS=
-	RENAMEDB=~/.smd/rename-db
+	RENAMEDB=.smd/rename-db
 
 	# default values for the configuration file
 	DEBUG=false
