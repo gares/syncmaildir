@@ -434,6 +434,7 @@ STATIC void save_db(const char* dbname, time_t timestamp){
 STATIC void load_db(const char* dbname){
 	FILE* fd;
 	int fields;
+	int line=0;
 	char new_dbname[PATH_MAX];
 
 	snprintf(new_dbname,PATH_MAX,"%s.mtime",dbname);
@@ -465,6 +466,7 @@ STATIC void load_db(const char* dbname){
 		fields = fscanf(fd,
 			"%1$40s %2$40s %3$" tostring(MAX_EMAIL_NAME_LEN) "[^\n]\n",
 			tmpbuff_1, tmpbuff_2, next_name());
+		line++;
 
 		if (fields == EOF) {
 			// deallocate mail entry
@@ -474,7 +476,8 @@ STATIC void load_db(const char* dbname){
 		
 		// sanity checks
 		if (fields != 3)
-			ERROR(fscanf,"malformed db file '%s', please remove it\n",dbname);
+			ERROR(fscanf, "%s: malformed line %d: %d != 3 fields."
+				" Please remove this db file.\n", dbname, line, fields);
 
 		shatxt(tmpbuff_1, mail(m)->hsha);
 		shatxt(tmpbuff_2, mail(m)->bsha);
