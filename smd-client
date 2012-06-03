@@ -157,6 +157,12 @@ function compute_renamings(actions)
 			local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
 			name = url_decode(name)
 			delete[name] = true
+		elseif opcode == 'ERROR' then
+			local msg = parse(cmd, '^ERROR (.*)$')
+			execute_error(msg)
+			io.write('ABORT\n')
+			io.flush()
+			os.exit(6)
 		end
 	end
 	for _, cp in ipairs(copy) do
