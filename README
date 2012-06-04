@@ -297,7 +297,11 @@ like `Maildir/cur` or `Maildir/.sub.folder/new` to local names like
 could be:
 
     #!/bin/sh
-    sed 's/^Maildir\(.*\)$/Mail\1/' | sed 's?/\.?/?'
+    sed --unbuffered -e 's/^Maildir\(.*\)$/Mail\1/' -e 's?/\.?/?'
+
+Note the `--unbuffered`: translators should not work in buffered mode.
+I.e. when given a line in input (terminated by `\n`) they must output a
+line without expecting any additional input.
 
 Translating the way back is trickier, since the leading `.` must be
 added only to sub-folders:
@@ -305,9 +309,9 @@ added only to sub-folders:
     #!/bin/sh
     t() {
         if [ "$1" = Mail/cur -o "$1" = Mail/tmp -o "$1" = Mail/new ]; then
-            echo $1 | sed 's?^Mail/\(.*\)?Maildir/\1?'
+            echo $1 | sed --unbuffered 's?^Mail/\(.*\)?Maildir/\1?'
         else
-            echo $1 | sed 's?^Mail/\(.*\)?Maildir/.\1?'
+            echo $1 | sed --unbuffered 's?^Mail/\(.*\)?Maildir/.\1?'
         fi
     }
     while read M; do t "$M"; done

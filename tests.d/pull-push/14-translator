@@ -8,14 +8,15 @@ echo MAILBOX_LOCAL=MyMail >> target/.smd/config.default
 echo MAILBOX_REMOTE=Mail >> target/.smd/config.default
 echo TRANSLATOR_RL=../trl >> target/.smd/config.default
 echo TRANSLATOR_LR=../tlr >> target/.smd/config.default
+echo DEBUG=true >> target/.smd/config.default
 
 cat > tlr <<EOT
 #!/bin/sh
 t() {
 if [ "\$1" = MyMail/cur -o "\$1" = MyMail/tmp -o "\$1" = MyMail/new ]; then
-	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/\1?'
+	echo \$1 | sed --unbuffered 's?^MyMail/\(.*\)?Mail/\1?'
 else
-	echo \$1 | sed 's?^MyMail/\(.*\)?Mail/.\1?'
+	echo \$1 | sed --unbuffered 's?^MyMail/\(.*\)?Mail/.\1?'
 fi
 }
 while read M; do t "\$M"; done
@@ -23,7 +24,7 @@ EOT
 chmod a+x tlr
 cat > trl <<EOT
 #!/bin/sh
-sed 's/^Mail\(.*\)$/MyMail\1/' | sed 's?/\.?/?'
+sed --unbuffered -e 's/^Mail\(.*\)$/MyMail\1/' -e 's?/\.?/?'
 EOT
 chmod a+x trl
 
@@ -31,7 +32,7 @@ mkdir -p Mail/.foo.bar
 cp -r Mail/cur Mail/.foo.bar/
 
 mpull
-assert $? 0 "failed mpull"
+assert $? 0 "failed mpull 1"
 test_eq Mail/cur/ target/MyMail/cur/
 test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
 
@@ -40,14 +41,14 @@ cp Mail/.foo.bar/cur/`ls Mail/.foo.bar/cur/|head -n 1` Mail/.foo.bar/cur/here
 sed -i s/a/z/ Mail/.foo.bar/cur/here
 
 mpull
-assert $? 0 "failed mpull"
+assert $? 0 "failed mpull 2"
 test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
 
 mkdir -p Mail/.foo.baz/cur
 cp Mail/.foo.bar/cur/here Mail/.foo.baz/cur/here
 
 mpull
-assert $? 0 "failed mpull"
+assert $? 0 "failed mpull 3"
 test_eq Mail/.foo.bar/ target/MyMail/foo.bar/
 
 touch target/.smd/workarea/cruft

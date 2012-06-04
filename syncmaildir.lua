@@ -40,6 +40,74 @@ if string.sub(SMDVERSION,1,1) == '@' then
 		SMDVERSION = '0.0.0'
 end
 
+-- to call external filter processes without too much pain
+function make_slave_filter_process(cmd, seed)
+	seed = seed or "no seed"
+	local init = function(filter)
+		if filter.inf == nil then
+			local rc
+			local base_dir
+			local home = os.getenv('HOME')
+			local user = os.getenv('USER') or 'nobody'
+			local mangled_name = string.gsub(seed,"[ %./]",'-')
+			local attempt = 0
+			if home ~= nil then
+				base_dir = home ..'/.smd/fifo/'
+			else
+				base_dir = '/tmp/'
+			end
+			rc = os.execute(MDDIFF..' --mkdir-p '..quote(base_dir))
+			if rc ~= 0 then
+				log_internal_error_and_fail('unable to create directory',
+					"make_slave_filter_process")
+			end
+			repeat 
+				pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
+				attempt = attempt + 1
+				rc = os.execute(MDDIFF..' --mkfifo '..quote(pipe))
+			until rc == 0 or attempt > 10
+			if rc ~= 0 then
+				log_internal_error_and_fail('unable to create fifo',
+					"make_slave_filter_process")
+			end
+			filter.inf = io.popen(cmd(quote(pipe)),'r')
+			filter.outf = io.open(pipe,'w')
+			filter.pipe = pipe
+		end
+	end
+	return setmetatable({}, {
+		__index = {
+			read = function(filter,...)
+				if filter.inf == nil then
+					-- check already initialized
+					log_internal_error_and_fail("read called before write",
+						"make_slave_filter_process")
+				end
+				-- once we known the channel is open, we clean up the fifo
+				if not filter.removed and filter.did_write then
+					filter.removed = true
+					local rc = { filter.inf:read(...) }
+					os.remove(filter.pipe)
+					return unpack(rc)
+				else
+					return filter.inf:read(...)
+				end
+			end,
+			write = function(filter,...)
+				init(filter)
+				filter.did_write = true
+				return filter.outf:write(...)
+			end,
+			flush = function(filter)
+				return filter.outf:flush()
+			end,
+			lines = function(filter)
+				return filter.inf:lines()
+			end
+		}
+	})
+end
+
 -- you should use logs_tags_and_fail
 function error(msg)
 	local d = debug.getinfo(1,"nl")
@@ -69,17 +137,20 @@ end
 function dry_run() return dryrun end
 
 function set_translator(p)
+	local translator_filter = make_slave_filter_process(function(pipe)
+		return p .. ' < ' .. pipe
+	end, "translate")
 	if p == 'cat' then translator = function(x) return x end
 	else translator = function(x)
-		local f = io.popen('echo '..quote(x)..' | '..p)
-		local rc = f:read('*l')
+		translator_filter:write(x..'\n')
+		translator_filter:flush()
+		local rc = translator_filter:read('*l')
 		if rc == nil or rc == 'ERROR' then
 			log_error("Translator "..p.." on input "..x.." gave an error")
-			for l in f:lines() do log_error(l) end
+			for l in translator_filter:lines() do log_error(l) end
 			log_tags_and_fail('Unable to translate mailbox',
 				'translate','bad-translator',true)
 		end
-		f:close()
 		if rc:match('%.%.') then
 			log_error("Translator "..p.." on input "..x..
 				" returned a path containing ..")
@@ -295,46 +366,19 @@ end
 
 -- =================== fast/maildir aware mkdir -p ==========================
 
-local mddiff_mkdirln_handler = {}
+local mddiff_mkdirln_handler = make_slave_filter_process(function(pipe)
+	return MDDIFF .. ' -s ' .. pipe	
+end, "mk_link_wa")
 
 -- create a link from the workarea to the real mailbox using mddiff
 function mk_link_wa(src, target)
-	local pipe, rm_pipe = nil, false
-	if mddiff_mkdirln_handler.inf == nil then
-		local rc
-		local base_dir
-		local home = os.getenv('HOME')
-		local user = os.getenv('USER') or 'nobody'
-		local mangled_name = string.gsub(src..target,"/","-"):gsub(' ','-')
-		local attempt = 0
-		if home ~= nil then
-			base_dir = home ..'/.smd/fifo/'
-		else
-			base_dir = '/tmp/'
-		end
-		repeat 
-			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
-			attempt = attempt + 1
-			mkdir_p(pipe)
-			rc = os.execute(MDDIFF..' --mkfifo '..quote(pipe))
-		until rc == 0 or attempt > 10
-		if rc ~= 0 then
-			log_internal_error_and_fail('unable to create fifo', "mk_link_wa")
-		end
-		mddiff_mkdirln_handler.inf = io.popen(MDDIFF .. ' -s ' .. quote(pipe))
-		mddiff_mkdirln_handler.outf = io.open(pipe,'w')
-		rm_pipe = true
-	end
-	mddiff_mkdirln_handler.outf:write(src,'\n',target,'\n')
-	mddiff_mkdirln_handler.outf:flush()
-	local data = mddiff_mkdirln_handler.inf:read('*l')
+	mddiff_mkdirln_handler:write(src,'\n',target,'\n')
+	mddiff_mkdirln_handler:flush()
+	local data = mddiff_mkdirln_handler:read('*l')
 	if data:match('^ERROR') or not data:match('^OK') then
 		log_tags_and_fail('Failed to mddiff -s',
 			'mddiff-s','wrong-permissions',true)
 	end
-	-- we are now sure that both endpoints opened the file, thus
-	-- we can safely garbage collect it
-	if rm_pipe then os.remove(pipe) end
 end
 
 local mkdir_p_cache = {}
@@ -488,38 +532,14 @@ function parse(s,spec)
 	return unpack(res)
 end
 
-local mddiff_sha_handler = {}
+local mddiff_sha_handler = make_slave_filter_process(function(pipe)
+	return MDDIFF .. ' ' .. pipe
+end, "sha_file")
 
 function sha_file(name)
-	local pipe, rm_pipe = nil, false
-	if mddiff_sha_handler.inf == nil then
-		local rc
-		local base_dir
-		local home = os.getenv('HOME')
-		local user = os.getenv('USER') or 'nobody'
-		local mangled_name = string.gsub(name,"/","-"):gsub(' ','-')
-		local attempt = 0
-		if home ~= nil then
-			base_dir = home ..'/.smd/fifo/'
-		else
-			base_dir = '/tmp/'
-		end
-		repeat 
-			pipe = base_dir..'smd-'..user..os.time()..mangled_name..attempt
-			attempt = attempt + 1
-			mkdir_p(pipe)
-			rc = os.execute(MDDIFF..' --mkfifo '..quote(pipe))
-		until rc == 0 or attempt > 10
-		if rc ~= 0 then
-			log_internal_error_and_fail('unable to create fifo', "sha_file")
-		end
-		mddiff_sha_handler.inf = io.popen(MDDIFF .. ' ' .. quote(pipe))
-		mddiff_sha_handler.outf = io.open(pipe,'w')
-		rm_pipe = true
-	end
-	mddiff_sha_handler.outf:write(name..'\n')
-	mddiff_sha_handler.outf:flush()
-	local data = mddiff_sha_handler.inf:read('*l')
+	mddiff_sha_handler:write(name,'\n')
+	mddiff_sha_handler:flush()
+	local data = mddiff_sha_handler:read('*l')
 	if data:match('^ERROR') then
 		log_tags_and_fail("Failed to sha1 message: "..(name or "nil"),
 			'sha_file','modify-while-update',false,'retry')
@@ -528,9 +548,6 @@ function sha_file(name)
 	if hsha == nil or bsha == nil then
 		log_internal_error_and_fail('mddiff incorrect behaviour', "mddiff")
 	end
-	-- we are now sure that both endpoints opened the file, thus
-	-- we can safely garbage collect it
-	if rm_pipe then os.remove(pipe) end
 	return hsha, bsha
 end
 

@@ -13,6 +13,13 @@ function escape(x)
 	return x:gsub('[]%%%.-]',function(x) return '%'..x end)
 end
 
+local orig_print = print
+
+function print(...)
+	orig_print(...)
+	io.stdout:flush()
+end
+
 -- argument parsing
 local mode, dir, endpoint
 mode = 'default'
