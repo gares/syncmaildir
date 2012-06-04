@@ -51,8 +51,6 @@ if [ -e "$DB" ]; then
 	exit 1
 fi
 
-set -x
-
 CHILDSARGS="$ORIG_CHILDARGS --get-mddiff-cmdline --override-db ~/$RENAMEDB"
 MDLINE=`run_local_server`
 
