@@ -820,7 +820,14 @@ STATIC void extra_sha1sum_file(const char* file) {
 	if (fstat(fd, &sb) == -1) ERROR(fstat,"unable to stat file '%s'\n",file);
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
+	if (addr == MAP_FAILED){
+		if (sb.st_size == 0) 
+			// empty file
+			;
+		else 
+			// mmap failed
+			ERROR(mmap, "unable to load '%s'\n",file);
+	}
 
 	// calculate sha1
 	fprintf(stdout, "%s  %s\n", 
@@ -828,7 +835,7 @@ STATIC void extra_sha1sum_file(const char* file) {
 		file);
 	g_free(sha1);
 	
-	munmap(addr, sb.st_size);
+	if (addr != MAP_FAILED) munmap(addr, sb.st_size);
 	close(fd);
 }
 
