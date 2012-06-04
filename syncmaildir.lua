@@ -314,9 +314,13 @@ function handshake(dbfile)
 	
 	-- we must have at least an empty file to compute its SHA1 sum
 	touch(dbfile)
-	local inf = io.popen(MDDIFF..' --sha1sum '.. dbfile,'r')
+	local inf = io.popen(MDDIFF..' --sha1sum '.. quote(dbfile),'r')
 	
-	local db_sha = inf:read('*a'):match('^(%S+)')
+	local db_sha, errmsg = inf:read('*a'):match('^(%S+)(.*)$')
+	inf:close()
+	if db_sha == 'ERROR' then
+		log_internal_error_and_fail('unreadable db file: '.. quote(dbfile),'handshake')
+	end
 	io.write('dbfile ',db_sha,'\n')
 	io.flush()
 
@@ -360,7 +364,8 @@ function dbfile_name(endpoint, mailboxes)
 	local HOME = os.getenv('HOME')
 	os.execute(MDDIFF..' --mkdir-p '..quote(HOME..'/.smd/'))
 	local dbfile = HOME..'/.smd/' ..endpoint:gsub('/$',''):gsub('/','_').. '__' 
-		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('/','_').. '.db.txt'
+		..table.concat(mailboxes,'__'):gsub('/$',''):gsub('[/%%]','_')..
+		'.db.txt'
 	return dbfile
 end
 
