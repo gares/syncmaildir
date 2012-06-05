@@ -489,7 +489,8 @@ STATIC void load_db(const char* dbname){
 		mail(m)->seen=NOT_SEEN;
 
 		// store it in the hash tables
-		g_hash_table_insert(bsha2mail,GPTR(m),GPTR(m));
+		g_hash_table_insert(bsha2mail,GPTR(m),
+			g_slist_prepend(g_hash_table_lookup(bsha2mail,GPTR(m)),GPTR(m)));
 		g_hash_table_insert(filename2mail,GPTR(m),GPTR(m));
 		
 	} 
@@ -539,9 +540,10 @@ STATIC void analyze_file(const char* dir,const char* file) {
 	unsigned char *addr,*next;
 	int fd;
 	struct stat sb;
-	mail_t alias, bodyalias, m;
+	mail_t alias, m;
 	GChecksum* ctx;
 	gsize ctx_len;
+	GSList *bodyaliases = NULL;
 
 	m = alloc_mail();
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
@@ -624,20 +626,25 @@ STATIC void analyze_file(const char* dir,const char* file) {
 		}
 	}
 
-	bodyalias = MAIL(g_hash_table_lookup(bsha2mail,GPTR(m)));
+	bodyaliases = g_hash_table_lookup(bsha2mail,GPTR(m));
 
-	if (bodyalias != 0) {
-		if (hsha_equal(GPTR(bodyalias), GPTR(m))) {
-			COMMAND_COPY(bodyalias,m);
-			PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
-			mail(m)->seen=SEEN;
-			return;
-		} else {
-			COMMAND_COPYBODY(bodyalias,m);
-			PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
-			mail(m)->seen=SEEN;
-			return;
+	// some messages with the same body are there
+	if (bodyaliases != NULL) {
+		mail_t firstalias = MAIL(bodyaliases->data);
+		for(; bodyaliases != NULL; bodyaliases = g_slist_next(bodyaliases)) {
+			mail_t bodyalias = MAIL(bodyaliases->data);
+			if (hsha_equal(GPTR(bodyalias), GPTR(m))) {
+				// this one has the same header too
+				COMMAND_COPY(bodyalias,m);
+				PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
+				mail(m)->seen=SEEN;
+				return;
+			}
 		}
+		// no full alias, we just recycle the body
+		COMMAND_COPYBODY(firstalias,m);
+		mail(m)->seen=SEEN;
+		return;
 	}
 
 	// we should add that file
