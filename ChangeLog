@@ -1,3 +1,24 @@
+../06/2012 - minor fix release - version 1.2.5
+	* mddiff:
+	  - better error messages for malformed db-file
+	  - mode --sha1sum works on empty files too
+	  - hashtable from body sha1 to mail now holds a list of
+	    mails so that COPY actions are generated whenever possible
+	    Used to be the case that on body collisions a COPYBODY
+	    action could have been generated instead.
+	* syncmaildir.lua:
+	  - more robust handshake in case mddiff is unable to
+	    sha1sum the db file
+	  - code for calling external tools refactored
+	  - optimize calls to external translator spawning only
+	    one process (translators must be line bufferd now)
+	* smd-uniform-names:
+	  - fix escaping of ~ that was always performed on the local host
+	* smd-client:
+	  - handle server ERROR messages while computing renamings
+	  - generate better smd-rename.sh script that call cp instead
+	    of mv is the source message has to be used later on
+
 28/05/2012 - minor feature improvement - version 1.2.4
 	* smd-uniform-names:
 	  - New tool to ease the migration from offlineimap. 
