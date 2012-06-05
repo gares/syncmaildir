@@ -388,13 +388,22 @@ configuration file:
 Migrating from offlineimap may require an extra step, since the local and
 remote mailboxes may not only differ in their names and sub folders, but also
 in the names of the single mail messages. Indeed offlineimap encodes some
-metadata in the file names local to the client. The `smt-translate` utility
-translates only folder names and not messages names. To uniform the names
-used on the client to the ones used on the server you can use the 
-`smd-uniform-names` utility. This utility has to be run before the first
-synchronization, but after smd is configured and `smd-check-conf` has
-reported no errors. `smd-uniform-names` does not modify the mailbox, but
-instead it generates a shell script that you can run to perform the renaming.
+metadata in the file names local to the client. The `smd-translate` utility
+translates only folder names and not messages names.
+
+To uniform the names used on the client to the ones used on the server you can
+do as follows:
+
+1. Remove `X-OfflineIMAP` from every mail that contains it.
+   Often the same email has that extra header line on the server but not on
+   the client. A not so dirty way of achieving that is the following snippet:
+   `find Mail -type f -exec sed -i '/^X-OfflineIMAP/d' {} \;`
+
+2. Run the `smd-uniform-names` utility.
+   This utility has to be run before the first synchronization, but after smd
+   is configured and `smd-check-conf` has reported no errors.
+   `smd-uniform-names` does not modify the mailbox, but instead it generates a
+   shell script that you can run to perform the renaming.
 
 Installation
 ============
