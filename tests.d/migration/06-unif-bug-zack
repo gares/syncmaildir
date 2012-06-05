@@ -1,0 +1,33 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+
+sed -i 's/MAILBOX=.*//' target/.smd/config.default
+echo 'MAILBOX_LOCAL="MyMail/"' >> target/.smd/config.default
+echo 'MAILBOX_REMOTE="Mail/"' >> target/.smd/config.default
+echo 'TRANSLATOR_RL="smd-translate -m oimap-dovecot -d RL default"'>> target/.smd/config.default
+echo 'TRANSLATOR_LR="smd-translate -m oimap-dovecot -d LR default"' >> target/.smd/config.default
+echo DEBUG=true >>  target/.smd/config.default
+
+cp Mail/cur/`ls Mail/cur|head -n 1` Mail/cur/copy
+rm Mail/cur/[0-9]*
+cp Mail/cur/copy Mail/cur/copy1 
+
+cp -r Mail target/MyMail
+cd target/MyMail/cur
+for x in *; do mv $x $x`md5sum $x | cut -d ' ' -f 1`; done
+cd ../../..
+
+muniform -v
+cd target
+sh smd-rename.sh
+cd ..
+
+N=`ls target/MyMail/cur | wc -l`
+assert $N 3 "not 3 mails"
+N=`grep '^cp ' target/smd-rename.sh | wc -l`
+assert $N 1 "not 1 cp"
+N=`grep '^mv ' target/smd-rename.sh | wc -l`
+assert $N 1 "not 1 mv"
+
