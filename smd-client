@@ -156,7 +156,7 @@ function compute_renamings(actions)
 		elseif opcode == "DELETE" then
 			local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
 			name = url_decode(name)
-			delete[name] = true
+			delete[name] = 1
 		elseif opcode == 'ERROR' then
 			local msg = parse(cmd, '^ERROR (.*)$')
 			execute_error(msg)
@@ -176,11 +176,19 @@ function compute_renamings(actions)
 				last1 ~= nil and last2 ~= nil and
 				(t1[#t1] == "cur" or t1[#t1] == "new") and
 				(t2[#t2] == "cur" or t2[#t2] == "new") and
-				dir1 == dir2 and is_translator_set() then
+				dir1 == dir2 then
+				--and is_translator_set() then
 				local t_dir =  homefy(translate(dir1))
-				script[#script + 1] = string.format( "mv %s %s",
-					quote(t_dir..'/'..last1),
-					quote(t_dir..'/'..last2))
+				if delete[cp.src] > 1 then
+					table.insert(script,1,string.format("cp %s %s",
+						quote(t_dir..'/'..last1),
+						quote(t_dir..'/'..last2)))
+				else
+					script[#script + 1] = string.format("mv %s %s",
+						quote(t_dir..'/'..last1),
+						quote(t_dir..'/'..last2))
+				end
+				delete[cp.src] = delete[cp.src] + 1
 			end
 		end
 	end
