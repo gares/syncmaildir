@@ -271,7 +271,7 @@ It can be followed by `error::` or `stats::`, that denote an error message or a
 statistical one respectively. Then a list of improperly called tags is output.
 Their meaning should be easy to guess.
 
-    <M>    ::= "error::" <ET> | "stats::" <ST>
+    <M>    ::= "error::" <ET> | "stats::" <ST> | "stats::" <DR>
     <ET>   ::= "context(" <STR> ")" 
                "probable-cause(" <STR> ")"
                "human-intervention(" <HI> ")"
@@ -283,7 +283,13 @@ Their meaning should be easy to guess.
     <A>    ::= "run(" <STR> ")" 
             |  "display-mail(" <STR> ")" 
             |  "display-permissions(" <STR> ")"
-    <ET>   ::= "new-mails(" <NUM> ")" <SPC> "del-mails(" <NUM> ")"
+    <ST>   ::= "new-mails(" <NUM> ")" <SPC>
+               "del-mails(" <NUM> ")" <SPC>
+               "bytes-received(" <NUM> ")" <SPC>
+               "xdelta-received(" <NUM> ")" <SPC>
+               "xdelta-received(" <NUM> ")"
+    <DR>   ::= "mail-transferred(" <ML> ")"
+    <ML>   ::= <STR> | <STR> " , " <ML>
     <NUM>  ::= `[0-9]+`
     <SPC>  ::= ` *,? *`
 
