@@ -1,24 +1,24 @@
-../06/2012 - minor fix release - version 1.2.5
+11/06/2012 - minor fix release - version 1.2.5
 	* mddiff:
-	  - better error messages for malformed db-file
-	  - mode --sha1sum works on empty files too
-	  - hashtable from body sha1 to mail now holds a list of
-	    mails so that COPY actions are generated whenever possible
-	    Used to be the case that on body collisions a COPYBODY
+	  - Hashtable from body sha1 to mail now holds a list of
+	    mails so that COPY actions are generated whenever possible.
+	    It used to be the case that on body collisions a COPYBODY
 	    action could have been generated instead.
+	  - Fix: --sha1sum works on empty files too
+	  - Better error messages for malformed db-file (including line number)
 	* syncmaildir.lua:
-	  - more robust handshake in case mddiff is unable to
+	  - During handshake handle the case in which mddiff is unable to
 	    sha1sum the db file
-	  - code for calling external tools refactored
-	  - optimize calls to external translator spawning only
+	  - Code for calling external tools refactored
+	  - Optimize calls to external translator spawning only
 	    one process (translators must be line bufferd now)
-	* smd-uniform-names:
-	  - fix escaping of ~ that was always performed on the local host
-	* smd-client:
-	  - handle server ERROR messages while computing renamings
-	  - generate better smd-rename.sh script that calls cp instead
+	* smd-uniform-names, smd-client:
+	  - Fix escaping of ~ that was always performed on the local host
+	  - Handle server ERROR messages while computing renamings
+	  - Generate better smd-rename.sh script that calls cp instead
 	    of mv if the source message has to be used later on
-	  - dry run mode prints the list of messages transferred over the
+	* smd-client:
+	  - Mode --dry-run prints the list of messages transferred over the
 	    network
 
 28/05/2012 - minor feature improvement - version 1.2.4
