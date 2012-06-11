@@ -4,9 +4,13 @@ mpull -t
 assert $? 0 "failed mpull -t"
 echo DEBUG=true >> target/.smd/config.default
 
+M=`ls Mail/cur/ | wc -l`
+
 mpull --dry-run
 assert $? 0 "failed mpull --dry-run"
 test -d target/Mail
 assert $? 1 "mpull --dry-run did something"
 N=`ls -l target/.smd/*.db.txt* 2>/dev/null | wc -l`
 assert $N 0 "mpull --dry-run created dbfile"
+N=`grep mail-transferred log.pull | sed 's? , ?\n?g' | wc -l`
+assert $N $M "dry run not printing the list of mails"

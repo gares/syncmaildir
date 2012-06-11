@@ -18,6 +18,8 @@
 	  - handle server ERROR messages while computing renamings
 	  - generate better smd-rename.sh script that calls cp instead
 	    of mv if the source message has to be used later on
+	  - dry run mode prints the list of messages transferred over the
+	    network
 
 28/05/2012 - minor feature improvement - version 1.2.4
 	* smd-uniform-names:

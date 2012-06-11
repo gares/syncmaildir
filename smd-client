@@ -15,6 +15,7 @@ local statistics = {
 	removed = 0,
 	received = 0,
 	xdelta = 0,
+	files = {},
 }
 
 -- ========================= get mail queue =================================
@@ -77,6 +78,7 @@ end
 function get_full_email(name,hsha,bsha)
 	if dry_run() then
 		statistics.added = statistics.added + 1
+		statistics.files[#statistics.files + 1] = name 
 		return true
 	end
 	get_full_email_queue[#get_full_email_queue+1] = {
@@ -702,6 +704,10 @@ function main()
 		'), bytes-received('..statistics.received..
 		'), xdelta-received('..statistics.xdelta..
 		')')
+	if dry_run() and #statistics.files > 0 then
+		log_tag('stats::mail-transferred('..
+			table.concat(statistics.files,' , ')..')')
+	end
 
 	os.exit(0)
 end
