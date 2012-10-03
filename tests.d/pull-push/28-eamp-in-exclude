@@ -1,0 +1,14 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+echo 'EXCLUDE_LOCAL="Mail/foo & bar"' >> target/.smd/config.default
+echo 'EXCLUDE_REMOTE="Mail/foo & bar"' >> target/.smd/config.default
+
+mkdir -p 'Mail/foo & bar/'
+cp -r Mail/cur 'Mail/foo & bar/'
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail target/Mail 
