@@ -103,11 +103,10 @@ check-w-%:
 	$H which $* > /dev/null || echo $* not found
 
 test/%: text/all check-run $(TEST_MAILBOX)
-	$H SUITES="$*" tests.d/test.sh $(TEST_MAILBOX) 
+	$H tests.d/test.sh $(TEST_MAILBOX) $*
 
 test: text/all check-run $(TEST_MAILBOX)
-	$H SUITES="$(TEST_SUITES)" tests.d/test.sh \
-		$(TEST_MAILBOX) $(if $(T),$(addprefix $(shell pwd)/,tests.d/$T))
+	$H SUITES="$(TEST_SUITES)" tests.d/test.sh $(TEST_MAILBOX) 
 
 bench: text/all check-run $(BENCH_MAILBOX)
 	$H SUITES="$(BENCH_SUITES)" tests.d/test.sh \

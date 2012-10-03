@@ -165,9 +165,14 @@ run_tests() {
 	local testcase="$1"
 	local testfile="$2"
 	if [ ! -z "$testfile" ]; then
-		if [ -f $testfile ] && 
-		   (echo $testfile | grep $TESTSUITE > /dev/null); then
-			run_test $testcase $testfile
+		if [ -f $BASE/tests.d/$testfile ] && 
+		   (echo $testfile | grep ^$TESTSUITE > /dev/null); then
+			run_test $testcase $BASE/tests.d/$testfile
+		elif [ -d $BASE/tests.d/$testfile ] && 
+		     (echo $testfile | grep ^$TESTSUITE > /dev/null); then
+			for T in $BASE/tests.d/$testfile/[0-9]*; do
+				run_test $testcase $T
+			done
 		fi
 	else
 		for T in $BASE/tests.d/$TESTSUITE/[0-9]*; do
