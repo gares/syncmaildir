@@ -2,7 +2,7 @@
 
 # set -x
 
-SUITES=${SUITES:-"mddiff client-server pull-push benchmarks"}
+SUITES=${SUITES:-"mddiff client-server pull-push benchmarks migration"}
 BASE=$PWD
 
 . $BASE/tests.d/common
