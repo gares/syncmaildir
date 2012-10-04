@@ -1,0 +1,8 @@
+version-1.2.5
+
+- & in EXCLUDE_* breaks shell scripts. smd-common builds a string to be called
+  and the & breaks it. Extra quotes and eval could fix the problem, but the
+  clean solution is to just rewrite the schellscripts in a decent language.
+
+  workaround: use %26 instead of & in the conf file.
+
