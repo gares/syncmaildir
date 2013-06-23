@@ -23,11 +23,11 @@ BENCH_MAILBOX=misc/Mail.BENCH.tgz
 BENCH_SUITES=benchmarks
 PKG_GTK=gtk+-3.0 
 SMD_APPLET_C=smd-applet.c 
-PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
+PKGS_VALA=glib-2.0 gthread-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-1.0 gio-2.0
 TARGET_GLIB=2.32
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(TARGET_GLIB) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
-VALAC=valac-0.16
+VALAC=valac-0.20
 H=@
 
 # ----------------------------------------------------------------------------
