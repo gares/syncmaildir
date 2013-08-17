@@ -211,11 +211,10 @@ class smdApplet {
 		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
 		about_win.set_copyright("Copyright " + SMDConf.COPYRIGHT);
 		log_win = builder.get_object("wLog") as Gtk.Window;
-		var logs_vb = builder.get_object("vbLog") as Gtk.VBox;
+		var logs_vb = builder.get_object("vbLog") as Gtk.Grid;
 		cblogs = new Gtk.ComboBoxText();
 		lognames = new Gee.ArrayList<string>();
-		logs_vb.pack_start(cblogs,false,true,0);
-		logs_vb.reorder_child(cblogs,0);
+		logs_vb.attach(cblogs,0,0,1,1);
 		cblogs.show();
 		cblogs.changed.connect((cb) => {
 			int selected = cblogs.get_active();
@@ -655,7 +654,7 @@ class smdApplet {
 			l_ctx.set_text(e.context);
 			l_cause.set_text(e.cause);
 			command_hash.remove_all();
-			var vb = builder.get_object("vbRun") as Gtk.VBox;
+			var vb = builder.get_object("vbRun") as Gtk.Grid;
 			foreach(Gtk.Widget w in vb.get_children()){ vb.remove(w); } 
 			
 			if (e.permissions != null) {
@@ -730,7 +729,7 @@ class smdApplet {
 					});
 					hb.attach(lbl,1,0,1,1);
 					hb.attach(but,0,0,1,1);
-					vb.pack_end(hb,true,true,0);
+					vb.add(hb);
 					hb.show_all();
 				}
 			}
