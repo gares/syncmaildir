@@ -681,7 +681,9 @@ class smdApplet {
 
 			if (e.commands != null) {
 				foreach (string command in e.commands) {
-					var hb = new Gtk.HBox(false,10);
+					var hb = new Gtk.Grid();
+					hb.set_column_homogeneous(false);
+					hb.set_column_spacing(10);
 					string nice_command;
 					try {
 						GLib.MatchInfo i_mailto;
@@ -726,8 +728,8 @@ class smdApplet {
 							stderr.printf("Spawning: %s\n",e.message);
 						}
 					});
-					hb.pack_end(lbl,true,true,0);
-					hb.pack_end(but,false,false,0);
+					hb.attach(lbl,1,0,1,1);
+					hb.attach(but,0,0,1,1);
 					vb.pack_end(hb,true,true,0);
 					hb.show_all();
 				}
