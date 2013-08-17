@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.2.5
+VERSION=1.2.6
 COPYRIGHT=© 2008-2012 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
