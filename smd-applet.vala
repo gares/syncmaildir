@@ -117,9 +117,9 @@ class smdApplet {
 
 	// =================== the constants ===============================
 
-	// gconf keys
-	static const string key_icon    = "/apps/smd-applet/icon_only_on_errors";
-	static const string key_newmail = "/apps/smd-applet/notify_new_mail";
+	// settings keys
+	static const string key_icon    = "icon-only-on-errors";
+	static const string key_newmail = "notify-new-mail";
 
 	// paths, set by main() to something that depends on the 
 	// installation path
@@ -147,8 +147,8 @@ class smdApplet {
 	Gtk.ComboBoxText cblogs = null;
 	Gee.ArrayList<string> lognames = null;
 
-	// the gconf client handler
-	GConf.Client gconf = null;
+	// the gsettings entry point
+	GLib.Settings settings = null;
 
 	// the thread to manage the child smd-loop instance
 	GLib.Thread<void *> thread = null;
@@ -190,8 +190,8 @@ class smdApplet {
 		// events queue and mutex
 		events = new Gee.ArrayList<Event>();
 
-		// connect to gconf
-		gconf = GConf.Client.get_default();
+		// gsettings
+		settings = new Settings("org.syncmaildir.applet");
 
 		// connect to dbus
 		try {
@@ -250,20 +250,15 @@ class smdApplet {
 		close.clicked.connect(close_prefs_action);
 
 		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
-		try { bicon.set_active( gconf.get_bool(key_icon)); }
-		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		bicon.set_active( settings.get_boolean(key_icon));
 		bicon.toggled.connect((b) => {
-			try { 
-				gconf.set_bool(key_icon,b.active); 
-				si.set_visible(!gconf.get_bool(key_icon));
-			} catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			settings.set_boolean(key_icon,b.active); 
+			si.set_visible(!settings.get_boolean(key_icon));
 		});
 		var bnotify = builder.get_object("cbNotify") as Gtk.CheckButton;
-		try { bnotify.set_active(gconf.get_bool(key_newmail)); }
-		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		bnotify.set_active(settings.get_boolean(key_newmail));
 		bnotify.toggled.connect((b) => {
-			try { gconf.set_bool(key_newmail,b.active); }
-			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			settings.set_boolean(key_newmail,b.active);
 		});
 		var bautostart = builder.get_object("cbAutostart") as Gtk.CheckButton;
 		try { string content;
@@ -625,8 +620,7 @@ class smdApplet {
 		// notification
 		if ( e != null && e.message != null) {
 			bool notify_on_newail = false;
-			try { notify_on_newail = gconf.get_bool(key_newmail); }
-			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			notify_on_newail = settings.get_boolean(key_newmail);
 			if (e.enter_network_error_mode && network_error_mode) {
 				// we avoid notifying the network problem more than once
 			} else if ((!e.is_error_event() && notify_on_newail) ||
@@ -775,8 +769,7 @@ class smdApplet {
 		error_mode = false;
 		si.set_tooltip_text("smd-applet is running");
 		si.set_from_icon_name("mail-send-receive");
-		try { si.set_visible(!gconf.get_bool(key_icon)); }
-		catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+		si.set_visible(!settings.get_boolean(key_icon));
 		debug("joining smdThread");
 		thread.join();
 		thread_die = false;
@@ -798,11 +791,7 @@ class smdApplet {
 		if (is_smd_stack_configured() && config_wait_mode) {
 			config_wait_mode = false;
 			// restore the default icon
-			try { si.set_visible(!gconf.get_bool(key_icon)); } 
-			catch (GLib.Error e) {
-				stderr.printf("Unable to read gconf key %s: %s\n",
-					key_icon,e.message); 
-			}
+			si.set_visible(!settings.get_boolean(key_icon));
 			si.set_from_icon_name("mail-send-receive");
 
 			// start the thread (if connected)
@@ -944,8 +933,7 @@ class smdApplet {
 			try { notification.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
 		} else {
-			try { si.set_visible(!gconf.get_bool(key_icon)); }
-			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
+			si.set_visible(!settings.get_boolean(key_icon));
 		}
 
 		Gtk.main(); 

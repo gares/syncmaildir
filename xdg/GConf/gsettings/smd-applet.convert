@@ -1,0 +1,3 @@
+[org.syncmaildir.applet]
+icon-only-on-errors = /apps/smd-applet/icon_only_on_errors
+notify-new-mail = /apps/smd-applet/notify_new_mail

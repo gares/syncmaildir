@@ -9,6 +9,8 @@ BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1 smd-translate.1 \
 	 smd-check-conf.1 smd-restricted-shell.1 smd-uniform-names.1
+GSCHEMAS=xdg/glib-2.0/schemas/org.syncmaildir.applet.gschema.xml
+GSCHEMAS_COMPILED=xdg/glib-2.0/schemas/gschemas.compiled
 MANPAGES5=smd-config.5
 HTML=index.html design.html hooks.html
 DESTDIR=
@@ -47,7 +49,7 @@ PKG_FLAGS=
 # ----------------------------------------------------------------------------
 # Rules follow...
 
-all: check-build update-smd-config $(BINARIES) 
+all: check-build update-smd-config $(BINARIES) $(GSCHEMAS_COMPILED)
 
 update-smd-config:
 	$H echo "#define SMD_CONF_PREFIX \"/$(PREFIX)\"" > smd-config.h.new
@@ -90,7 +92,15 @@ smd-applet: $(SMD_APPLET_C) smd-config.h
 		`pkg-config $(PKG_FLAGS) --cflags --libs $(PKGS_VALA)` \
 		$(LDFLAGS)
 
-check-build: check-w-gcc check-w-$(VALAC)
+$(GSCHEMAS_COMPILED): $(GSCHEMAS)
+	@echo GLIB-COMPILE-SCHEMAS $(dir $(GSCHEMAS))
+	$H glib-compile-schemas $(dir $(GSCHEMAS))
+	$H $(foreach p,$(subst :, ,$(XDG_DATA_DIRS)), \
+		test -e $(p)/glib-2.0/schemas/$(patsubst xdg/%, \
+			%,$(notdir $(GSCHEMAS))) ||) \
+		echo WARN: export XDG_DATA_DIRS=\$$XDG_DATA_DIRS:xdg/
+
+check-build: check-w-gcc check-w-$(VALAC) check-w-glib-compile-schemas
 	$H pkg-config $(PKGCONFIG_CHECK_GLIB_VERSION) || \
 		(echo glib version too old: \
 			`pkg-config $(PKGCONFIG_GLIB_VERSION)`; \
@@ -149,7 +159,7 @@ define install-replacing
 endef
 
 define install
-	cp $(1) $(DESTDIR)/$(PREFIX)/$(2)/$(1)
+	cp $(1) $(DESTDIR)/$(PREFIX)/$(2)/$(notdir $(1))
 	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
 endef
 
@@ -178,10 +188,13 @@ install-bin: $(BINARIES)
 	$(call install-replacing,syncmaildir.lua,share/lua/$(LUAV))
 
 install-misc: $(MANPAGES1) $(MANPAGES5)
-	mkdir -p $(DESTDIR)/etc/xdg/autostart
-	$(call mkdir-p,share/applications)
-	$(call install,smd-applet-configure.desktop,share/applications)
-	$(call install,smd-applet.desktop,share/applications)
+	$(call mkdir-p,$(DESTDIR)/etc/xdg/autostart)
+	$(foreach d,\
+	  $(filter-out xdg,$(shell find xdg -type d)),\
+	  $(call mkdir-p,share/$(patsubst xdg/%,%,$(d)));)
+	$(foreach f,\
+	  $(filter-out $(GSCHEMAS_COMPILED),$(shell find xdg -type f)),\
+	  $(call install,$(f),share/$(patsubst xdg/%,%,$(dir $(f))));)
 	$(call install,smd-applet.ui,share/$(PROJECTNAME)-applet)
 	$(call mkdir-p,share/man/man1)
 	$(call mkdir-p,share/man/man5)

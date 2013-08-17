@@ -1,0 +1,14 @@
+<schemalist>
+  <schema id="org.syncmaildir.applet" path="/apps/smd-applet/">
+    <key name="icon-only-on-errors" type="b">
+      <default>false</default>
+      <summary>Choose when the icon is shown in the notification area</summary>
+      <description>If set, this option makes the icon show up only in case an error occurs</description>
+    </key>
+    <key name="notify-new-mail" type="b">
+      <default>false</default>
+      <summary>Choose when a notification is produced</summary>
+      <description>If set, this option makes smd-applet produce a new notification every time new emails are received</description>
+    </key>
+  </schema>
+</schemalist>
