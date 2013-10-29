@@ -123,7 +123,7 @@ This file defines the following variables (see the [`smd-config`](smd-config.5.h
           BatchMode yes
           Compression yes
           Hostname your.real.server.name
-          Username you
+          User you
 
 - `CLIENTNAME` a name for your client: the host name concatenated with
    the server name should be fine.  Note that you can pull and push from

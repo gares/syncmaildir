@@ -314,7 +314,7 @@ read_conffile() {
 		#   Host smd-server-foo
 		#     Compression yes
 		#     Hostname your.real.server.name
-		#     Username you
+		#     User you
 		#
 		SERVERNAME=smd-server-$REPNAME
 
