@@ -4,7 +4,7 @@
 
 PROJECTNAME=syncmaildir
 VERSION=1.2.6
-COPYRIGHT=© 2008-2012 Enrico Tassi <gares@fettunta.org>
+COPYRIGHT=© 2008-2013 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
 	 smd-pull.1 smd-push.1 smd-loop.1 smd-applet.1 smd-translate.1 \
