@@ -113,12 +113,11 @@ static string SMD_PP_DEF_CFG;
 static string XDG_AUTORUN_FILE;
 
 // the main class containing all the data smd-applet will use
-class smdApplet {
+class smdApplet : Gtk.Application {
 
 	// =================== the constants ===============================
 
 	// settings keys
-	static const string key_icon    = "icon-only-on-errors";
 	static const string key_newmail = "notify-new-mail";
 
 	// paths, set by main() to something that depends on the 
@@ -134,14 +133,11 @@ class smdApplet {
 	Gtk.Builder builder = null;
 
 	// main widgets
-	Gtk.Menu menuL = null;
-	Gtk.Menu menuR = null;
 	Gtk.StatusIcon si = null;
 	Gtk.Window win = null;
 	Gtk.Window err_win = null;
-	Gtk.Window log_win = null;
-	Gtk.AboutDialog about_win = null;
-	Gtk.CheckMenuItem miPause = null;
+	Gtk.Notebook notebook = null;
+	Gtk.Switch sync_active = null;
 
 	// Stuff for logs display
 	Gtk.ComboBoxText cblogs = null;
@@ -174,17 +170,38 @@ class smdApplet {
 	Notify.Notification notification = null;
 	bool notification_server_has_persistence = false;
 
+	static string menu_ui = """
+	<interface>
+	  <menu id='app-menu'>
+	    <section>
+	      <item>
+	        <attribute name='label' translatable='yes'>_Quit</attribute>
+	        <attribute name='action'>app.quit</attribute>
+	      </item>
+	    </section>
+	  </menu>
+	</interface>
+	""";
 
 	// ======================= constructor ================================
 
 	// initialize data structures and build gtk+ widgets
-	public smdApplet(bool hide_status_icon) throws Exit {
+	public smdApplet() throws Exit {
+		set_application_id("org.syncmaildir");
+		try { register(); }
+		catch (GLib.Error e) { stderr.printf("%s\n",e.message); };
+
 		// load the ui file
 		builder = new Gtk.Builder ();
 		try { builder.add_from_file (smd_applet_ui); } 
 		catch (GLib.Error e) { 
 			stderr.printf("%s\n",e.message); 
 			throw new Exit.ABORT("Unable to load the ui file");
+		}
+		try { builder.add_from_string (menu_ui, menu_ui.length); } 
+		catch (GLib.Error e) { 
+			stderr.printf("%s\n",e.message); 
+			throw new Exit.ABORT("Unable to load the menu ui string");
 		}
 	
 		// events queue and mutex
@@ -197,8 +214,8 @@ class smdApplet {
 		try {
 			net_manager=Bus.get_proxy_sync(BusType.SYSTEM,NM_SERVICE,NM_PATH);
 	        net_manager.state_changed.connect((s) => {
-				if (is_nm_connected(s)) miPause.set_active(false);
-				else miPause.set_active(true);
+				if (is_nm_connected(s)) sync_active.set_active(true);
+				else sync_active.set_active(false);
 			});
 		} catch (GLib.Error e) {
 			stderr.printf("%s\n",e.message);
@@ -206,60 +223,30 @@ class smdApplet {
 		}
 
 		// load widgets and attach callbacks
-		win = builder.get_object("wPrefs") as Gtk.Window;
+		var simple_mainwin = builder.get_object("wMain") as Gtk.Window;
+		win = new Gtk.ApplicationWindow(this);
+		simple_mainwin.get_child().reparent(win);
+		var w = 0;
+		var h = 0;
+		simple_mainwin.get_size_request(out w, out h);
+		win.set_size_request(w,h);
+		win.set_title(simple_mainwin.get_title());
 		err_win = builder.get_object("wError") as Gtk.Window;
-		about_win = builder.get_object("wAbout") as Gtk.AboutDialog;
-		about_win.set_copyright("Copyright " + SMDConf.COPYRIGHT);
-		log_win = builder.get_object("wLog") as Gtk.Window;
+		var lcopyright = builder.get_object("lCopyright") as Gtk.Label;
+		lcopyright.set_text("Copyright " + SMDConf.COPYRIGHT);
 		var logs_vb = builder.get_object("vbLog") as Gtk.Grid;
 		cblogs = new Gtk.ComboBoxText();
 		lognames = new Gee.ArrayList<string>();
 		logs_vb.attach(cblogs,0,0,1,1);
 		cblogs.show();
-		cblogs.changed.connect((cb) => {
-			int selected = cblogs.get_active();
-			if (selected >= 0) {
-				string file = lognames.get(selected);
-				string content;
-				try {
-					if (GLib.FileUtils.get_contents(
-							SMD_LOGS_DIR+file,out content)){
-						var tv = builder.get_object("tvLog") as Gtk.TextView;
-						var b = tv.get_buffer();
-						b.set_text(content,-1);
-						Gtk.TextIter end_iter;
-						b.get_end_iter(out end_iter);
-						var end_mark = b.create_mark("end",end_iter,false);
-						tv.scroll_to_mark(end_mark, 0.0, true, 0.0, 0.0);
-					} else {
-						stderr.printf("Unable to read %s\n",SMD_LOGS_DIR+file);
-					}
-				} catch (GLib.FileError e) { 
-						stderr.printf("Unable to read %s: %s\n",
-							SMD_LOGS_DIR+file, e.message);
-				}
-			}
-		});
+		update_logcontents();
 
-		var close_log = builder.get_object("bLogClose") as Gtk.Button;
-		close_log.clicked.connect(close_logs_action);
-		log_win.delete_event.connect(close_logs_event);
-
-		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked.connect(close_prefs_action);
-
-		var bicon = builder.get_object("cbIcon") as Gtk.CheckButton;
-		bicon.set_active( settings.get_boolean(key_icon));
-		bicon.toggled.connect((b) => {
-			settings.set_boolean(key_icon,b.active); 
-			si.set_visible(!settings.get_boolean(key_icon));
-		});
-		var bnotify = builder.get_object("cbNotify") as Gtk.CheckButton;
+		var bnotify = builder.get_object("sNotify") as Gtk.Switch;
 		bnotify.set_active(settings.get_boolean(key_newmail));
-		bnotify.toggled.connect((b) => {
-			settings.set_boolean(key_newmail,b.active);
+		bnotify.notify["active"].connect(() => {
+			settings.set_boolean(key_newmail,bnotify.active);
 		});
-		var bautostart = builder.get_object("cbAutostart") as Gtk.CheckButton;
+		var bautostart = builder.get_object("sAutostart") as Gtk.Switch;
 		try { string content;
 		  if (GLib.FileUtils.get_contents(XDG_AUTORUN_FILE,out content)){
 			if (GLib.Regex.match_simple(GNOME_AUTOSTART_DISABLED,content))
@@ -267,8 +254,8 @@ class smdApplet {
 			else bautostart.set_active(true);
 		  } else bautostart.set_active(false);
 		} catch (FileError e) { stderr.printf("%s\n",e.message); }
-		bautostart.toggled.connect((b) => {
-			if (b.active) {
+		bautostart.notify["active"].connect(() => {
+			if (bautostart.active) {
 				string content;
 				try {
 					GLib.FileUtils.get_contents(smd_applet_desktop,out content);
@@ -313,51 +300,44 @@ class smdApplet {
 		});
 
 		// menu popped up when the user clicks on the notification area
-        menuL = builder.get_object ("mLeft") as Gtk.Menu;
-        menuR = builder.get_object ("mRight") as Gtk.Menu;
-		var quit = builder.get_object ("miQuit") as Gtk.MenuItem;
-		quit.activate.connect((b) => { 
+		sync_active = builder.get_object("sSyncActive") as Gtk.Switch;
+		sync_active.notify["active"].connect(() => {
+			if (sync_active.get_active()) unpause();
+			else pause(); 
+		});
+		notebook = builder.get_object("nMain") as Gtk.Notebook;
+		update_loglist();
+		GLib.Timeout.add(2000,(() => {
+			update_loglist(); update_logcontents(); return true; }));
+
+		// status icon
+		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
+		si.set_visible(true);
+		si.set_tooltip_text("smd-applet is running");
+		si.activate.connect((s) => { 
+			if ( error_mode ) 
+				err_win.reshow_with_initial_size();
+			else {
+				win.show();
+				if ( config_wait_mode ) notebook.page = 1;
+				else notebook.page = 0;
+			}
+		});
+		
+		add_window(win);
+		activate.connect(() => { });
+
+		var quit = new SimpleAction("quit", null);
+		var menu = builder.get_object("app-menu") as MenuModel;
+		set_app_menu(menu);
+		add_action(quit);
+		quit.activate.connect(() => { 
 			thread_die = true;
 			if ((int)pid != 0) {
 				debug("sending SIGTERM to %d".printf(-(int)pid));
 				Posix.kill((Posix.pid_t)(-(int)pid),Posix.SIGTERM);
 			}
-			Gtk.main_quit(); 
-		});
-		miPause = builder.get_object("miPause") as Gtk.CheckMenuItem;
-		miPause.toggled.connect((b) => {
-			if (miPause.get_active()) pause();
-			else unpause(); 
-		});
-		var about = builder.get_object ("miAbout") as Gtk.MenuItem;
-		about_win.response.connect((id) => { about_win.hide(); });
-		about.activate.connect((b) => { about_win.run(); });
-		about_win.set_comments("GNOME applet for syncmaildir version " + 
-			SMDConf.VERSION);
-		var prefs = builder.get_object ("miPrefs") as Gtk.MenuItem;
-		prefs.activate.connect((b) => {  win.show(); });
-		var logs = builder.get_object ("miLog") as Gtk.MenuItem;
-		logs.activate.connect((b) => { 
-			update_loglist();
-			log_win.show(); 
-		});
-
-		// status icon
-		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
-		si.set_visible(!hide_status_icon);
-		si.set_tooltip_text("smd-applet is running");
-		si.popup_menu.connect((button,time) => {
-				menuR.popup(null,null,si.position_menu,0,
-					Gtk.get_current_event_time());
-		});
-		si.activate.connect((s) => { 
-			if ( error_mode ) 
-				err_win.reshow_with_initial_size();
-			else if( config_wait_mode )
-				win.show();
-			else
-				menuL.popup(null,null,si.position_menu,0,
-					Gtk.get_current_event_time());
+			this.quit(); 
 		});
 
 		// notification system
@@ -389,7 +369,8 @@ class smdApplet {
 		// if no network, we do not start the thread and enter pause mode
 		// immediately
 		if (!force && net_manager != null && !is_nm_connected(net_manager.state)) {
-			miPause.set_active(true);
+			sync_active.set_active(false);
+			si.set_from_stock("gtk-media-pause");
 		} else {
 			// the thread fills the event queue
 			thread = new GLib.Thread<void *>(null, smdThread);
@@ -435,7 +416,7 @@ class smdApplet {
 		string permissions = null;
 		string mail_name = null;
 		string mail_body = null;
-		var commands = new Gee.ArrayList<string>();
+		var commands = new Gee.ArrayList<string>(str_equal);
 
 		if (has_actions) {
 			string acts = i_act.fetch(1);
@@ -770,16 +751,14 @@ class smdApplet {
 		error_mode = false;
 		si.set_tooltip_text("smd-applet is running");
 		si.set_from_icon_name("mail-send-receive");
-		si.set_visible(!settings.get_boolean(key_icon));
 		debug("joining smdThread");
-		thread.join();
+		if (thread != null) thread.join();
 		thread_die = false;
 		debug("starting smdThread");
 		start_smdThread(force);
 	}
 	
 	// these are just wrappers for close_prefs
-	private void close_prefs_action(Gtk.Button b){ close_prefs(); }
 	private bool close_prefs_event(Gdk.EventAny e){
 		close_prefs();
 		return true;
@@ -792,31 +771,12 @@ class smdApplet {
 		if (is_smd_stack_configured() && config_wait_mode) {
 			config_wait_mode = false;
 			// restore the default icon
-			si.set_visible(!settings.get_boolean(key_icon));
 			si.set_from_icon_name("mail-send-receive");
 
 			// start the thread (if connected)
 			debug("starting smdThread since smd stack is configured");
 			start_smdThread();
 		}
-	}
-
-	// close logs win
-	private void close_logs(){ log_win.hide(); }
-
-	// these are just wrappers for close_logs
-	private void close_logs_action(Gtk.Button b){ close_logs(); }
-	private bool close_logs_event(Gdk.EventAny e){
-		close_logs();
-		return true;
-	}
-
-	// these are names for gtk_main_quit(), they are needed
-	// in order to remove signal handlers
-	private void my_gtk_main_quit_button(Gtk.Button b) { Gtk.main_quit(); }
-	private bool my_gtk_main_quit_event(Gdk.EventAny b) {
-		Gtk.main_quit();
-		return false;
 	}
 
 	// pause/unpause the program
@@ -840,7 +800,7 @@ class smdApplet {
 
     private bool is_smd_loop_configured() {
 		bool rc = GLib.FileUtils.test(SMD_LOOP_CFG,GLib.FileTest.EXISTS);
-		Gtk.Label l = builder.get_object("lErrLoop") as Gtk.Label;
+		var l = builder.get_object("bErrLoop") as Gtk.Box;
 		if (!rc) l.show();
 		else l.hide();
 		return rc;
@@ -848,7 +808,7 @@ class smdApplet {
 
     private bool is_smd_pushpull_configured() {
 		bool rc = GLib.FileUtils.test(SMD_PP_DEF_CFG,GLib.FileTest.EXISTS);
-		Gtk.Label l = builder.get_object("lErrPushPull") as Gtk.Label;
+		var l = builder.get_object("bErrPushPull") as Gtk.Box;
 		if (!rc) l.show();
 		else l.hide();
 		return rc;
@@ -869,30 +829,67 @@ class smdApplet {
 		try {
 			Dir d = GLib.Dir.open(SMD_LOGS_DIR);
 			string file;
-
-			((Gtk.ListStore)cblogs.get_model()).clear();
-			lognames.clear();
-
+			var new_lognames = new Gee.ArrayList<string>(str_equal);
+			
 			while ( (file = d.read_name()) != null ){
-				lognames.add(file);
-				cblogs.append_text(file);
+				new_lognames.add(file);
 			}
+
+			if (!new_lognames.contains_all(lognames) ||
+                !lognames.contains_all(new_lognames)) {
+
+				((Gtk.ListStore)cblogs.get_model()).clear();
+				lognames.clear();
+
+				foreach (string f in new_lognames) {
+					lognames.add(f);
+					cblogs.append_text(f);
+				}
 	
-			if (lognames.size == 0) {
-				b.set_text("No logs in %s".printf(SMD_LOGS_DIR),-1);
-			} else {
-				cblogs.set_title("Choose log file");
-				cblogs.set_active(0);
+				if (lognames.size == 0) {
+					b.set_text("No logs in %s".printf(SMD_LOGS_DIR),-1);
+				} else {
+					cblogs.set_title("Choose log file");
+					cblogs.set_active(0);
+				}
 			}
 		} catch (GLib.FileError e) {
 			b.set_text("Unable to list directory %s".printf(SMD_LOGS_DIR),-1);
 		}
 	}
 
+	void update_logcontents() {
+		int selected = cblogs.get_active();
+		if (selected >= 0) {
+			string file = lognames.get(selected);
+			string content;
+			try {
+				if (GLib.FileUtils.get_contents(
+						SMD_LOGS_DIR+file,out content)){
+					var tv = builder.get_object("tvLog") as Gtk.TextView;
+					var b = tv.get_buffer();
+					Gtk.TextIter end_iter, start_iter;
+					b.get_end_iter(out end_iter);
+					b.get_start_iter(out start_iter);
+					if (content != b.get_text(start_iter,end_iter,false)) {
+						b.set_text(content,-1);
+						b.get_end_iter(out end_iter);
+						tv.scroll_to_iter(end_iter, 0.0, true, 0.0, 0.0);
+					}
+				} else {
+					stderr.printf("Unable to read %s\n",SMD_LOGS_DIR+file);
+				}
+			} catch (GLib.FileError e) { 
+					stderr.printf("Unable to read %s: %s\n",
+						SMD_LOGS_DIR+file, e.message);
+			}
+		}
+	}
+
 	// ====================== public methods ==============================
 
 	// starts the thread and the timeout handler
-	public void run() throws Exit { 
+	public void start() throws Exit { 
 
 		// the timout function that will eventually notify the user
 		GLib.Timeout.add(1000, eat_event);
@@ -915,9 +912,8 @@ class smdApplet {
 		// since if we passed --configure the icon has not
 		// to be shown
 		if ( config_wait_mode ) {
-			// this is an hack to avoid cluttering the bar
-			si.set_visible(false);
 			while ( Gtk.events_pending() ) Gtk.main_iteration();
+			si.set_visible(false);
 			// we wait a bit, hopefully the gnome bar will be drawn in the
 			// meanwhile
 			Posix.sleep(5);
@@ -928,28 +924,17 @@ class smdApplet {
 			while ( Gtk.events_pending() ) Gtk.main_iteration();
 			// we do the notification
 			notification = new Notify.Notification(
-				"Syncmaildir","Syncmaildir is not configured properly, "+
-				"click on the icon to configure it.","dialog-warning");
+				"Syncmaildir","Syncmaildir is not configured properly.",
+				"dialog-error");
 			notification.set_hint("transient",new Variant.boolean(true));
+			notification.add_action("configure","Configure now",((n,a) =>
+				{ si.activate(); }));
 			try { notification.show(); }
 			catch (GLib.Error e) { stderr.printf("%s\n",e.message); }
-		} else {
-			si.set_visible(!settings.get_boolean(key_icon));
 		}
 
-		Gtk.main(); 
+		base.run(); 
 		if (thread != null) thread.join();
-	}
-
-	// just displays the config win
-	public void configure() {
-		var close = builder.get_object("bClosePrefs") as Gtk.Button;
-		close.clicked.connect(my_gtk_main_quit_button);
-		win.delete_event.connect(my_gtk_main_quit_event);
-		win.show();	
-		Gtk.main(); 
-		close.clicked.disconnect(my_gtk_main_quit_button);
-		win.delete_event.disconnect(my_gtk_main_quit_event);
 	}
 
 } // class end
@@ -999,14 +984,7 @@ static int main(string[] args){
 	Gtk.init (ref args);
 	Notify.init("smd-applet");
 
-	bool config_only=false;
 	GLib.OptionEntry[] oe = {
-      GLib.OptionEntry () { 
-		long_name = "configure", short_name = 'c', 
-		flags = 0, arg = GLib.OptionArg.NONE,
-		arg_data = &config_only,
-		description = "show config window, don't really run the applet",
-		arg_description = null },
       GLib.OptionEntry () { 
 		long_name = "verbose", short_name = 'v',
 		flags = 0, arg = GLib.OptionArg.NONE,
@@ -1029,12 +1007,8 @@ static int main(string[] args){
 
 	// go!
 	try { 
-		var smd_applet = new smdApplet(config_only);
-    	if ( config_only ) {
-			smd_applet.configure();
-		} else {
-			smd_applet.run();
-		}
+		var smd_applet = new smdApplet();
+		smd_applet.start();
 	} catch (Exit e) { 
 		stderr.printf("abort: %s\n",e.message); 
 		return 1;
