@@ -6,3 +6,5 @@ version-1.2.5
 
   workaround: use %26 instead of & in the conf file.
 
+- COPY old TO new + DELETE old can be inefficient on some FS.  If old is
+  not neded by other commands, one should implement this with os.rename
