@@ -308,7 +308,10 @@ class smdApplet : Gtk.Application {
 		notebook = builder.get_object("nMain") as Gtk.Notebook;
 		update_loglist();
 		GLib.Timeout.add(2000,(() => {
-			update_loglist(); update_logcontents(); return true; }));
+			if (win.visible) {
+				update_loglist(); update_logcontents();
+			}
+			return true; }));
 
 		// status icon
 		si = new Gtk.StatusIcon.from_icon_name("mail-send-receive");
