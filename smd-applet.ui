@@ -1088,7 +1088,6 @@ Public License instead of this License.  But first, please read
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="border_width">5</property>
-        <property name="tab_pos">left</property>
         <child>
           <object class="GtkBox" id="box1">
             <property name="visible">True</property>
