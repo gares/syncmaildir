@@ -1140,6 +1140,7 @@ Public License instead of this License.  But first, please read
                   <object class="GtkSwitch" id="sSyncActive">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="active">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
