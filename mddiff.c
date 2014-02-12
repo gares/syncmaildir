@@ -191,6 +191,7 @@ STATIC int only_mkfifo;
 STATIC int n_excludes;
 STATIC char **excludes;
 STATIC int no_delete;
+STATIC int no_move;
 
 // ============================ helpers =====================================
 
@@ -514,6 +515,12 @@ STATIC void load_db(const char* dbname){
 		txtsha(mail(m)->bsha, tmpbuff_2),\
 		URLtxt(mail_name(n),tmpbuff_6))
 
+#define COMMAND_MOVE(m,n) \
+	fprintf(stdout, "MOVE %s %s %s TO %s\n", URLtxt(mail_name(m),tmpbuff_5),\
+		txtsha(mail(m)->hsha, tmpbuff_1),\
+		txtsha(mail(m)->bsha, tmpbuff_2),\
+		URLtxt(mail_name(n),tmpbuff_6))
+
 #define COMMAND_COPYBODY(m,n) \
 	fprintf(stdout, "COPYBODY %s %s TO %s %s\n",\
 		URLtxt(mail_name(m),tmpbuff_5),txtsha(mail(m)->bsha, tmpbuff_1),\
@@ -535,6 +542,46 @@ STATIC void load_db(const char* dbname){
 		txtsha(mail(m)->bsha,tmpbuff_2), \
 		txtsha(mail(n)->hsha,tmpbuff_3))
 
+STATIC int is_old_file_still_there(const char* file){
+	int fd;
+	struct stat sb;
+	mail_t alias, m;
+
+	m = alloc_mail();
+	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s",file);
+	set_mail_name(m,alloc_name());
+
+	fd = open_rdonly_noatime(mail_name(m));
+	if (fd == -1) {
+			goto err_alloc_cleanup;
+	}
+	if (fstat(fd, &sb) == -1) {
+			goto err_alloc_fd_cleanup;
+	}
+
+	alias = MAIL(g_hash_table_lookup(filename2mail,GPTR(m)));
+
+	if (alias != 0 && lastcheck >= sb.st_mtime) {
+		// we cache that it has been seen already
+		mail(alias)->seen=SEEN;
+
+		close(fd);
+		dealloc_name();
+		dealloc_mail();
+
+		return 1;
+	}
+
+err_alloc_fd_cleanup:
+	close(fd);
+
+err_alloc_cleanup:
+	dealloc_name();
+	dealloc_mail();
+
+	return 0;
+}
+
 // the heart
 STATIC void analyze_file(const char* dir,const char* file) {    
 	unsigned char *addr,*next;
@@ -543,7 +590,7 @@ STATIC void analyze_file(const char* dir,const char* file) {
 	mail_t alias, m;
 	GChecksum* ctx;
 	gsize ctx_len;
-	GSList *bodyaliases = NULL;
+	GSList *bodyaliases = NULL, *bodyaliases_orig = NULL;
 
 	m = alloc_mail();
 	snprintf(next_name(), MAX_EMAIL_NAME_LEN,"%s/%s",dir,file);
@@ -626,7 +673,7 @@ STATIC void analyze_file(const char* dir,const char* file) {
 		}
 	}
 
-	bodyaliases = g_hash_table_lookup(bsha2mail,GPTR(m));
+	bodyaliases_orig = bodyaliases = g_hash_table_lookup(bsha2mail,GPTR(m));
 
 	// some messages with the same body are there
 	if (bodyaliases != NULL) {
@@ -635,9 +682,28 @@ STATIC void analyze_file(const char* dir,const char* file) {
 			mail_t bodyalias = MAIL(bodyaliases->data);
 			if (hsha_equal(GPTR(bodyalias), GPTR(m))) {
 				// this one has the same header too
-				COMMAND_COPY(bodyalias,m);
-				PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
-				mail(m)->seen=SEEN;
+
+				// absurd, see the else case
+				g_assert(mail(bodyalias)->seen != MOVED || no_move);
+				if (mail(bodyalias)->seen == SEEN ||
+					is_old_file_still_there(mail_name(bodyalias)) ||
+					no_move) {
+					// a real copy
+					COMMAND_COPY(bodyalias,m);
+					PROMOTE(mail(bodyalias)->seen, NOT_SEEN, MOVED);
+					mail(m)->seen=SEEN;
+				} else {
+					// a real move
+					COMMAND_MOVE(bodyalias,m);
+
+					// the new file is the source for such body so that if the
+					// file was copied twice and then removed we generate a
+					// MOVE x -> y and a COPY y -> z
+					g_hash_table_insert(bsha2mail,GPTR(m),
+						g_slist_prepend(bodyaliases_orig,GPTR(m)));
+					mail(bodyalias)->seen=MOVED;
+					mail(m)->seen=SEEN;
+				}
 				return;
 			}
 		}
@@ -742,10 +808,11 @@ STATIC void generate_deletions(){
 	size_t m;
 
 	for(m=1; m < mailno; m++){
-		if (!no_delete && (mail(m)->seen == NOT_SEEN || mail(m)->seen == MOVED))
+		if (!no_delete &&
+			(mail(m)->seen == NOT_SEEN || (no_move && mail(m)->seen == MOVED)))
 			// normally moved or removed mails are deleted
 			COMMAND_DELETE(m);
-		else if (no_delete && mail(m)->seen == MOVED)
+		else if (no_delete && no_move && mail(m)->seen == MOVED)
 			// if --no-delete only moved mails should be deleted
 			COMMAND_DELETE(m);
 		else 
@@ -854,6 +921,7 @@ STATIC void extra_sha1sum_file(const char* file) {
 #define OPT_SHA1SUM    303
 #define OPT_MKDIRP     304
 #define OPT_MKFIFO     305
+#define OPT_NOMOVE     306
 
 // command line options
 STATIC struct option long_options[] = {
@@ -868,6 +936,7 @@ STATIC struct option long_options[] = {
 	{"verbose"   , no_argument      , NULL, 'v'},
 	{"dry-run"   , no_argument      , NULL, 'd'},
 	{"no-delete" , no_argument      , NULL, 'n'},
+	{"no-move"   , no_argument      , NULL, OPT_NOMOVE},
 	{"help"      , no_argument      , NULL, 'h'},
 	{NULL        , no_argument      , NULL, 0},
 };
@@ -969,6 +1038,9 @@ int main(int argc, char *argv[]) {
 			break;
 			case OPT_MKFIFO:
 				only_mkfifo = 1;
+			break;
+			case OPT_NOMOVE:
+				no_move = 1;
 			break;
 			case 'v':
 				verbose = 1;

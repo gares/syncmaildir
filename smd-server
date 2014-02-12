@@ -19,6 +19,7 @@ function main()
 	-- argument parsing
 	local exclude = {}
 	local no_delete = false
+	local no_move = false
 	local just_mddiff = false
 	local stop_after_diff = false
 	local override_db = nil
@@ -34,6 +35,9 @@ function main()
 			table.remove(arg,1)
 		elseif arg[1] == '-n' or arg[1] == '--no-delete' then
 			no_delete = true
+			table.remove(arg,1)
+		elseif arg[1] == '--no-move' then
+			no_move = true
 			table.remove(arg,1)
 		elseif arg[1] == '--exclude' then
 			exclude[#exclude + 1] = arg[1]
@@ -94,11 +98,14 @@ function main()
 	local mailbox_opt = table.concat(arg,' ')
 	local no_delete_opt = ''
 	if no_delete then no_delete_opt = '-n' end
+	local no_move_opt = ''
+	if no_move then no_move_opt = '--no-move' end
 	local dry_opt = ''
 	if dry_run() then dry_opt = '-d' end
 	local exclude_opt = table.concat(exclude, ' ')
 	local mddiff = MDDIFF..' '..dry_opt..' '..database_opt..' '..
-		exclude_opt..' '..no_delete_opt..' '..mailbox_opt
+		exclude_opt..' '..no_delete_opt..' '..no_move_opt..' '..
+		mailbox_opt
 	
 	-- to call mddiff from another tool with the same cmdline
 	if just_mddiff then

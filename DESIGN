@@ -209,8 +209,9 @@ and bsha to the sha1 sum of its body.
 - `ADD name hsha bsha` is generated whenever a new mail message is found,
   and there is no mail message with a different name but the same body.
 - `COPY name hsha bsha TO newname` is generated if a new message is found,
-  that the mailbox contains a copy of it. In case mail has been moved,
-  this message is followed by a `DELETE` command.
+  and the mailbox contains a copy of it.
+- `MOVE name hsha bsha TO newname` is generated if a new message is found,
+  and the mailbox does not contain a copy of it but it used do.
 - `COPYBODY name bsha TO newname newhsha` is generated when a new file is 
   created, and that file has the same body of an already existent file. 
   In case mail has been moved, this message is followed by a `DELETE` command.

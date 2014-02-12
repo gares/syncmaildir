@@ -3,11 +3,14 @@
 
 msync 1
 
-mv Mail/cur/`ls Mail/cur/ | head -n 1` Mail/cur/moved_here
+M=Mail/cur/`ls Mail/cur/ | head -n 1`
+
+mv $M Mail/cur/copied_here
+mv target/$M target/Mail/cur/copied_here
 
 msync 2
 
-test_eq Mail target/Mail 
+test_eq target/Mail Mail
 
 X=`grep '^MOVE ' log.s2c | wc -l`
 assert $X 1 "missing MOVE in s2c"

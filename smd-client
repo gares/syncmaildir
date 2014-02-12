@@ -265,7 +265,8 @@ function execute_copy(name_src, hsha, bsha, name_tgt)
 	local ex_src, hsha_src, bsha_src = exists_and_sha(name_src)
 	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
 	if ex_src and ex_tgt then
-		if hsha_src == hsha_tgt and bsha_src == bsha_tgt then
+		if hsha_src == hsha_tgt and bsha_src == bsha_tgt and
+		   hsha_src == hsha and bsha_src == bsha then
 			return (trace(true)) -- skip copy, already there
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
@@ -292,7 +293,7 @@ function execute_copy(name_src, hsha, bsha, name_tgt)
 				else
 					ok = 0 -- we do not copy for real (--dry-run)
 				end
-				if ok == 0 then 
+				if ok == 0 then
 					return (trace(true)) -- copy successful
 				else 
 					log_error('Failed to copy '..name_src..' to '..name_tgt..
@@ -303,7 +304,7 @@ function execute_copy(name_src, hsha, bsha, name_tgt)
 					return (trace(false)) -- copy failed (cp command failed)
 				end
 		else
-				-- sub-optimal, we may reuse body or header 
+				-- sub-optimal, we may reuse body or header
 				return (get_full_email(name_tgt,hsha,bsha))
 		end
 	elseif not ex_src and ex_tgt then
@@ -311,6 +312,84 @@ function execute_copy(name_src, hsha, bsha, name_tgt)
 			return (trace(true)) -- skip copy, already there (only the copy)
 		else
 			log_error('Failed to copy '..name_src..' to '..name_tgt)
+			log_error('The source file has been locally removed.')
+			log_error('The destination file already exists but its '..
+				'content differs.')
+			log_error('To fix this problem you have two options:')
+			log_error('- rename '..name_tgt..' by hand so that '..
+				name_src..' can be')
+			log_error('  copied without replacing it.')
+			log_error('  Executing `cd; mv -n '..quote(name_tgt)..' '..
+				quote(tmp_for(name_tgt,false))..'` should work.')
+			log_error('- run @@INVERSECOMMAND@@ so that your changes to '..
+				name_tgt..' are')
+			log_error('  propagated to the other mailbox')
+
+			log_tags("copy-message","concurrent-mailbox-edit",true,
+				mk_act('mv', name_tgt),
+				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
+			return (trace(false)) -- skip copy, already there and !=, no source
+		end
+	else
+		return (get_full_email(name_tgt,hsha,bsha))
+	end
+end
+
+function execute_move(name_src, hsha, bsha, name_tgt)
+	local ex_src, hsha_src, bsha_src = exists_and_sha(name_src)
+	local ex_tgt, hsha_tgt, bsha_tgt = exists_and_sha(name_tgt)
+	if ex_src and ex_tgt then
+		if hsha_tgt == hsha and bsha_tgt == bsha then
+			-- the target is already in place
+			if hsha_src == hsha and bsha_src == bsha then
+				return (execute_delete(name_src,hsha,bsha))
+			else
+				return (trace(true)) -- the source has changes, nothing to do
+			end
+		else
+			log_error('Failed to move '..name_src..' to '..name_tgt)
+			log_error('The destination already exists but its content differs.')
+			log_error('To fix this problem you have two options:')
+			log_error('- rename '..name_tgt..' by hand so that '..name_src)
+			log_error('  can be copied without replacing it.')
+			log_error('  Executing `cd; mv -n '..quote(name_tgt)..' '..
+				quote(tmp_for(name_tgt,false))..'` should work.')
+			log_error('- run @@INVERSECOMMAND@@ so that your changes to '..
+				name_tgt)
+			log_error('  are propagated to the other mailbox')
+
+			log_tags("move-message","concurrent-mailbox-edit",true,
+				mk_act('mv',name_tgt),
+				"run(@@INVERSECOMMAND@@ @@ENDPOINT@@)")
+			return (trace(false)) -- fail move, already there but !=
+		end
+	elseif ex_src and not ex_tgt then
+		if hsha_src == hsha and bsha_src == bsha then
+			local ok, err
+			if not dry_run() then
+				ok, err = os.rename(name_src,name_tgt)
+			else
+				ok = true -- we do not move for real (--dry-run)
+			end
+			if ok then
+				return (trace(true)) -- move successful
+			else
+				log_error('Failed to move '..name_src..' to '..name_tgt..
+					' : '..(err or 'unknown error'))
+
+				log_tags("move-message","bad-directory-permission",true,
+					mk_act('display', name_tgt))
+				return (trace(false)) -- copy failed (cp command failed)
+			end
+		else
+			-- sub-optimal, we may reuse body or header
+			return (get_full_email(name_tgt,hsha,bsha))
+		end
+	elseif not ex_src and ex_tgt then
+		if hsha == hsha_tgt and bsha == bsha_tgt then
+			return (trace(true)) -- skip move, already there (and no source)
+		else
+			log_error('Failed to move '..name_src..' to '..name_tgt)
 			log_error('The source file has been locally removed.')
 			log_error('The destination file already exists but its '..
 				'content differs.')
@@ -367,7 +446,7 @@ function execute_copybody(name, bsha, newname, hsha)
 			else
 				ok = 0 -- we do not copy the body for merging (--dry-run)
 			end
-			if ok == 0 then 
+			if ok == 0 then
 				ok = get_header_and_merge(newname,hsha)
 				if ok then
 					return (trace(true)) -- copybody OK
@@ -442,21 +521,21 @@ end
 function execute(cmd)
 	local opcode = parse(cmd, '^(%S+)')
 
-	if opcode == "ADD" then 
+	if opcode == "ADD" then
 		local name, hsha, bsha = parse(cmd, '^ADD (%S+) (%S+) (%S+)$')
 		name = url_decode(name)
 		mkdir_p(name)
 		return (execute_add(name, hsha, bsha))
 	end
 
-	if opcode == "DELETE" then 
+	if opcode == "DELETE" then
 		local name, hsha, bsha = parse(cmd, '^DELETE (%S+) (%S+) (%S+)$')
 		name = url_decode(name)
 		mkdir_p(name)
 		return (execute_delete(name, hsha, bsha))
 	end
 
-	if opcode == "COPY" then 
+	if opcode == "COPY" then
 		local name_src, hsha, bsha, name_tgt = 
 			parse(cmd, '^COPY (%S+) (%S+) (%S+) TO (%S+)$')
 		name_src = url_decode(name_src)
@@ -464,6 +543,16 @@ function execute(cmd)
 		mkdir_p(name_src)
 		mkdir_p(name_tgt)
 		return (execute_copy(name_src, hsha, bsha, name_tgt))
+	end
+
+	if opcode == "MOVE" then
+		local name_src, hsha, bsha, name_tgt =
+			parse(cmd, '^MOVE (%S+) (%S+) (%S+) TO (%S+)$')
+		name_src = url_decode(name_src)
+		name_tgt = url_decode(name_tgt)
+		mkdir_p(name_src)
+		mkdir_p(name_tgt)
+		return (execute_move(name_src, hsha, bsha, name_tgt))
 	end
 	
 	if opcode == "REPLACEHEADER" then
@@ -672,7 +761,7 @@ function main()
 	statistics.xdelta = receive(io.stdin, xdelta)
 
 	local rc
-	if not dry_run() and apply_xdelta then 
+	if not dry_run() and apply_xdelta then
 		rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
 	else
 		rc = 0 -- the xdelta transmitted with --dry-run is dummy

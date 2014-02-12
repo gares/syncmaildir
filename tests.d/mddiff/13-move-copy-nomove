@@ -1,0 +1,26 @@
+#!/bin/sh
+
+mdiff Mail
+assert $? 0 "mdiff failed"
+
+mv db.txt.new db.txt
+mv db.txt.mtime.new db.txt.mtime
+
+ls Mail/cur | head -n 2 > mails
+exec 7<mails
+read MAIL1 <&7
+read MAIL2 <&7
+exec 7<&-
+
+cp Mail/cur/$MAIL2 Mail/cur/bar0
+mv Mail/cur/$MAIL2 Mail/cur/bar1
+
+mdiff --no-move Mail
+N=`cat log.mddiff | wc -l`
+assert $N 3 "too many commands: $N"
+N=`cat log.mddiff | grep ^DELETE | wc -l`
+assert $N 1 "no DELETE command"
+N=`cat log.mddiff | grep ^COPY | grep Mail/cur/bar1 | wc -l`
+assert $N 1 "missing COPY command"
+N=`cat log.mddiff | grep ^MOVE | wc -l`
+assert $N 0 "wrong number of MOVE command: $N"

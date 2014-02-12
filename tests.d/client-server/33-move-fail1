@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+msync 1
+
+M=Mail/cur/`ls Mail/cur/ | head -n 1`
+
+mv $M Mail/cur/copied_here
+echo -e 'foo\n\nbar' > target/Mail/cur/copied_here
+
+msync 2
+
+test_eq target/$M Mail/cur/copied_here
+
+X=`grep '^MOVE ' log.s2c | wc -l`
+assert $X 1 "missing MOVE in s2c"
+
+X=`grep '^COMMIT$' log.c2s | wc -l`
+assert $X 0 "missing COMMIT in c2s"

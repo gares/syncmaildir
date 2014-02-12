@@ -17,13 +17,15 @@ mv Mail/cur/$MAIL2 Mail/cur/foo
 
 mdiff Mail
 N=`cat log.mddiff | wc -l`
-assert $N 3 "too many commands: $N"
-N=`cat log.mddiff | grep ^DELETE | wc -l`
-assert $N 2 "too few DELETE commands: $N"
+assert $N 2 "too many commands: $N"
+N=`cat log.mddiff | grep ^DELETE | grep $MAIL1 | wc -l`
+assert $N 1 "no DELETE command for $MAIL1"
 N=`cat log.mddiff | grep ^COPY | wc -l`
-assert $N 1 "not 1 COPY command: $N"
+assert $N 0 "COPY command"
+N=`cat log.mddiff | grep ^MOVE | grep $MAIL2 | wc -l`
+assert $N 1 "no MOVE command for $MAIL2"
 mdiff -n Mail
 N=`cat log.mddiff | grep ^DELETE | wc -l`
-assert $N 1 "too many DELETE commands: $N"
-N=`cat log.mddiff | grep ^DELETE | grep $MAIL1 | wc -l`
-assert $N 0 "deletes aven if -n"
+assert $N 0 "a DELETE command: $N"
+N=`cat log.mddiff | grep ^MOVE | grep $MAIL2 | wc -l`
+assert $N 1 "no MOVE command for $MAIL2"

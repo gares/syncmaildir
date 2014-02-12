@@ -1,0 +1,18 @@
+#!/bin/bash
+
+
+msync 1
+
+M=Mail/cur/`ls Mail/cur/ | head -n 1`
+
+rm $M
+
+msync 2
+
+test_eq target/Mail Mail
+
+X=`grep '^DELETE ' log.s2c | wc -l`
+assert $X 1 "missing DELETE in s2c"
+
+X=`grep '^COMMIT$' log.c2s | wc -l`
+assert $X 1 "missing COMMIT in c2s"
