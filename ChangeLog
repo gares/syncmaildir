@@ -1,5 +1,10 @@
-../../2013 - minor fix release - version 1.2.6
+../../2014 - minor feature improvement - version 1.2.6
+	* mddiff:
+	  - Emit MOVE command when appropriate.  This optimization and its
+	    implementation was desined by Jesus Cea to make smd ZFS friendly
+	  - --no-move option for retrocompatibility with smd-uniform-names
 	* smd-applet:
+	  - Redesign the applet with gnome3 and gnome-shell in mind
 	  - Do not use Gtk.HBox (deprecated in favour of Gtk.Grid)
 	  - Switch from GConf to Gsettings
 	  - Compile with valac 0.20
