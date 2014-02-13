@@ -1,13 +1,15 @@
-../../2014 - minor feature improvement - version 1.2.6
-	* mddiff:
+../02/2014 - feature improvement and gui redesign - version 1.2.6
+	* mddiff, smd-client, DESIGN:
 	  - Emit MOVE command when appropriate.  This optimization and its
 	    implementation was desined by Jesus Cea to make smd ZFS friendly
 	  - --no-move option for retrocompatibility with smd-uniform-names
+	* test.d/:
+	  - new tests for the MOVE command
 	* smd-applet:
-	  - Redesign the applet with gnome3 and gnome-shell in mind
+	  - Redesign the applet with GNOME3 in mind
 	  - Do not use Gtk.HBox (deprecated in favour of Gtk.Grid)
 	  - Switch from GConf to Gsettings
-	  - Compile with valac 0.20
+	  - Compile with valac 0.22
 	* smd-common, README:
 	  - Suggest to use "User" and not "Username" for ssh configuration.
 	    Thanks Kim Christensen for spotting that.
