@@ -4,7 +4,7 @@
 --
 -- common code for smd-client/server
 
-local PROTOCOL_VERSION="1.1"
+local PROTOCOL_VERSION="1.2"
 
 local verbose = false
 local dryrun = false
