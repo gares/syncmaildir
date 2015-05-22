@@ -344,7 +344,7 @@ class smdApplet : Gtk.Application {
 		});
 
 		// notification system
-		unowned List<string> l = Notify.get_server_caps();
+		List<string> l = Notify.get_server_caps();
 		notification_server_has_persistence = (0 <= l.index("persistence")); 
 
 		// error mode data
@@ -419,7 +419,8 @@ class smdApplet : Gtk.Application {
 		string permissions = null;
 		string mail_name = null;
 		string mail_body = null;
-		var commands = new Gee.ArrayList<string>(str_equal);
+		var commands = new Gee.ArrayList<string>(
+			Gee.Functions.get_equal_func_for(typeof(string)));
 
 		if (has_actions) {
 			string acts = i_act.fetch(1);
@@ -832,7 +833,8 @@ class smdApplet : Gtk.Application {
 		try {
 			Dir d = GLib.Dir.open(SMD_LOGS_DIR);
 			string file;
-			var new_lognames = new Gee.ArrayList<string>(str_equal);
+			var new_lognames = new Gee.ArrayList<string>(
+				Gee.Functions.get_equal_func_for(typeof(string)));
 			
 			while ( (file = d.read_name()) != null ){
 				new_lognames.add(file);

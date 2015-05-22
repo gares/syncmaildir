@@ -1,3 +1,8 @@
+22/05/2015 - update vala code to 0.26 - version 1.2.6.1
+	* smd-applet:
+	  - compile with valac 0.26
+	  - use libgee ABI 2 (gee-0.8.pc)
+
 14/03/2014 - feature improvement and gui redesign - version 1.2.6
 	* mddiff, smd-client, DESIGN:
 	  - Emit MOVE command when appropriate.  This optimization and its
