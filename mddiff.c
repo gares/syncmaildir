@@ -843,11 +843,19 @@ STATIC void extra_sha_file(const char* file) {
 	}
 
 	addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (addr == MAP_FAILED) ERROR(mmap, "unable to load '%s'\n",file);
+	if (addr == MAP_FAILED) {
+		if (sb.st_size == 0) {
+			next = addr;
+		} else {
+			ERROR(mmap, "unable to load '%s'\n",file);
+		}
+	} else {
+		next = find_endof_header(addr, sb.st_size);
 
-	next = find_endof_header(addr, sb.st_size);
+		if ( next == NULL )
+				ERROR(parse, "malformed file '%s', no header\n",file);
+	}
 
-	if ( next == NULL ) ERROR(parse, "malformed file '%s', no header\n",file);
 
 	// calculate sha1
 	fprintf(stdout, "%s ", 
