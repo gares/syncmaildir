@@ -1,3 +1,11 @@
+../11/2015 - minor bugfix - version 1.2.6.2
+	* smd-common:
+	  - signal failure in creating a temp file (disk full?)
+	* mddiff:
+	  - when acting as a sha1 slave, be resilient to empty files
+	* smd-common:
+	  - consider an empty file as non-existing (no conflicts)
+
 22/05/2015 - update vala code to 0.26 - version 1.2.6.1
 	* smd-applet:
 	  - compile with valac 0.26
