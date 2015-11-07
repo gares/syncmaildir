@@ -566,10 +566,16 @@ function exists(name)
 	end
 end
 
+local empty_file_sha = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+
 function exists_and_sha(name)
 	if exists(name) then
 		local h, b = sha_file(name)
-		return true, h, b
+		if h == empty_file_sha and b == empty_file_sha then
+			return false
+		else
+			return true, h, b
+		end
 	else
 		return false
 	end
