@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.2.6.1
+VERSION=1.2.6.2
 COPYRIGHT=© 2008-2013 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
@@ -29,7 +29,7 @@ PKGS_VALA=glib-2.0 $(PKG_GTK) libnotify gconf-2.0 gee-0.8 gio-2.0
 TARGET_GLIB=2.32
 PKGCONFIG_CHECK_GLIB_VERSION=--atleast-version=$(TARGET_GLIB) glib-2.0
 PKGCONFIG_GLIB_VERSION=--modversion glib-2.0
-VALAC=valac-0.26
+VALAC=valac-0.30
 H=@
 
 # ----------------------------------------------------------------------------
