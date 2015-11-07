@@ -26,6 +26,10 @@ atexit_kill() {
 
 gc_mktemp() {
 	local tmp=`mktemp -q /tmp/smd.XXXXXXXXXX`
+	if [ -z "$tmp" ]; then
+		echo "Failed to create temp file in /tmp.  Is the disk full?"
+		exit 1
+	fi
 	atexit_rm $tmp
 	RC="$tmp"
 }
