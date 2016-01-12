@@ -720,13 +720,13 @@ function main()
 	log_progress('Phase 2: synchronization')
 	if firsttime then
 		log_progress([[
-		 This phase propagates the chages occurred to the remote mailbox to
+		 This phase propagates the changes occurred to the remote mailbox to
 		 the local one.
 		 In the first run of smd-pull all remote emails are considered as
 		 new, and if not already present in the local mailbox, they are
 		 transferred over the ssh link.
 		 It is thus recommended to run the first synchronization on mailboxes
-		 that are resonably similar (i.e. not on an empty local mailbox).]])
+		 that are reasonably similar (i.e. not on an empty local mailbox).]])
 	end
 	for i,cmd in ipairs(commands) do
 		local rc = execute(cmd)
@@ -751,7 +751,7 @@ function main()
 	if firsttime then
 		log_progress([[
 		 This last phase concludes the agreement between the remote and the
-		 local mailbox. In particular the s $tatus of the mailbox is sent
+		 local mailbox. In particular the status of the mailbox is sent
 		 from the remote host and stored locally.
 		 The status file size is circa 7M (3M compressed) for a 1G mailbox
 		 and it needs to be transferred completely only the first time.]])
