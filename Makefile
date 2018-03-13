@@ -3,7 +3,7 @@
 # should care about them
 
 PROJECTNAME=syncmaildir
-VERSION=1.2.6.2
+VERSION=1.2.6.3
 COPYRIGHT=© 2008-2013 Enrico Tassi <gares@fettunta.org>
 BINARIES=mddiff smd-applet
 MANPAGES1=mddiff.1 smd-server.1 smd-client.1 \
@@ -202,7 +202,7 @@ install-misc: $(MANPAGES1) $(MANPAGES5)
 	cp $(MANPAGES5) $(DESTDIR)/$(PREFIX)/share/man/man5
 	$(call mkdir-p,share/doc/syncmaildir)
 	cp -r sample-hooks/ $(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
-	$(call install,README,share/doc/syncmaildir)
+	$(call install,README.md,share/doc/syncmaildir)
 
 clean: 
 	$H rm -f $(BINARIES) $(MANPAGES1) $(MANPAGES5)
@@ -225,7 +225,7 @@ dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c
 
 $(HTML): check-w-markdown
 	cat misc/head.html > index.html
-	markdown README >> index.html
+	markdown README.md >> index.html
 	cat misc/tail.html >> index.html
 	cat misc/head.html > design.html
 	markdown DESIGN >> design.html
@@ -248,7 +248,7 @@ upload-website: $(HTML) $(MANPAGES1:%=%.html) $(MANPAGES5:%=%.html)
 upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
 	scp $(PROJECTNAME)-$(VERSION).tar.gz \
 	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
-	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/README
+	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/README.md
 
 stats:
 	T=`git tag | sort -V | head -n 1`; \

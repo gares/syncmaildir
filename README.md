@@ -3,7 +3,7 @@ SYNC MAIL DIR
 
 Sync Mail Dir (`smd`) is a set of tools to synchronize a pair of mailboxes
 in Maildir format.  It is Free Software, released under the terms of GPLv3,
-Copyright © 2008-2012 Enrico Tassi.
+Copyright © 2008-2018 Enrico Tassi.
 
 It differs from other solutions in terms of performances and lower
 installation requirements.  The widespread solution IMAP-server plus
@@ -31,7 +31,7 @@ In the most common scenario, the server is our mail server, while the
 client is our laptop.
 
 The directory `~/.smd/` contains the configuration file(s), some `fifo` needed
-to short-circuit the softwares running on the client and on the server, and
+to short-circuit the software running on the client and on the server, and
 a cache file (called db-file from now on) that represents the status of the
 mailbox last time we successfully pushed.  The configuration file is needed
 only on the client host (the one that will run `smd-pull` and `smd-push`).
@@ -441,6 +441,5 @@ Author
 The software is distributed as-is, with no warranties, so if your mailbox
 is irremediably lost due to Sync Mail Dir, you will get nothing back, but
 you can complain with me, of course.  If you find the software useful,
-an happy-user report is also welcome.  For patches, bug-reports, etc. refer to
-Enrico Tassi, login gares on fettunta dot org.
+an happy-user report is also welcome.
 
