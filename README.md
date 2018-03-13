@@ -41,57 +41,57 @@ implemented in low level languages (to achieve decent performances) and
 high level tools are written in scripting languages (to achieve better
 flexibility).
 
-- [`mddiff`](mddiff.1.html) 
+- [`mddiff`](mddiff.1.txt) 
   is a small and hopefully efficient C program that given a
   db-file (a snapshot of a previous mailbox status) generates a set of
   actions (a diff) a client should perform to synchronize its local mailbox
   copy.  It is a low level tool, not meant to be used directly by the user.
-- [`smd-server`](smd-server.1.html)
+- [`smd-server`](smd-server.1.txt)
   a simple script that calls `mddiff` to compute the diff,
   sends it to the client and then listens for client requests like getting a
   mail body or header.  Even if this tool is simple to run, redirecting its
   input and output to `smd-client` over a network may not be straightforward,
   thus users should not call it directly.
-- [`smd-client`](smd-client.1.html) 
+- [`smd-client`](smd-client.1.txt) 
   a quite complex script applying a diff locally, eventually
   requesting data to the server.  In case the diff cannot be applied
   cleanly, it outputs an error message that higher level tools should display
   to the user.  As `smd-server` it is a quite high level tool, but should not
   be called directly by the average user.
-- [`smd-pull`](smd-pull.1.html) 
+- [`smd-pull`](smd-pull.1.txt) 
   thanks to ssh, it executes `smd-server` on the server host and
   `smd-client` on the client host.  This allows to pull remote changes and
   apply them locally.  The remote mailbox is left untouched.  This tool is
   meant to be called by the user.
-- [`smd-push`](smd-push.1.html) 
+- [`smd-push`](smd-push.1.txt) 
   thanks to ssh, it executes `smd-client` on the server host and
   `smd-serer` on the client host.  This allows to push local changes and to
   apply them on the remote host.  The local mailbox is left untouched.  This
   tool is meant to be called by the user.
-- [`smd-translate`](smd-translate.1.html) 
+- [`smd-translate`](smd-translate.1.txt) 
   handles common folder renaming scenarios. The tool 
   is meant to be used as a translator program in the configuration file 
   of `smd-pull` and `smd-push`.
-- [`smd-check-conf`](smd-check-conf.1.html) 
+- [`smd-check-conf`](smd-check-conf.1.txt) 
   performs a quick check that a setup, especially when it involves
   some folders renaming, actually works as expected. This tool is meant to
   be manually called by the user to check a given configuration file.
-- [`smd-restricted-shell`](smd-restricted-shell.1.html)
+- [`smd-restricted-shell`](smd-restricted-shell.1.txt)
   only meant to be used in conjunction with an SSH key and specifically in
   the remote OpenSSH's authorized_keys file to restrict the commands allowed.
-- [`smd-uniform-names`](smd-uniform-names.1.html)
+- [`smd-uniform-names`](smd-uniform-names.1.txt)
   meant to be used before the first synchronization, when the content of
   the local and remote mailboxes is similar, but mails are named differently.
   This is often the case when migrating from offlineimap, that encodes
   some metadata in the local file names.
-- [`smd-loop`](smd-loop.1.html) 
+- [`smd-loop`](smd-loop.1.txt) 
   runs runs smd-push and smd-pull at regular intervals as defined
   by the user in a configuration file, in the style of a crontab, but
   catches recoverable errors (like a, non recurrent, network problem),
   bailing out only in cases where human intervention is needed.  This is
   the utility you may want to run if you are using a textual environment or
   a graphical one not based on GNOME.
-- [`smd-applet`](smd-applet.1.html) 
+- [`smd-applet`](smd-applet.1.txt) 
   is an applet for the GNOME notification area, that runs
   `smd-loop`, eventually notifying the user for critical events and allowing
   him to solve them by clicking on buttons instead of running commands from
@@ -114,7 +114,7 @@ higher level tools like `smd-loop` or `smd-applet`.
 Both tools read a configuration file in `~/.smd/config.name`, that is a simple
 shell script sourced by both when called with argument `name`.  If no argument
 is given, they source `~/.smd/config.default`. 
-This file defines the following variables (see the [`smd-config`](smd-config.5.html) manpage for a complete documentation):
+This file defines the following variables (see the [`smd-config`](smd-config.5.txt) manpage for a complete documentation):
 
 - `SERVERNAME` is a valid alias for ssh.  It should be defined in
   your `~/.ssh/config`, with compression enabled.  For example:
@@ -257,7 +257,7 @@ Hooks receive four arguments in the following order:
 
 Hooks should not fail, if they do so then `smd-push/pull` will fail too.
 Sample hooks are available in the source tarball under `sample-hooks/`.
-Some documentation about [available hooks](hooks.html) is also present.
+Some documentation about [available hooks](sample-hooks/) is also present.
 
 ### folder renaming
 
@@ -273,7 +273,7 @@ programs must be defined:
 
 To avoid common mistakes in writing translators, some recurrent renaming
 scenarios are handled by the `smd-translate` utility. Please refer to
-[`smd-translate`](smd-translate.1.html) manpage. What following describes 
+[`smd-translate`](smd-translate.1.txt) manpage. What following describes 
 how to write a translator by hand, that may be necessary is your translation
 schema is no supported by `smd-translate`.
 
@@ -426,14 +426,14 @@ Runtime dependencies are: `ssh`, `xdelta`, `lua5.1` and `bash`.
 Design
 ======
 
-The design of the software is detailed in the [design document](design.html).
+The design of the software is detailed in the [design document](DESIGN.md).
 If you are interested in hacking `smd`, it may be helpful.
 
 Download
 ========
 
 The software can be download from the Source Forge
-[download page](http://sourceforge.net/project/showfiles.php?group_id=259152)
+[download page](https://github.com/gares/syncmaildir/releases)
 
 Author
 ======
