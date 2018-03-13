@@ -1,3 +1,9 @@
+../../../ - minor update - version 1.2.6.3
+	* repo:
+	  - switch to github
+	* README:
+	  - Switch to markdown
+
 18/11/2015 - minor bugfix - version 1.2.6.2
 	* smd-common:
 	  - signal failure in creating a temp file (disk full?)
