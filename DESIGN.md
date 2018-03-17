@@ -110,11 +110,22 @@ The protocol
 The protocol is line oriented for commands, chunk oriented for data
 transmission.
 
-1. Both client and server send the following two messages, and check that
-   they are equal to the ones sent by the other endpoint
+1. Both client and server send the following message, and check that
+   it is equal to the one sent by the other endpoint
 
         protocol NUMBER
-        dbfile SHA1
+
+   Then both client and server send the following message, where the
+   first SHA1 is the sha1 of the dbfile, while the second one is
+   the SHA1 of the "dbfile.new".
+
+        dbfile SHA1 SHA1
+
+   If "dbfile.new" is absent, then "-" is sent in place of a SHA1.
+
+   The "dbfile.new" is present only if the protocol is interrupted between
+   steps 4 and 5. Client and server pick the rightmost SHA1 the have in common
+   and rename the corresponding file "dbfile".   
 
    This part of the protocol is called handshake
 

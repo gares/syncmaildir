@@ -4,7 +4,7 @@
 --
 -- common code for smd-client/server
 
-local PROTOCOL_VERSION="1.2"
+local PROTOCOL_VERSION="1.3"
 
 local verbose = false
 local dryrun = false
@@ -302,7 +302,7 @@ function receive(inf,outfile)
 	return total
 end
 
-function handshake(dbfile)
+function handshake(dbfile,newdb)
 	-- send the protocol version and the dbfile sha1 sum
 	io.write('protocol ',PROTOCOL_VERSION,'\n')
 
@@ -321,7 +321,18 @@ function handshake(dbfile)
 	if db_sha == 'ERROR' then
 		log_internal_error_and_fail('unreadable db file: '.. quote(dbfile),'handshake')
 	end
-	io.write('dbfile ',db_sha,'\n')
+
+    -- if present, we read the sha1 of newdb
+	local ndb_sha = "-"
+	if io.open(newdb,'r') then
+	  local inf = io.popen(MDDIFF..' --sha1sum '.. quote(newdb),'r')
+	  ndb_sha, _ = inf:read('*a'):match('^(%S+)(.*)$')
+	  inf:close()
+	end
+	if ndb_sha == 'ERROR' then ndb_sha = "-" end
+
+	-- we send both db SHA1
+	io.write('dbfile ',db_sha,' ',ndb_sha,'\n')
 	io.flush()
 
 	-- but if the file was not there and --dry-run, we should not create it
@@ -351,8 +362,16 @@ function handshake(dbfile)
 		log_error "The client disconnected during handshake"
 		log_tags_and_fail('Network error',"handshake", "network",false,"retry")
 	end
-	local sha = line:match('^dbfile (%S+)$')
-	if sha ~= db_sha then
+	local sha, nsha = line:match('^dbfile (%S+) (%S+)$')
+
+	if nsha == db_sha then
+		-- db here more recent, the other endpoint will update
+	elseif sha == ndb_sha then
+		-- db more recent there, we rename here
+		os.rename(newdb,dbfile)
+	elseif sha == db_sha then
+		-- all good
+	else
 		log_error('Local dbfile and remote db file differ.')
 		log_error('Remove both files and push/pull again.')
 		log_tags_and_fail('Database mismatch',

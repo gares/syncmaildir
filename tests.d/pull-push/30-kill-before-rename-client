@@ -1,0 +1,20 @@
+#!/bin/sh
+
+mpull -t
+assert $? 0 "failed mpull -t"
+echo DEBUG=true >> target/.smd/config.default
+
+mpull
+assert $? 0 "failed mpull"
+test_eq Mail target/Mail 
+
+for f in .smd/*.db.*; do
+	mv $f ${f}.new
+	echo 0 > $f
+done
+
+
+mpull
+assert $? 0 "failed mpull with .new files around"
+test_eq Mail target/Mail 
+

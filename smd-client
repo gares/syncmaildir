@@ -699,7 +699,7 @@ function main()
 	log_progress('Phase 0: handshake')
 	if firsttime then log_progress(' This phase opens the ssh connection.') end
 
-	handshake(dbfile)
+	handshake(dbfile,newdb)
 	
 	-- receive and process commands
 	local commands = receive_delta(io.stdin, firsttime)
