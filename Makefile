@@ -14,9 +14,6 @@ GSCHEMAS_COMPILED=xdg/glib-2.0/schemas/gschemas.compiled
 MANPAGES5=smd-config.5
 HTML=index.html design.html hooks.html
 DESTDIR=
-SF_FRS=/home/frs/project/s/sy/syncmaildir/syncmaildir
-SF_LOGIN=$(SF_USER),syncmaildir
-SF_WEB=htdocs
 TEST_SIZE=100
 TEST_MAILBOX=misc/Mail.TEST.tgz
 TEST_SUITES=mddiff client-server pull-push migration
@@ -222,33 +219,6 @@ dist $(PROJECTNAME)-$(VERSION).tar.gz: smd-applet.c
 		--owner root --group root \
 		-f $(PROJECTNAME)-$(VERSION).tar
 	gzip -9 -n -f $(PROJECTNAME)-$(VERSION).tar
-
-$(HTML): check-w-markdown
-	cat misc/head.html > index.html
-	markdown README.md >> index.html
-	cat misc/tail.html >> index.html
-	cat misc/head.html > design.html
-	markdown DESIGN >> design.html
-	cat misc/tail.html >> design.html
-	cat misc/head.html > hooks.html
-	grep -h '^##' sample-hooks/* | sed 's/^## \?//' | markdown >> hooks.html
-	cat misc/tail.html >> hooks.html
-
-%.html:%.txt
-	cat misc/head.html > $@
-	echo '<pre>' >> $@
-	cat $< | sed -e '/^AUTHOR/,$$d' >> $@
-	echo '</pre>' >> $@
-	cat misc/tail.html >> $@
-
-upload-website: $(HTML) $(MANPAGES1:%=%.html) $(MANPAGES5:%=%.html)
-	scp $? misc/style.css \
-		$(SF_LOGIN)@web.sourceforge.net:$(SF_WEB)
-
-upload-tarball-and-changelog: $(PROJECTNAME)-$(VERSION).tar.gz
-	scp $(PROJECTNAME)-$(VERSION).tar.gz \
-	       	$(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/$<
-	scp ChangeLog $(SF_LOGIN)@frs.sourceforge.net:$(SF_FRS)/README.md
 
 stats:
 	T=`git tag | sort -V | head -n 1`; \
