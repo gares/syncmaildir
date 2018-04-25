@@ -1,0 +1,123 @@
+#!/usr/bin/python3
+
+'''Remove the specified header from emails'''
+
+import argparse
+import email
+import logging
+import math
+import os
+import sys
+
+__description__ = '''Sanitize OfflineIMAP-created emails for syncmaildir (smd). The
+given header will be recursively removed from all files in the
+specified folder. "Headers" are defined as all the lines before an
+empty line, which should keep the body of emails intact. If you know
+the number of files that will be processed, you can show progress
+using the following pipeline: strip_header > /dev/null 2>&1 | pv -l -s
+$linecount > log. Otherwise by default a throbber is shown on
+stdout and the list of files on stderr.'''
+
+
+class throbber:
+    '''weird logarithmic "progress bar"
+
+    when a throbber object is called, will display progress using the
+    provided "symbol"
+
+    the throbber will print the symbol every time it's called until it
+    crosses a logarithmic threshold (the "factor"), at which point the
+    factor is increased.
+
+    this is useful to display progress on large datasets that have an
+    unknown size (so we can't guess completion time *and* we can't
+    reasonably guess the progress/display ratio).
+
+    originally from the code I wrote for the Euler project, now part
+    of the ecdysis project.
+
+    this function requires Python 3.3 at least, because it uses
+    print(flush=True)
+    '''
+    def __init__(self, factor=0, stream=sys.stderr, symbol='.', fmt='{}', i=1):
+        '''build a throbber object and pass along the settings
+
+        >>> throbber(stream='')
+        throbber(i=1, factor=0, stream=, symbol=., fmt={})
+        '''
+        self.i = i
+        self.factor = factor
+        self.stream = stream
+        self.symbol = symbol
+        self.fmt = fmt
+
+    def __repr__(self):
+        '''nicer representation of this object
+
+        mainly to ease testing of the constructor
+
+        >>> throbber(factor=1,stream='',symbol='!',fmt='{s}')
+        throbber(i=1, factor=1, stream=, symbol=!, fmt={s})
+        '''
+        return 'throbber(i={i}, factor={factor}, stream={stream}, symbol={symbol}, fmt={fmt})'.format(**self.__dict__)  # noqa
+
+    def __call__(self, symbol=None):
+        '''increment the counter and potentially print something
+
+        >>> t = throbber(stream=sys.stdout)
+        >>> t()
+        .
+        >>> for i in range(1,100): t('+')
+        ++++++++10+++++++++100
+        >>> # here we overrode the throbber symbol otherwise it breaks doctest
+        '''
+        if symbol is None:
+            symbol = self.symbol
+        self.i += 1
+        # put a dot every modulo(log10(i))
+        if (self.i % 10**self.factor) == 0:
+            print(symbol, end='', file=self.stream, flush=True)
+        # and every time we go one log10 higher, slow down the throbber
+        if (self.i % 10**(self.factor+1)) == 0:
+            print(self.fmt.format(self.i),
+                  end='', file=self.stream, flush=True)
+            self.factor = math.floor(float(math.log10(self.i)))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     epilog=__description__)
+    parser.add_argument('--header', default='X-OfflineIMAP',
+                        help='header string to look for at the beginning of line (default: %(default)s)')
+    parser.add_argument('folder', help='folder to iterate on')
+    args = parser.parse_args()
+    # we work on binary
+    args.header = args.header.encode('utf8')
+
+    logging.basicConfig(level='DEBUG')
+
+    status = throbber(stream=sys.stdout)
+    for root, dirs, files in os.walk(args.folder):
+        for name in files:
+            path = os.path.join(root, name)
+            logging.info("fixing %s", path)
+            tmp = path + '.tmp'
+            status()
+            with open(path, mode='rb') as mail, open(tmp, mode='wb') as tmpmail:
+                for line in mail:
+                    #logging.debug('header: %s', line)
+                    if line.startswith(args.header):
+                        continue
+                    tmpmail.write(line)
+                    # end of headers
+                    if line == b"\n":
+                        break
+                # write body
+                for line in mail:
+                    #logging.debug('body: %s', line)
+                    tmpmail.write(line)
+            os.rename(tmp, path)
+
+
+if __name__ == '__main__':
+    main()

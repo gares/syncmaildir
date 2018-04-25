@@ -396,8 +396,10 @@ do as follows:
 
 1. Remove `X-OfflineIMAP` from every mail that contains it.
    Often the same email has that extra header line on the server but not on
-   the client. A not so dirty way of achieving that is the following snippet:
-   `find Mail -type f -exec sed -i '/^X-OfflineIMAP/d' {} \;`
+   the client. The script in `misc/strip-header` can be used to strip
+   that header on a given folder, for example with:
+
+        strip_header Maildir/ 2> modified.log
 
 2. Run the `smd-uniform-names` utility.
    This utility has to be run before the first synchronization, but after smd
