@@ -200,6 +200,7 @@ install-misc: $(MANPAGES1) $(MANPAGES5)
 	$(call mkdir-p,share/doc/syncmaildir)
 	cp -r sample-hooks/ $(DESTDIR)/$(PREFIX)/share/doc/syncmaildir
 	$(call install,README.md,share/doc/syncmaildir)
+	$(call install,misc/strip-header,share/doc/syncmaildir)
 
 clean: 
 	$H rm -f $(BINARIES) $(MANPAGES1) $(MANPAGES5)
