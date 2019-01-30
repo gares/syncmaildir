@@ -136,6 +136,52 @@ modes['nodots'] = function(dir)
 	end
 
 end
+modes['nodots2'] = function(dir)
+	if dir == 'LR' then
+		local p_mlc = '^'..escape(mailbox_local)..'/(.*)/(cur)'
+		local p_mln = '^'..escape(mailbox_local)..'/(.*)/(new)'
+		local p_mlt = '^'..escape(mailbox_local)..'/(.*)/(tmp)'
+		local mlc = mailbox_local..'/cur'
+		local mln = mailbox_local..'/new'
+		local mlt = mailbox_local..'/tmp'
+
+		local p_ml = '^'..escape(mailbox_local)..'/'
+		local mr = mailbox_remote..'/'
+
+		for l in io.stdin:lines() do
+			if l == mlc or l == mln or l == mlt then
+				print((l:gsub(p_ml,mr)))
+			else
+				local f = function(path, last)
+					return mr..(path:gsub('%.%.',''):gsub('%.','/'))..
+						'/'..last end
+				print((l:gsub(p_mlc,f):gsub(p_mln,f):gsub(p_mlt,f)))
+			end
+		end
+	else
+		local p_mrc = '^'..escape(mailbox_remote)..'/(.*)/(cur)'
+		local p_mrn = '^'..escape(mailbox_remote)..'/(.*)/(new)'
+		local p_mrt = '^'..escape(mailbox_remote)..'/(.*)/(tmp)'
+		local mrc = mailbox_remote..'/cur'
+		local mrn = mailbox_remote..'/new'
+		local mrt = mailbox_remote..'/tmp'
+
+		local p_mr = '^'..escape(mailbox_remote)..'/'
+		local ml = mailbox_local..'/'
+
+		for l in io.stdin:lines() do
+			if l == mrc or l == mrn or l == mrt then
+				print((l:gsub(p_mr,ml)))
+			else
+				local f = function(cap, last)
+				    return ml..'..'..(cap:gsub('^//+','/'):gsub('/','.'))..
+						'/'..last end
+				print((l:gsub(p_mrc,f):gsub(p_mrn,f):gsub(p_mrt,f)))
+		    end
+		end
+	end
+
+end
 modes['move'] = function(dir)
 	if dir == 'LR' then
 		local l_m = '^'..escape(mailbox_local)..'/'

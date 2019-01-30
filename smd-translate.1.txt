@@ -40,6 +40,19 @@ DESCRIPTION
     Mail/cur
     Mail/sub/folder/new
 
+  nodots2  
+
+  This mode simply gets rid of all dots. It assumes remote mailboxes are 
+  named like in the following:
+    
+    Maildir/cur
+    Maildir/..sub.folder/new
+    
+  The corresponding local mailboxes are named like in the following:
+    
+    Mail/cur
+    Mail/sub/folder/new
+
   move  
 
   This mode just replaces the root of the mailbox, i.e. substitutes
