@@ -189,6 +189,36 @@ can be run with `--configure` to pop-up its configuration window, that
 allows to tune its notification behaviour and to edit the configuration
 files for `smd-loop` and `smd-push/pull`.
 
+### systemd integration
+
+`smd-pull` and `smd-push` can be configured as user services that get
+automatically run under [`systemd`][]. The following units are provided:
+
+- [`smd-push.service`](misc/smd-push.service)
+- [`smd-push.timer`](misc/smd-push.timer)
+- [`smd-pull.service`](misc/smd-pull.service)
+- [`smd-pull.timer`](misc/smd-pull.timer)
+
+Those should be installed in `~/.config/systemd/user/` and enabled
+like this:
+
+    systemctl --user daemon-reload
+    systemctl enable smd-push.service smd-push.timer smd-pull.service smd-pull.timer
+
+Then you should see progress from those jobs in the journal:
+
+    journalctl --user -f
+
+You might need to enable [`journald`][] persistence by enabling the
+`Storage` paramter in [`journald.conf`][]. This is generally simply a
+matter of creating the storage directory, with:
+
+    sudo mkdir /var/log/journal
+
+[`systemd`]: https://freedesktop.org/wiki/Software/systemd/
+[`journald`]: https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html
+[`journald.conf`]: https://www.freedesktop.org/software/systemd/man/journald.conf.html
+
 Notes on performances
 ---------------------
 

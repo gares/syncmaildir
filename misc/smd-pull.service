@@ -1,0 +1,12 @@
+[Unit]
+Description=pull emails with syncmaildir
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# --show-tags gives email counts
+ExecStart=/usr/bin/smd-pull --show-tags
+
+[Install]
+WantedBy=multi-user.target

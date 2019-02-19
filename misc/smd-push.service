@@ -1,0 +1,12 @@
+[Unit]
+Description=push emails with syncmaildir
+Wants=network-online.target
+After=smd-pull.service
+
+[Service]
+Type=oneshot
+# --show-tags gives email counts
+ExecStart=/usr/bin/smd-push --show-tags
+
+[Install]
+WantedBy=multi-user.target
