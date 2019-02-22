@@ -1,0 +1,8 @@
+[Unit]
+Description=run smd-pull regularly
+
+[Timer]
+OnCalendar=*:0/2
+
+[Install]
+WantedBy=timers.target
