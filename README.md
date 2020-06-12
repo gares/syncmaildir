@@ -203,7 +203,7 @@ Those should be installed in `~/.config/systemd/user/` and enabled
 like this:
 
     systemctl --user daemon-reload
-    systemctl enable smd-push.service smd-push.timer smd-pull.service smd-pull.timer
+    systemctl --user enable smd-push.service smd-push.timer smd-pull.service smd-pull.timer
 
 Then you should see progress from those jobs in the journal:
 
