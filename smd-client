@@ -1,4 +1,4 @@
-#! /usr/bin/env lua5.1
+#!/usr/bin/env lua5.1
 -- 
 -- Released under the terms of GPLv3 or at your option any later version.
 -- No warranties.
@@ -762,7 +762,7 @@ function main()
 
 	local rc
 	if not dry_run() and apply_xdelta then
-		rc = os.execute(XDELTA..' patch '..xdelta..' '..dbfile..' '..newdb)
+		rc = os.execute(XDELTA..' -d -s '..dbfile..' '..xdelta..'  '..newdb)
 	else
 		rc = 0 -- the xdelta transmitted with --dry-run is dummy
 	end

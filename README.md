@@ -453,7 +453,7 @@ supported by templates defined at the end of `Makefile`, for example you may
 want to run `make osx/text/all && make osx/text/install` to properly build and
 install text mode only syncmaildir utilities on an MacOSX platform.
 
-Runtime dependencies are: `ssh`, `xdelta`, `lua5.1` and `bash`.
+Runtime dependencies are: `ssh`, `xdelta3`, `lua5.1` and `bash`.
 
 Design
 ======

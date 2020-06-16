@@ -31,7 +31,7 @@ end
 -- set xdelta executable name
 XDELTA = '@XDELTA@'
 if string.sub(XDELTA,1,1) == '@' then
-		XDELTA = 'xdelta'
+		XDELTA = 'xdelta3'
 end
 
 -- set smd version 
