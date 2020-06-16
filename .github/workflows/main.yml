@@ -1,0 +1,21 @@
+name: main
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install xmllint
+    - run: sudo apt-get install xdelta3 lua5.1
+    - name: make
+      run: make
+    - name: make test
+      run: make test
