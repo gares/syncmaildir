@@ -762,7 +762,7 @@ function main()
 
 	local rc
 	if not dry_run() and apply_xdelta then
-		rc = os.execute(XDELTA..' -d -s '..dbfile..' '..xdelta..'  '..newdb)
+		rc = os.execute(XDELTA..' -d -s '..dbfile..' '..xdelta..' '..newdb)
 	else
 		rc = 0 -- the xdelta transmitted with --dry-run is dummy
 	end
