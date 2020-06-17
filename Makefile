@@ -36,7 +36,7 @@ H=@
 
 PREFIX=usr/local
 SED=sed
-XDELTA=xdelta
+XDELTA=xdelta3
 SSH=ssh
 LUAV=5.1
 LUA=lua$(LUAV)
@@ -150,7 +150,7 @@ define install-replacing
 		$(SED) 's?@XDELTA@?$(XDELTA)?' |\
 		$(SED) 's?@SSH@?$(SSH)?' |\
 		$(SED) 's?@SMDVERSION@?$(VERSION)?' |\
-		$(SED) 's?#! /usr/bin/env lua.*?#! /usr/bin/env $(LUA)?' |\
+		$(SED) 's?#!/usr/bin/env lua.*?#!/usr/bin/env $(LUA)?' |\
 		cat > $(DESTDIR)/$(PREFIX)/$(2)/$(1)
 	if [ $(2) = "bin" ]; then chmod a+rx $(DESTDIR)/$(PREFIX)/$(2)/$(1); fi
 endef
