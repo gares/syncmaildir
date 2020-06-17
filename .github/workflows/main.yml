@@ -13,11 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install xmllint
+    - name: install dependencies
       run: sudo apt-get install txt2man pkg-config libglib2.0-dev libgtk-3-dev libnotify-dev libgee-0.8-dev lua5.1 moreutils xdelta3
-    - name: make
+    - name: build
       run: make
-    - name: make test
+    - name: test
       run: make test
     - uses: actions/upload-artifact@v2
       if: failure()
