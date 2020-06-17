@@ -19,3 +19,8 @@ jobs:
       run: make
     - name: make test
       run: make test
+    - uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: test-logs
+        path: tests.d/run/
