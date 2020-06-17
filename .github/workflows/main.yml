@@ -23,4 +23,4 @@ jobs:
       if: failure()
       with:
         name: test-logs
-        path: tests.d/run/
+        path: tests.d/run/*/*/log.*
