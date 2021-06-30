@@ -2,6 +2,7 @@
 Description=pull emails with syncmaildir
 Wants=network-online.target
 After=network-online.target
+Before=smd-push.service
 
 [Service]
 Type=oneshot
