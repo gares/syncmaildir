@@ -1,3 +1,18 @@
+
+This piece of software needs a new maintainer
+=============================================
+
+I've no energy to maintain this project myself.
+Help is very welcome.
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 SYNC MAIL DIR
 =============
 
